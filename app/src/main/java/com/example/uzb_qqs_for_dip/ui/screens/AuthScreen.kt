@@ -99,9 +99,12 @@ fun AuthScreen(
 
         if (users.isEmpty()) {
             EmptyUsersCard(onCreateProfile)
+            Spacer(Modifier.weight(1f))
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(users, key = { it.id }) { user ->
@@ -183,7 +186,7 @@ fun AuthScreen(
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(12.dp))
 
         OutlinedButton(
             onClick = onCreateProfile,
@@ -202,18 +205,20 @@ fun AuthScreen(
             initialFullName = user.fullName,
             initialPosition = user.position,
             initialInitialsSurname = user.initialsSurname,
+            initialOrganization = user.organization,
             error = editError,
             onClearError = { appViewModel.clearEditError() },
             onDismiss = {
                 editing = null
                 appViewModel.clearEditError()
             },
-            onConfirm = { fullName, position, initialsSurname ->
+            onConfirm = { fullName, position, initialsSurname, organization ->
                 appViewModel.updateProfile(
                     userId = user.id,
                     fullName = fullName,
                     position = position,
                     initialsSurname = initialsSurname,
+                    organization = organization,
                     onDone = { editing = null }
                 )
             }

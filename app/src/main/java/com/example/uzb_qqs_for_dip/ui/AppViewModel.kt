@@ -2,13 +2,21 @@ package com.example.uzb_qqs_for_dip.ui
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.uzb_qqs_for_dip.QqsApp
 import com.example.uzb_qqs_for_dip.data.AppContainer
+import com.example.uzb_qqs_for_dip.data.backup.AppBackup
 import com.example.uzb_qqs_for_dip.data.model.User
+import com.example.uzb_qqs_for_dip.data.model.UserRole
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +54,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun logout() = container.sessionManager.logout()
 
-    fun register(fullName: String, position: String, initialsSurname: String, autoLogin: Boolean = true) {
+    fun register(
+        fullName: String,
+        position: String,
+        initialsSurname: String,
+        organization: String = "",
+        autoLogin: Boolean = true,
+        role: UserRole = UserRole.EMPLOYEE
+    ) {
         val name = fullName.trim()
         val pos = position.trim()
         val initials = initialsSurname.trim()
@@ -56,7 +71,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             val res = container.userRepository.create(
-                User(fullName = name, position = pos, initialsSurname = initials)
+                User(fullName = name, position = pos, initialsSurname = initials,
+                    organization = organization.trim(), role = role)
             )
             res.onSuccess { id ->
                 _registerError.value = null
@@ -86,6 +102,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         fullName: String,
         position: String,
         initialsSurname: String,
+        organization: String = "",
+        role: UserRole = UserRole.EMPLOYEE,
         onDone: () -> Unit = {}
     ) {
         val name = fullName.trim()
@@ -97,7 +115,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             val res = container.userRepository.update(
-                User(id = userId, fullName = name, position = pos, initialsSurname = initials)
+                User(id = userId, fullName = name, position = pos, initialsSurname = initials,
+                    organization = organization.trim(), role = role)
             )
             res.onSuccess {
                 _editError.value = null
@@ -107,6 +126,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     "Пользователь с таким именем уже существует"
                 else "Не удалось обновить профиль: ${e.message}"
             }
+        }
+    }
+
+    /** Переключает роль текущего пользователя между EMPLOYEE и AUDITOR. */
+    fun switchCurrentUserRole() {
+        viewModelScope.launch {
+            val user = currentUser.value ?: return@launch
+            val newRole = if (user.role == UserRole.AUDITOR) UserRole.EMPLOYEE else UserRole.AUDITOR
+            container.userRepository.update(user.copy(role = newRole))
         }
     }
 
@@ -148,6 +176,82 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     Toast.makeText(
                         appCtx,
                         e.message ?: "Ошибка сохранения бэкапа",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    /**
+     * Формирует JSON-бэкап во временный файл и открывает системный диалог «Поделиться».
+     */
+    fun shareBackup(context: Context) {
+        val appCtx = context.applicationContext
+        viewModelScope.launch {
+            runCatching {
+                val file = withContext(Dispatchers.IO) {
+                    val json = container.appBackup.exportJsonString()
+                    val dir = File(appCtx.cacheDir, "exports").apply { mkdirs() }
+                    val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
+                    File(dir, "${AppBackup.FILE_BASE_NAME}_$stamp.json").apply {
+                        writeText(json, Charsets.UTF_8)
+                    }
+                }
+                val uri = FileProvider.getUriForFile(
+                    appCtx, "${appCtx.packageName}.fileprovider", file
+                )
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = AppBackup.MIME_TYPE
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                withContext(Dispatchers.Main) {
+                    appCtx.startActivity(
+                        Intent.createChooser(intent, "Поделиться данными")
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+            }.onFailure { e ->
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        appCtx,
+                        e.message ?: "Не удалось поделиться данными",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    /**
+     * Добавляет данные из файла бэкапа к текущей базе БЕЗ удаления имеющихся данных.
+     * Профили сопоставляются по имени, дубликаты чеков (по ссылке) пропускаются.
+     */
+    fun mergeBackupFromUri(context: Context, uri: Uri) {
+        val appCtx = context.applicationContext
+        viewModelScope.launch {
+            runCatching {
+                val json = withContext(Dispatchers.IO) {
+                    val bytes = appCtx.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                        ?: error("Не удалось прочитать файл")
+                    String(bytes, Charsets.UTF_8)
+                }
+                container.appBackup.mergeJsonString(json).getOrThrow()
+            }.onSuccess { outcome ->
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        appCtx,
+                        "Добавлено: профилей ${outcome.addedUsers}, чеков ${outcome.addedReceipts}" +
+                            if (outcome.skippedReceipts > 0) " (пропущено дублей: ${outcome.skippedReceipts})" else "",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }.onFailure { e ->
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        appCtx,
+                        e.message ?: "Ошибка добавления из бэкапа",
                         Toast.LENGTH_LONG
                     ).show()
                 }

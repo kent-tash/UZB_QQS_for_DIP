@@ -3,6 +3,7 @@ package com.example.uzb_qqs_for_dip.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.automirrored.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.TableChart
@@ -23,7 +24,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.uzb_qqs_for_dip.data.model.UserRole
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
+import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
+import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuthScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ProfileScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ReceiptsScreen
@@ -41,12 +45,17 @@ private sealed class MainTab(val route: String, val title: String, val icon: Ima
     data object Scan : MainTab("main/scan", "Добавить", Icons.Outlined.QrCodeScanner)
     data object Receipts : MainTab("main/receipts", "Чеки", Icons.Outlined.TableChart)
     data object Report : MainTab("main/report", "Отчёт", Icons.Outlined.Description)
+    data object Audit : MainTab("main/audit", "Аудит", Icons.AutoMirrored.Outlined.FactCheck)
     data object Profile : MainTab("main/profile", "Профиль", Icons.Outlined.Person)
 
     companion object {
-        val all = listOf(Scan, Receipts, Report, Profile)
+        val employee = listOf(Scan, Receipts, Report, Profile)
+        val auditor = listOf(Audit, Receipts, Report, Profile)
     }
 }
+
+private const val ROUTE_AUDIT_VERIFY = "main/audit/verify"
+private const val ARG_USER_ID = "userId"
 
 @Composable
 fun AppNavHost(appViewModel: AppViewModel = viewModel()) {
@@ -100,10 +109,16 @@ private fun MainScaffold(
     val backStackEntry by tabsNav.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
+    val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
+    val isAuditor = currentUser?.role == UserRole.AUDITOR
+    val tabs = if (isAuditor) MainTab.auditor else MainTab.employee
+
+    val startTab = if (isAuditor) MainTab.Audit.route else MainTab.Scan.route
+
     Scaffold(
         bottomBar = {
             NavigationBar {
-                MainTab.all.forEach { tab ->
+                tabs.forEach { tab ->
                     val selected = currentRoute?.let { route ->
                         backStackEntry?.destination?.hierarchy?.any { it.route == tab.route } == true ||
                             route == tab.route
@@ -126,7 +141,7 @@ private fun MainScaffold(
     ) { padding ->
         NavHost(
             navController = tabsNav,
-            startDestination = MainTab.Scan.route,
+            startDestination = startTab,
             modifier = Modifier.padding(padding)
         ) {
             composable(MainTab.Scan.route) {
@@ -137,6 +152,22 @@ private fun MainScaffold(
             }
             composable(MainTab.Report.route) {
                 ReportScreen(appViewModel = appViewModel)
+            }
+            composable(MainTab.Audit.route) {
+                AuditorScreen(
+                    appViewModel = appViewModel,
+                    onVerifyEmployee = { userId ->
+                        tabsNav.navigate("$ROUTE_AUDIT_VERIFY?$ARG_USER_ID=$userId")
+                    }
+                )
+            }
+            composable("$ROUTE_AUDIT_VERIFY?$ARG_USER_ID={$ARG_USER_ID}") { backStack ->
+                val userId = backStack.arguments?.getString(ARG_USER_ID)?.toLongOrNull()
+                AuditorVerifyScreen(
+                    appViewModel = appViewModel,
+                    preselectedUserId = userId,
+                    onBack = { tabsNav.popBackStack() }
+                )
             }
             composable(MainTab.Profile.route) {
                 ProfileScreen(

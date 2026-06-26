@@ -22,7 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.uzb_qqs_for_dip.data.backup.AppBackup
+import com.example.uzb_qqs_for_dip.data.model.UserRole
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -66,6 +69,7 @@ fun ProfileScreen(
     var editing by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf(false) }
     var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingMergeUri by remember { mutableStateOf<Uri?>(null) }
 
     val createBackupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument(AppBackup.MIME_TYPE)
@@ -77,6 +81,12 @@ fun ProfileScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) pendingRestoreUri = uri
+    }
+
+    val mergeBackupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) pendingMergeUri = uri
     }
 
     Column(
@@ -137,6 +147,47 @@ fun ProfileScreen(
                 ProfileRow("Имя", user?.fullName ?: "—")
                 ProfileRow("Должность", user?.position ?: "—")
                 ProfileRow("И.О. Фамилия для подписи", user?.initialsSurname ?: "—")
+                ProfileRow("Организация", user?.organization?.ifBlank { "—" } ?: "—")
+                ProfileRow(
+                    "Роль",
+                    if (user?.role == UserRole.AUDITOR) "Аудитор" else "Сотрудник"
+                )
+            }
+        }
+
+        // Role switch card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Режим работы",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    if (user?.role == UserRole.AUDITOR)
+                        "Вы работаете в режиме «Аудитор». Доступна вкладка «Аудит» для квартальной сверки."
+                    else
+                        "Вы работаете в режиме «Сотрудник». Включите режим аудитора, чтобы получить доступ к вкладке «Аудит».",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    onClick = { appViewModel.switchCurrentUserRole() },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        if (user?.role == UserRole.AUDITOR)
+                            "Переключить на «Сотрудник»"
+                        else
+                            "Переключить на «Аудитор»"
+                    )
+                }
             }
         }
 
@@ -154,8 +205,10 @@ fun ProfileScreen(
                 )
                 Text(
                     "Один файл JSON: все профили, сохранённые чеки и настройки отчёта " +
-                        "(период, сортировка, выбранный пользователь в фильтре). " +
-                        "При загрузке бэкапа текущие данные в приложении полностью заменяются.",
+                        "(период, сортировка, выбранный пользователь в фильтре).\n\n" +
+                        "• «Загрузить бэкап» — полностью заменяет текущие данные.\n" +
+                        "• «Добавить из бэкапа» — добавляет данные из файла к текущим без удаления " +
+                        "(например, чеки другого пользователя). Дубликаты чеков пропускаются.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -172,6 +225,15 @@ fun ProfileScreen(
                     Text("Создать бэкап")
                 }
                 OutlinedButton(
+                    onClick = { appViewModel.shareBackup(context) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Outlined.Share, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("Поделиться данными")
+                }
+                OutlinedButton(
                     onClick = {
                         openBackupLauncher.launch(arrayOf(AppBackup.MIME_TYPE, "*/*"))
                     },
@@ -181,6 +243,17 @@ fun ProfileScreen(
                     Icon(Icons.Outlined.FolderOpen, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text("Загрузить бэкап")
+                }
+                OutlinedButton(
+                    onClick = {
+                        mergeBackupLauncher.launch(arrayOf(AppBackup.MIME_TYPE, "*/*"))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Outlined.LibraryAdd, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("Добавить из бэкапа")
                 }
             }
         }
@@ -263,6 +336,31 @@ fun ProfileScreen(
         )
     }
 
+    pendingMergeUri?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { pendingMergeUri = null },
+            title = { Text("Добавить из бэкапа?") },
+            text = {
+                Text(
+                    "Данные из выбранного файла будут добавлены к текущим без удаления. " +
+                        "Совпадающие профили объединяются по имени, а уже имеющиеся чеки " +
+                        "(по той же ссылке) повторно не добавляются."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pendingMergeUri = null
+                        appViewModel.mergeBackupFromUri(context, uri)
+                    }
+                ) { Text("Добавить") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { pendingMergeUri = null }) { Text("Отмена") }
+            }
+        )
+    }
+
     if (editing) {
         val u = user
         if (u == null) {
@@ -272,18 +370,20 @@ fun ProfileScreen(
                 initialFullName = u.fullName,
                 initialPosition = u.position,
                 initialInitialsSurname = u.initialsSurname,
+                initialOrganization = u.organization,
                 error = editError,
                 onClearError = { appViewModel.clearEditError() },
                 onDismiss = {
                     editing = false
                     appViewModel.clearEditError()
                 },
-                onConfirm = { fullName, position, initialsSurname ->
+                onConfirm = { fullName, position, initialsSurname, organization ->
                     appViewModel.updateProfile(
                         userId = u.id,
                         fullName = fullName,
                         position = position,
                         initialsSurname = initialsSurname,
+                        organization = organization,
                         onDone = { editing = false }
                     )
                 }
@@ -353,20 +453,23 @@ fun EditProfileDialog(
     initialFullName: String,
     initialPosition: String,
     initialInitialsSurname: String,
+    initialOrganization: String = "",
     error: String?,
     onClearError: () -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (String, String, String) -> Unit,
+    onConfirm: (fullName: String, position: String, initials: String, organization: String) -> Unit,
     title: String = "Редактирование профиля"
 ) {
     var fullName by remember { mutableStateOf(initialFullName) }
     var position by remember { mutableStateOf(initialPosition) }
     var initials by remember { mutableStateOf(initialInitialsSurname) }
+    var organization by remember { mutableStateOf(initialOrganization) }
 
-    LaunchedEffect(initialFullName, initialPosition, initialInitialsSurname) {
+    LaunchedEffect(initialFullName, initialPosition, initialInitialsSurname, initialOrganization) {
         fullName = initialFullName
         position = initialPosition
         initials = initialInitialsSurname
+        organization = initialOrganization
     }
 
     AlertDialog(
@@ -398,6 +501,14 @@ fun EditProfileDialog(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
+                OutlinedTextField(
+                    value = organization,
+                    onValueChange = { organization = it; onClearError() },
+                    label = { Text("Организация (необязательно)") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 error?.let {
                     Text(
                         it,
@@ -408,7 +519,7 @@ fun EditProfileDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(fullName, position, initials) }) {
+            Button(onClick = { onConfirm(fullName, position, initials, organization) }) {
                 Text("Сохранить")
             }
         },

@@ -101,4 +101,143 @@ class ReceiptParserDebugTest {
         assertEquals(16_701_000L, parsed.totalAmountTiyin)
         assertEquals(1_789_392L, parsed.vatAmountTiyin)
     }
+
+    /**
+     * Регрессия: чек ofd.soliq.uz/check ("ZOO LITTLE" MCHJ) ранее не отдавал
+     * адрес (сокращённые узбекские формы «sh», «tum», «MFY», «kochasi», «xonadon»
+     * не распознавались) и не имел поля ИНН/STIR вовсе.
+     */
+    @Test
+    fun parses_soliq_check_zoo_little_address_and_tin() {
+        val html = loadFixture("soliq_check_zoo_little.html")
+        val parser = ReceiptParser()
+
+        val parsed = parser.parseHtml(
+            qrUrl = "https://ofd.soliq.uz/check?t=VG343420021451&r=16312&c=20260405154318&s=242642240512",
+            html = html
+        )
+
+        val seller = parsed.sellerName ?: error("seller is null")
+        assertTrue("seller='${seller}'", seller.contains("ZOO LITTLE", ignoreCase = true))
+
+        // Адрес должен распознаться целиком.
+        val address = parsed.address ?: error("address is null")
+        assertTrue("address='${address}'", address.contains("Nukus kochasi", ignoreCase = true))
+        assertTrue("address='${address}'", address.contains("Mirobod", ignoreCase = true))
+        // ИНН не должен попасть в адрес (он отдельным полем).
+        assertTrue("address wrongly contains tin: '${address}'", !address.contains("311067194"))
+
+        // ИНН/STIR продавца.
+        assertEquals("311067194", parsed.tin)
+
+        // SN на этом чеке пустой — он НЕ должен подменяться датой покупки.
+        assertTrue("sn should be null/blank but was '${parsed.sn}'", parsed.sn.isNullOrBlank())
+
+        // Суммы из чека: «Jami to`lov: 375 460,00» и «Umumiy QQS qiymati: 40 227,86».
+        assertEquals(37_546_000L, parsed.totalAmountTiyin)
+        assertEquals(4_022_786L, parsed.vatAmountTiyin)
+    }
+
+    /**
+     * Регрессия: чек ofd.soliq.uz/check ("CHEESE DAY" MCHJ) — адрес на узбекской
+     * кириллице («Миробод тумани, …») ранее не распознавался, а SN извлекался корректно.
+     */
+    @Test
+    fun parses_soliq_check_cheese_day_cyrillic_address() {
+        val html = loadFixture("soliq_check_cheese_day.html")
+        val parser = ReceiptParser()
+
+        val parsed = parser.parseHtml(
+            qrUrl = "https://ofd.soliq.uz/check?t=VG343420012599&r=84775&c=20260429114017&s=194167710346",
+            html = html
+        )
+
+        val seller = parsed.sellerName ?: error("seller is null")
+        assertTrue("seller='${seller}'", seller.contains("CHEESE DAY", ignoreCase = true))
+
+        // Кириллический адрес должен распознаться.
+        val address = parsed.address ?: error("address is null")
+        assertTrue("address='${address}'", address.contains("тумани", ignoreCase = true))
+        assertTrue("address wrongly contains tin: '${address}'", !address.contains("309896398"))
+
+        // ИНН/STIR — 9 цифр после адреса.
+        assertEquals("309896398", parsed.tin)
+
+        // SN заполнен на сайте и не должен быть датой.
+        assertEquals("101680", parsed.sn)
+
+        // Суммы: «Jami to`lov: 112 900,00» и «Umumiy QQS qiymati: 12 096,43».
+        assertEquals(11_290_000L, parsed.totalAmountTiyin)
+        assertEquals(1_209_643L, parsed.vatAmountTiyin)
+    }
+
+    /**
+     * Регрессия для разных префиксов терминала (YZ/LG помимо VG/EP), кириллических
+     * адресов и пустого SN (он не должен подменяться датой).
+     */
+    @Test
+    fun parses_various_terminal_prefixes_addresses_and_sn() {
+        data class Case(
+            val fixture: String,
+            val qr: String,
+            val terminalId: String,
+            val addressMustContain: String,
+            val sn: String?
+        )
+
+        val cases = listOf(
+            Case(
+                "soliq_check_yz_madina.html",
+                "https://ofd.soliq.uz/check?t=YZ231006034585&r=239245&c=20260407103812&s=029441353159",
+                "YZ231006034585", "Нукус", "iiko320"
+            ),
+            Case(
+                "soliq_check_lg_anglesey.html",
+                "https://ofd.soliq.uz/check?t=LG420230644664&r=84229&c=20260407105718&s=054387142715",
+                "LG420230644664", "ko'chasi", "AFK-20250725-000664"
+            ),
+            Case(
+                "soliq_check_vg_kredo.html",
+                "https://ofd.soliq.uz/check?t=VG343420026083&r=47555&c=20260410205306&s=331638885541",
+                "VG343420026083", "tumani", null
+            ),
+            Case(
+                "soliq_check_yz_makfood.html",
+                "https://ofd.soliq.uz/check?t=YZ231006034767&r=346750&c=20260504194541&s=614443346717",
+                "YZ231006034767", "тумани", "313219"
+            ),
+            Case(
+                "soliq_check_yz_grandpharm.html",
+                "https://ofd.soliq.uz/check?t=YZ231006033214&r=95798&c=20260510121146&s=252545824140",
+                "YZ231006033214", "тумани", "TS10012020049"
+            ),
+            Case(
+                "soliq_check_lg_madina.html",
+                "https://ofd.soliq.uz/check?t=LG420230604913&r=18476&c=20260515194943&s=276922840530",
+                "LG420230604913", "Нукус", "iiko217"
+            ),
+            Case(
+                "soliq_check_lg_chilanzar.html",
+                "https://ofd.soliq.uz/check?t=LG420230638307&r=4006&c=20260617203253&s=351400591405",
+                "LG420230638307", "р-он", "STS-20200618-000442"
+            )
+        )
+
+        val parser = ReceiptParser()
+        for (c in cases) {
+            val parsed = parser.parseHtml(c.qr, loadFixture(c.fixture))
+            assertEquals("terminalId for ${c.fixture}", c.terminalId, parsed.terminalId)
+            val address = parsed.address
+            assertNotNull("address is null for ${c.fixture}", address)
+            assertTrue(
+                "address '${address}' must contain '${c.addressMustContain}' (${c.fixture})",
+                address!!.contains(c.addressMustContain, ignoreCase = true)
+            )
+            if (c.sn == null) {
+                assertTrue("sn for ${c.fixture} must be blank but was '${parsed.sn}'", parsed.sn.isNullOrBlank())
+            } else {
+                assertEquals("sn for ${c.fixture}", c.sn, parsed.sn)
+            }
+        }
+    }
 }

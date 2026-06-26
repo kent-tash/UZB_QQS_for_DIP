@@ -1,5 +1,6 @@
 package com.example.uzb_qqs_for_dip.network
 
+import com.example.uzb_qqs_for_dip.data.model.PaymentType
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +24,14 @@ data class ParsedReceipt(
     val sellerName: String?,
     val totalAmountTiyin: Long?,
     val vatAmountTiyin: Long?,
+    val paymentType: PaymentType,
+    val fiscalSign: String?,
+    val address: String? = null,
+    val tin: String? = null,
+    val terminalId: String? = null,
+    val receiptNumber: String? = null,
+    val nkmName: String? = null,
+    val sn: String? = null,
     val rawSnippet: String?
 ) {
     val isValid: Boolean
@@ -82,6 +91,19 @@ class ReceiptParser(
         val seller = extractSeller(doc, text)
         val total = extractTotal(doc, text)
         val vat = extractVat(doc, text)
+        val paymentType = extractPaymentType(text)
+        val fiscalSign = extractFiscalSign(doc, text) ?: extractFiscalFromUrl(qrUrl)
+
+        // Новые поля для детального заголовка
+        val address = extractAddress(doc, text)
+        // ИНН/STIR продавца (9 цифр) — отдельным полем, рядом с названием организации
+        val tin = extractTin(doc, text)
+        // Терминал может начинаться на разные префиксы (VG, EP, YZ, LG, …)
+        val termId = extractTerminalId(doc, text)
+        val recNum = extractByLabel(doc, text, listOf("Chek raqami", "Номер чека", "Receipt number", "Check number"))
+        // Marketpleys nomi — специфичный лейбл для Uzum и других площадок
+        val nkm = extractByLabel(doc, text, listOf("Marketpleys nomi", "Onlayn NKM nomi", "NKM nomi", "Название НКМ"))
+        val snNum = extractByLabel(doc, text, listOf("SN", "Zavod raqami", "Серийный номер", "Serial number"))
 
         return ParsedReceipt(
             qrUrl = qrUrl,
@@ -89,8 +111,318 @@ class ReceiptParser(
             sellerName = seller,
             totalAmountTiyin = total,
             vatAmountTiyin = vat,
+            paymentType = paymentType,
+            fiscalSign = fiscalSign,
+            address = address,
+            tin = tin,
+            terminalId = termId,
+            receiptNumber = recNum,
+            nkmName = nkm,
+            sn = snNum,
             rawSnippet = text.take(2000)
         )
+    }
+
+    private fun extractAddress(doc: Document, text: String): String? {
+        // 1. Поиск по явным меткам в DOM
+        val labels = listOf("Manzil", "Адрес", "Address", "Адрес торговой точки", "Манзил")
+        labelValue(doc, labels)?.let { return cleanValue(it) }
+
+        // 2. Специфичная логика для ofd.soliq.uz и EPI: адрес после названия организации
+        val headings = doc.select("h1, h2, h3, b, strong, .company-name, .org-name, .seller-name")
+        for (h in headings) {
+            val hText = h.text().trim().lowercase()
+            if (hText.isEmpty() || hText.contains("savdo cheki") || hText.contains("sotuv")) continue
+            
+            // Проверяем следующие за заголовком элементы. Ищем адрес и возможный индекс.
+            var next = h.nextSibling()
+            var count = 0
+            while (next != null && count < 8) {
+                val t = when (next) {
+                    is org.jsoup.nodes.TextNode -> next.text().trim()
+                    is Element -> next.text().trim()
+                    else -> ""
+                }
+                
+                if (t.length >= 5) {
+                    if (isLikelyAddress(t)) {
+                        // Нашли базовую часть адреса. Теперь ищем почтовый индекс (6 цифр) в следующих узлах.
+                        // ИНН (9 цифр) намеренно НЕ присоединяем — он извлекается отдельным полем.
+                        var fullAddress = t
+                        var subNext = next.nextSibling()
+                        var subCount = 0
+                        while (subNext != null && subCount < 4) {
+                            val st = when (subNext) {
+                                is org.jsoup.nodes.TextNode -> subNext.text().trim()
+                                is Element -> subNext.text().trim()
+                                else -> ""
+                            }
+                            // Почтовый индекс (6 цифр)
+                            if (st.matches(Regex("\\d{6}"))) {
+                                fullAddress = "$fullAddress $st"
+                            } else if (st.matches(Regex("\\d{9}"))) {
+                                // ИНН — пропускаем, это отдельное поле
+                                subNext = subNext.nextSibling()
+                                subCount++
+                                continue
+                            } else if (st.isNotEmpty() && !st.contains(Regex("\\d{10,}"))) {
+                                // Если это какой-то короткий текст (напр. номер дома), тоже берем
+                                if (st.length < 20) fullAddress = "$fullAddress $st"
+                                else break
+                            }
+                            subNext = subNext.nextSibling()
+                            subCount++
+                        }
+                        return cleanValue(fullAddress)
+                    }
+                }
+                next = next.nextSibling()
+                count++
+            }
+        }
+
+        // 3. Поиск по регулярному выражению (лейбл: значение)
+        val r = Regex("(?i)(?:Manzil|Адрес|Address|Адрес торговой точки)\\s*[:\\-]?\\s*([^\\n\\r]{5,250})")
+        r.find(text)?.let { return cleanValue(it.groupValues[1]) }
+        
+        // 4. Поиск в свободном тексте по маркерам. Собираем строку с ИНН/индексом.
+        val lines = text.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
+        for (i in lines.indices) {
+            if (isLikelyAddress(lines[i])) {
+                var res = lines[i]
+                // Проверяем следующую строку на почтовый индекс (6 цифр). ИНН (9 цифр) не добавляем.
+                if (i + 1 < lines.size) {
+                    val nextLine = lines[i+1]
+                    if (nextLine.matches(Regex("\\d{6}"))) {
+                        res += " $nextLine"
+                    }
+                }
+                return cleanValue(res)
+            }
+        }
+
+        return null
+    }
+
+    private fun isLikelyAddress(s: String): Boolean {
+        val lower = s.lowercase()
+        // Маркеры адреса, включая сокращённые узбекские формы латиницей (sh — shahar,
+        // tum — tumani, MFY — mahalla, ko'chasi/kochasi — улица, uy — дом, xonadon — квартира)
+        // и узбекскую кириллицу (тумани, кўчаси, маҳалла, бозори, дўкони, худуди и т.п.).
+        val addressMarkers = listOf(
+            // латиница
+            "tumani", "tuman", " tum", "ko'chasi", "koʻchasi", "kuchasi", "kochasi",
+            "ko'cha", "koʻcha", "kocha", "mfy", "mahalla", "shahar", "shahri",
+            " sh,", " sh.", "viloyat", "xonadon", " uy", " uy.", "mavzesi", "mavze",
+            "bozori", "do'koni", "doʻkoni", "dokoni", "hududi",
+            // кириллица (узбекская/русская)
+            "тумани", "туман", " тум", "вилоят", "шаҳар", "шахар", "шаҳри", "шахри",
+            "кўчаси", "кучаси", "куча", "кўча", "маҳалла", "махалла", "мфй",
+            "бозори", "дўкони", "дукони", "дўкон", "дукон", "худуди", "хонадон",
+            "уй", "дом", "кв.", "улица", "район", "проспект", "кават", "қават",
+            // русские сокращения
+            "р-он", "р-н", "ул.", "ул ", "просп", "пр-т", "пр-кт", "мкр", "кв-л",
+            "проезд", "шоссе", "тупик"
+        )
+        val hasMarker = addressMarkers.any { lower.contains(it) }
+        // Не должен быть техническим ID (ИНН 9 цифр, Терминал 12 цифр)
+        val notTechnical = !s.matches(Regex("\\d{9,}")) && !s.startsWith("VG") && !s.startsWith("EP")
+        return hasMarker && notTechnical && s.length in 8..300
+    }
+
+    /**
+     * Извлекает ИНН/STIR продавца — девятизначное число, которое на чеке стоит
+     * сразу ПОСЛЕ адреса организации (часто в теге <i>), без явной подписи.
+     *
+     * Стратегия: сначала явные метки STIR/ИНН/TIN, затем — главный случай ofd.soliq.uz:
+     * находим блок с названием организации, доходим до строки адреса и берём первое
+     * 9-значное число, идущее после неё.
+     */
+    private fun extractTin(doc: Document, text: String): String? {
+        // 1. Явные метки STIR/ИНН/TIN.
+        val labels = listOf("STIR", "ИНН", "INN", "TIN")
+        for (lab in labels) {
+            val r = Regex("(?i)\\b$lab\\b[^0-9]{0,20}(\\d{9})\\b")
+            r.find(text)?.let { return it.groupValues[1] }
+        }
+
+        // 2. Девятизначное число сразу после адреса в блоке заголовка организации.
+        tinAfterAddress(doc)?.let { return it }
+
+        // 3. Фолбэк: отдельно стоящий 9-значный токен среди заголовочных элементов.
+        for (el in doc.select("i, b, span, h3, h4")) {
+            val t = el.ownText().trim()
+            if (t.matches(Regex("\\d{9}"))) return t
+        }
+
+        return null
+    }
+
+    /**
+     * Ищет 9-значный ИНН, стоящий после строки адреса. Сканирует контейнеры
+     * с названием организации: внутри каждого проходит по дочерним узлам по порядку
+     * и, как только встретит узел-адрес, возвращает первое следующее 9-значное число.
+     */
+    private fun tinAfterAddress(doc: Document): String? {
+        val nineDigits = Regex("\\d{9}")
+        val containers = doc.select("td, div, p, h1, h2, h3, h4").mapNotNull { it.parent() }.toSet() +
+            doc.select("td, div, p")
+        for (container in containers) {
+            var addressSeen = false
+            for (node in container.childNodes()) {
+                val t = when (node) {
+                    is org.jsoup.nodes.TextNode -> node.text().trim()
+                    is Element -> node.text().trim()
+                    else -> ""
+                }
+                if (t.isEmpty()) continue
+                if (!addressSeen) {
+                    if (isLikelyAddress(t)) addressSeen = true
+                } else {
+                    if (nineDigits.matches(t)) return t
+                    // Внутри значения адреса может встретиться индекс (6 цифр) — пропускаем.
+                    if (t.matches(Regex("\\d{6}"))) continue
+                    // Любой другой существенный текст означает, что ИНН рядом не стоит.
+                    if (t.length > 3 && !t.contains(nineDigits)) break
+                    nineDigits.find(t)?.let { return it.value }
+                }
+            }
+        }
+        return null
+    }
+
+    /**
+     * Извлекает идентификатор терминала/онлайн-ККМ. На чеках soliq.uz он стоит
+     * отдельным жирным токеном сразу под названием/адресом организации и имеет
+     * формат «2 заглавные буквы + 8–20 цифр» (VG, EP, YZ, LG, … — список открытый).
+     */
+    private fun extractTerminalId(doc: Document, text: String): String? {
+        val pattern = Regex("^[A-Z]{2}\\d{8,20}$")
+        // 1. Отдельный токен в DOM (терминал идёт по документу раньше, чем SN/штрихкоды).
+        for (el in doc.select("b, td, span, h3, h4")) {
+            val t = el.ownText().trim()
+            if (pattern.matches(t)) return t
+        }
+        // 2. Явные метки (если терминал подписан).
+        extractByLabel(doc, text, listOf("Terminal ID", "NKM ID", "Терминал ID"))?.let {
+            if (Regex("^[A-Z]{2}\\d{8,20}$").matches(it)) return it
+        }
+        // 3. Фолбэк: токен «2 буквы + 8–20 цифр» в свободном тексте.
+        Regex("\\b([A-Z]{2}\\d{8,20})\\b").find(text)?.let { return it.groupValues[1] }
+        return null
+    }
+
+    private fun extractByLabel(doc: Document, text: String, labels: List<String>): String? {
+        // 1. Поиск точного совпадения в DOM (th/td, dt/dd).
+        //    Значение-дата отбраковывается: ни terminalId, ни SN, ни номер чека
+        //    не могут быть датой (это защищает от случая пустого SN, когда следом идёт дата).
+        labelValue(doc, labels)?.let {
+            val v = cleanValue(it)
+            if (v.isNotEmpty() && !isDateLike(v)) return formatValueIfNeeded(v, labels, text)
+        }
+        
+        // 2. Специфичный фолбэк для EPI/Soliq: данные часто в ячейках <td> или <span>
+        // без явных <th>, просто текстом.
+        if (labels.contains("VG") || labels.contains("EP")) {
+            // Ищем строку "Терминал ID: EP..." или "VG..." или просто "EP..."
+            val rTerm = Regex("(?i)\\b((?:VG|EP)\\d{5,30})\\b")
+            rTerm.find(text)?.let { return it.groupValues[1].uppercase() }
+            
+            // Если префикса нет, ищем 12-значный номер терминала
+            val rDigitOnly = Regex("(?i)(?:Terminal ID|ID|Терминал|NKM ID)\\s*[:\\-]?\\s*(\\d{12})")
+            rDigitOnly.find(text)?.let { return "VG${it.groupValues[1]}" }
+        }
+
+        for (lab in labels) {
+            // Специальный случай для префиксов: они часто идут как часть значения
+            if (lab == "VG" || lab == "EP") {
+                val rPrefix = Regex("(?i)\\b($lab\\d{5,30})\\b")
+                rPrefix.find(text)?.let { return it.groupValues[1].uppercase() }
+            }
+            
+            val r = Regex("(?i)(?:$lab)\\s*[:\\-]?\\s*([^\\n\\r]{1,100})")
+            r.find(text)?.let { 
+                val valPart = it.groupValues[1].trim()
+                // Берем первое слово или всю строку если слов нет
+                val v = cleanValue(valPart.split(' ').firstOrNull() ?: "")
+                // Для имен маркетплейсов берем больше слов
+                val resultValue = if (lab.contains("nomi", ignoreCase = true)) cleanValue(valPart) else v
+                // Дата/время — не валидное значение для SN/terminalId/номера чека.
+                if (resultValue.isNotEmpty() && !isDateLike(resultValue)) {
+                    return formatValueIfNeeded(resultValue, labels, text)
+                }
+            }
+        }
+        
+        // 3. Фолбэк для специфичных полей
+        if (labels.contains("VG") || labels.contains("EP")) {
+            val rTerm = Regex("\\b((?:VG|EP)\\d{10,25})\\b")
+            rTerm.find(text)?.let { return it.groupValues[1] }
+            val rDigitOnly = Regex("\\b(\\d{12,14})\\b")
+            rDigitOnly.find(text)?.let { return "VG${it.groupValues[1]}" }
+        }
+        
+        if (labels.contains("SN")) {
+            // Ищем SN, который НЕ является датой (не содержит точек в формате даты)
+            val rSN = Regex("(?i)SN\\s*[:\\-]?\\s*([a-zA-Z0-9_-]{4,32})")
+            rSN.findAll(text).forEach { m ->
+                val v = m.groupValues[1]
+                if (!v.contains(Regex("\\d{2}\\.\\d{2}\\.\\d{4}"))) {
+                    return v
+                }
+            }
+        }
+
+        return null
+    }
+
+    private fun formatValueIfNeeded(v: String, labels: List<String>, fullText: String): String {
+        // Если это ID терминала и он состоит только из цифр, добавляем VG. 
+        // Но если в тексте рядом есть EP, то это EP.
+        if ((labels.contains("VG") || labels.contains("EP")) && v.all { it.isDigit() }) {
+            return if (fullText.contains("EP$v", ignoreCase = true)) "EP$v" else "VG$v"
+        }
+        return v
+    }
+
+    private fun cleanValue(v: String): String = v.trim().trimEnd(',', '.', ';', ':')
+
+    /** true, если строка похожа на дату и/или время (dd.mm.yyyy, hh:mm и т.п.). */
+    private fun isDateLike(s: String): Boolean =
+        Regex("\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4}").containsMatchIn(s) ||
+            Regex("\\d{1,2}:\\d{2}").containsMatchIn(s)
+
+    private fun extractFiscalFromUrl(url: String): String? {
+        val q = url.substringAfter('?', "")
+        if (q.isEmpty()) return null
+        val params = q.split('&').mapNotNull {
+            val idx = it.indexOf('=')
+            if (idx <= 0) null else it.substring(0, idx).lowercase() to it.substring(idx + 1)
+        }.toMap()
+        return params["s"] ?: params["f"] ?: params["fs"] ?: params["fp"] ?: params["code"]
+    }
+
+    private fun extractFiscalSign(doc: Document, text: String): String? {
+        val labels = listOf("Fiskal belgi", "Фискальный признак", "FP", "FB", "Fiskal belgisi")
+        for (lab in labels) {
+            val r = Regex("(?i)(?:$lab)\\s*[:\\-]?\\s*([0-9]{6,20})")
+            r.find(text)?.let { return it.groupValues[1].trim() }
+        }
+        return labelValue(doc, labels)
+    }
+
+    private fun extractPaymentType(text: String): PaymentType {
+        // Узбекские чеки часто пишут «Naqd pul» (наличные) или «Bank kartasi» (карта).
+        // Если в тексте есть упоминание карты или терминала — считаем картой.
+        val lower = text.lowercase()
+        return if (lower.contains("karta") || lower.contains("terminal") || lower.contains("uzcard") || lower.contains("humo")) {
+            PaymentType.CARD
+        } else if (lower.contains("naqd")) {
+            PaymentType.CASH
+        } else {
+            // По умолчанию для современных чеков (особенно электронных по QR) чаще всего карта.
+            PaymentType.CARD
+        }
     }
 
     private fun normalizeText(s: String): String =
@@ -213,7 +545,9 @@ class ReceiptParser(
         val excluded = setOf(
             "savdo cheki/sotuv", "savdo cheki / sotuv", "savdo cheki", "kassa cheki",
             "soliq", "yuklab olish", "online check", "электронный чек", "qr-чек",
-            "электронный фискальный чек", "fiskal chek"
+            "электронный фискальный чек", "fiskal chek", "чек", "продажа", "sotuv",
+            "xaridingiz uchun rahmat", "xaridingiz uchun rahmat!", "rahmat", "rahmat!",
+            "savdo", "savdo чеки"
         )
         val orgSuffixes = listOf(" AJ", " MCHJ", " OOO", " OAJ", " AO", " ZAO", " JSh", " ИП", " UE", " QK", " ChP")
         // Маркеры узбекских организационно-правовых форм, которые встречаются
@@ -245,7 +579,16 @@ class ReceiptParser(
     private fun cleanSeller(raw: String): String {
         var s = raw.trim().trimEnd(',', '.', ';')
         // Обрезаем хвост вида "ИНН ...", "STIR ...", "ИКПУ ..." и т.п.
-        s = s.replace(Regex("(?i)\\b(?:ИНН|STIR|TIN|ИКПУ|MFO|MXIK|расчётный\\s+счёт)\\b.*"), "").trim()
+        s = s.replace(Regex("(?i)\\b(?:ИНН|STIR|TIN|ИКПУ|MFO|MXIK|расчётный\\s+счёт|Адрес|Manzil)\\b.*"), "").trim()
+        // Если в строке есть адрес (например, район, улица), попробуем обрезать его.
+        // Узбекские адреса часто содержат " tumani", " ko'chasi", " koʻchasi", " kuchasi", " viloyati", " shahri", " sh.", " v."
+        val addressMarkers = listOf(" tumani", " ko'chasi", " koʻchasi", " kuchasi", " viloyati", " shahri", " sh.", " v.")
+        for (m in addressMarkers) {
+            val idx = s.indexOf(m, ignoreCase = true)
+            if (idx > 10) { // Оставляем хотя бы 10 символов названия
+                s = s.substring(0, idx).trim()
+            }
+        }
         return s.ifEmpty { raw.trim() }
     }
 

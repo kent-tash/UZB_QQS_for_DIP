@@ -1,6 +1,5 @@
 package com.example.uzb_qqs_for_dip.ui.screens
 
-import android.app.Activity
 import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -62,6 +61,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.uzb_qqs_for_dip.network.ParsedReceipt
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
+import com.example.uzb_qqs_for_dip.ui.ExistingOwner
 import com.example.uzb_qqs_for_dip.ui.ScanState
 import com.example.uzb_qqs_for_dip.ui.ScanViewModel
 import com.example.uzb_qqs_for_dip.ui.theme.Danger
@@ -69,10 +69,7 @@ import com.example.uzb_qqs_for_dip.ui.theme.Success
 import com.example.uzb_qqs_for_dip.ui.theme.Warning
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
-import com.google.android.gms.common.moduleinstall.ModuleInstall
-import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
-import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import com.example.uzb_qqs_for_dip.util.startQrScanner
 
 @Composable
 fun ScanScreen(
@@ -148,7 +145,7 @@ fun ScanScreen(
                 Button(
                     onClick = {
                         if (!isBusy) {
-                            startScanner(
+                            startQrScanner(
                                 context = context,
                                 onScanned = { scanViewModel.handleScan(it) },
                                 onError = { msg ->
@@ -230,7 +227,7 @@ fun ScanScreen(
                     .padding(horizontal = 20.dp)
                     .wrapContentHeight(),
                 parsed = parsedState.parsed,
-                alreadyExists = parsedState.alreadyExists,
+                existingOwner = parsedState.existingOwner,
                 onSave = {
                     scanViewModel.saveCurrent {
                         Toast.makeText(context, "Чек сохранён", Toast.LENGTH_SHORT).show()
@@ -354,11 +351,12 @@ private fun LoadingCard() {
 private fun ParsedCard(
     modifier: Modifier = Modifier,
     parsed: ParsedReceipt,
-    alreadyExists: Boolean,
+    existingOwner: ExistingOwner? = null,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
     val isValid = parsed.isValid
+    val canSave = isValid && existingOwner !is ExistingOwner.SameUser && existingOwner !is ExistingOwner.OtherUser
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -367,50 +365,72 @@ private fun ParsedCard(
     ) {
         Column(
             Modifier
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
                 .heightIn(max = 540.dp)
                 .padding(20.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                StatusBadge(
-                    icon = if (isValid) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                    color = if (isValid) Success else Danger,
-                    text = if (isValid) "Чек распознан" else "Не все поля распознаны"
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StatusBadge(
+                        icon = if (isValid) Icons.Filled.CheckCircle else Icons.Filled.Error,
+                        color = if (isValid) Success else Danger,
+                        text = if (isValid) "Чек распознан" else "Не все поля распознаны"
+                    )
+                    Spacer(Modifier.weight(1f))
+                }
+                when (existingOwner) {
+                    ExistingOwner.SameUser -> {
+                        Spacer(Modifier.height(8.dp))
+                        StatusBadge(
+                            icon = Icons.Filled.Error,
+                            color = Warning,
+                            text = "Этот чек уже сохранён у вас"
+                        )
+                    }
+                    is ExistingOwner.OtherUser -> {
+                        Spacer(Modifier.height(8.dp))
+                        StatusBadge(
+                            icon = Icons.Filled.Error,
+                            color = Danger,
+                            text = "Данный чек уже есть у пользователя ${existingOwner.fullName}"
+                        )
+                    }
+                    null -> Unit
+                }
+                Spacer(Modifier.height(14.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(14.dp))
+
+                ReceiptField("Дата покупки", parsed.purchasedAt?.let { DateFormat.formatDateTime(it) })
+                ReceiptField("Юр. лицо", parsed.sellerName)
+                ReceiptField("Адрес", parsed.address)
+                ReceiptField("ИНН (STIR)", parsed.tin)
+                ReceiptField(
+                    "Итоговая сумма, сум",
+                    parsed.totalAmountTiyin?.let { MoneyFormat.fromTiyin(it) },
+                    bold = true
                 )
-                Spacer(Modifier.weight(1f))
-            }
-            if (alreadyExists) {
+                ReceiptField(
+                    "НДС (QQS), сум",
+                    parsed.vatAmountTiyin?.let { MoneyFormat.fromTiyin(it) },
+                    bold = true
+                )
                 Spacer(Modifier.height(8.dp))
-                StatusBadge(
-                    icon = Icons.Filled.Error,
-                    color = Warning,
-                    text = "Этот чек уже есть в базе"
+                Text(
+                    parsed.qrUrl,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(Modifier.height(16.dp))
             }
-            Spacer(Modifier.height(14.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(14.dp))
 
-            ReceiptField("Дата покупки", parsed.purchasedAt?.let { DateFormat.formatDateTime(it) })
-            ReceiptField("Юр. лицо", parsed.sellerName)
-            ReceiptField(
-                "Итоговая сумма, сум",
-                parsed.totalAmountTiyin?.let { MoneyFormat.fromTiyin(it) },
-                bold = true
-            )
-            ReceiptField(
-                "НДС (QQS), сум",
-                parsed.vatAmountTiyin?.let { MoneyFormat.fromTiyin(it) },
-                bold = true
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                parsed.qrUrl,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(16.dp))
+            // Фиксированные кнопки внизу карточки
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                     onClick = onCancel,
@@ -419,7 +439,7 @@ private fun ParsedCard(
                 ) { Text("Отмена") }
                 Button(
                     onClick = onSave,
-                    enabled = isValid && !alreadyExists,
+                    enabled = canSave,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -497,41 +517,3 @@ private fun ReceiptField(label: String, value: String?, bold: Boolean = false) {
     }
 }
 
-private fun startScanner(
-    context: Context,
-    onScanned: (String?) -> Unit,
-    onError: (String) -> Unit
-) {
-    val activity = context.findActivity()
-    if (activity == null) {
-        onError("Не удалось открыть сканер: нет активности")
-        return
-    }
-    val options = GmsBarcodeScannerOptions.Builder()
-        .setBarcodeFormats(com.google.mlkit.vision.barcode.common.Barcode.FORMAT_QR_CODE)
-        .enableAutoZoom()
-        .build()
-    val scanner = GmsBarcodeScanning.getClient(activity, options)
-
-    fun launchScan() {
-        scanner.startScan()
-            .addOnSuccessListener { barcode -> onScanned(barcode.rawValue) }
-            .addOnCanceledListener { /* пользователь закрыл */ }
-            .addOnFailureListener { e ->
-                onError("Сканер недоступен: ${e.localizedMessage ?: e::class.simpleName}")
-            }
-    }
-
-    // На некоторых устройствах модуль code-scanner ещё не установлен — заранее загружаем.
-    val moduleInstall = ModuleInstall.getClient(activity)
-    val request = ModuleInstallRequest.newBuilder().addApi(scanner).build()
-    moduleInstall.installModules(request)
-        .addOnSuccessListener { launchScan() }
-        .addOnFailureListener { launchScan() }
-}
-
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is android.content.ContextWrapper -> this.baseContext.findActivity()
-    else -> null
-}

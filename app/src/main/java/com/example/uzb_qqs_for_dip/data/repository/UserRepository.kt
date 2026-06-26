@@ -3,6 +3,7 @@ package com.example.uzb_qqs_for_dip.data.repository
 import android.content.ContentValues
 import com.example.uzb_qqs_for_dip.data.db.DbHelper
 import com.example.uzb_qqs_for_dip.data.model.User
+import com.example.uzb_qqs_for_dip.data.model.UserRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,7 @@ class UserRepository(private val dbHelper: DbHelper) {
         val db = dbHelper.readableDatabase
         val list = mutableListOf<User>()
         db.rawQuery(
-            "SELECT id, full_name, position, initials_surname, created_at FROM users ORDER BY full_name COLLATE NOCASE",
+            "SELECT id, full_name, position, initials_surname, organization, role, created_at FROM users ORDER BY full_name COLLATE NOCASE",
             null
         ).use { c ->
             while (c.moveToNext()) {
@@ -36,7 +37,9 @@ class UserRepository(private val dbHelper: DbHelper) {
                         fullName = c.getString(1),
                         position = c.getString(2),
                         initialsSurname = c.getString(3),
-                        createdAt = c.getLong(4)
+                        organization = c.getString(4),
+                        role = runCatching { UserRole.valueOf(c.getString(5)) }.getOrDefault(UserRole.EMPLOYEE),
+                        createdAt = c.getLong(6)
                     )
                 )
             }
@@ -49,7 +52,7 @@ class UserRepository(private val dbHelper: DbHelper) {
     suspend fun getById(id: Long): User? = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase
         db.rawQuery(
-            "SELECT id, full_name, position, initials_surname, created_at FROM users WHERE id = ?",
+            "SELECT id, full_name, position, initials_surname, organization, role, created_at FROM users WHERE id = ?",
             arrayOf(id.toString())
         ).use { c ->
             if (c.moveToFirst()) {
@@ -58,7 +61,9 @@ class UserRepository(private val dbHelper: DbHelper) {
                     fullName = c.getString(1),
                     position = c.getString(2),
                     initialsSurname = c.getString(3),
-                    createdAt = c.getLong(4)
+                    organization = c.getString(4),
+                    role = runCatching { UserRole.valueOf(c.getString(5)) }.getOrDefault(UserRole.EMPLOYEE),
+                    createdAt = c.getLong(6)
                 )
             } else null
         }
@@ -71,6 +76,8 @@ class UserRepository(private val dbHelper: DbHelper) {
                 put("full_name", user.fullName.trim())
                 put("position", user.position.trim())
                 put("initials_surname", user.initialsSurname.trim())
+                put("organization", user.organization.trim())
+                put("role", user.role.name)
                 put("created_at", user.createdAt)
             }
             val id = db.insertOrThrow("users", null, cv)
@@ -90,6 +97,8 @@ class UserRepository(private val dbHelper: DbHelper) {
                 put("full_name", user.fullName.trim())
                 put("position", user.position.trim())
                 put("initials_surname", user.initialsSurname.trim())
+                put("organization", user.organization.trim())
+                put("role", user.role.name)
             }
             val n = db.update("users", cv, "id = ?", arrayOf(user.id.toString()))
             if (n <= 0) error("Профиль не найден")

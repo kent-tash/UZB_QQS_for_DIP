@@ -6,11 +6,14 @@ package com.example.uzb_qqs_for_dip.data.model
  * @property fullName Полное имя пользователя (для входа и отображения).
  * @property position Должность (используется в шапке и блоке подписи отчёта).
  * @property initialsSurname Запись вида "И.О. Фамилия" — подставляется в подпись PDF.
+ * @property role Роль: EMPLOYEE (сотрудник) или AUDITOR (аудитор).
  */
 data class User(
     val id: Long = 0,
     val fullName: String,
     val position: String,
     val initialsSurname: String,
+    val organization: String = "",
+    val role: UserRole = UserRole.EMPLOYEE,
     val createdAt: Long = System.currentTimeMillis()
 )

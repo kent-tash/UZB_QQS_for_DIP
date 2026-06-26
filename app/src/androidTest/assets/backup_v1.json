@@ -1,0 +1,1024 @@
+{
+  "formatVersion": 1,
+  "exportedAt": 1779888780539,
+  "reportSettings": {
+    "userId": null,
+    "quarter": "Q2",
+    "year": 2026,
+    "from": 1774983600000,
+    "to": 1782845999999,
+    "sortField": "DATE",
+    "sortOrder": "ASC"
+  },
+  "users": [
+    {
+      "id": 2,
+      "fullName": "Нестерук Денис Николаевич",
+      "position": "Сотрудник Посольства",
+      "initialsSurname": "Д.Н. Нестерук",
+      "createdAt": 1778054005592
+    }
+  ],
+  "receipts": [
+    {
+      "userId": 2,
+      "purchasedAt": 1779613860000,
+      "sellerName": "\"GRAND PHARM TRADE\" MCHJ",
+      "totalAmountTiyin": 25960000,
+      "vatAmountTiyin": 2781428,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006033214&r=97970&c=20260524141131&s=414137545501",
+      "rawText": "YZ231006033214 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"GRAND PHARM TRADE\" MCHJ Миробод тумани, Нукус ва Мироншох 8-тор кучалари, кесишувида 303303592 YZ231006033214 Chek raqami : 97970 Onlayn NKM nomi : Pill SN : TS10012020049 24.05.2026, 14:11 Nomi Soni Narxi Доппельгерц актив от А до цинка шип таб №15, Квайссер Фарма Г 1 95,300.00 QQS qiymati 10,210.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4009932007312 MXIK kodi 02106999028000000 MXIK nomi Biologik faol qo’shimchalar ovqat uchun O'lchov birligi iste'mol qutisi=15 dona (qadoq) Markirovka kodi Komitent STIR\/JSHSHIR Апдропс гл капли 0,5% 5мл, \"Ajanta Pharma Limited\" И(Упаковки) 1 60,200.00 QQS qiymati 6,450.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8901111004197 MXIK kodi 03004999073001002 MXIK nomi Moksifloksatsin Апдропс (Ajanta Pharma Ltd) Ko’z tomchilari 0.5 % 5ml flakon-tomizg’ichlar O'lchov birligi dona (flakon (0.5 % 5 ml)) Markirovka kodi 0108901111004197216PAA567ZX4MPE Komitent STIR\/JSHSHIR Офтавиган гель офтальм 1,5мг\/г 5г №1, SION HEALTHCARE Индия(Уп 1 104,000.00 QQS qiymati 11,142.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8906127770166 MXIK kodi 03004570008004001 MXIK nomi Gansiklovir - S01AD09 Офтавиган (UDI PAHRMA PVT. LTD.) oftalmologik gel 1,5 mg\/g, 5 g №1. O'lchov birligi qadoq=1 dona (tuba 1,5 mg\/g, 5 g) Markirovka kodi 0108906127770166217Lj9podXgMyH0 Komitent STIR\/JSHSHIR Пакет рулон маленький \"GRAND\" №300, \"Azia Plast Star\" Узб(Шту 1 100.00 QQS qiymati 10.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2050000589492 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi rulon=1 dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 259,600.00 Bank kartasi turi Shaxsiy Jami to`lov: 259,600.00 Umumiy QQS qiymati 27,814.28 Markirovka kodlari ×",
+      "createdAt": 1779613979801
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779611520000,
+      "sellerName": "\"MAZZALI SUPER FOOD\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 13600000,
+      "vatAmountTiyin": 1457142,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420211614815&r=6313&c=20260524133204&s=123551541523",
+      "rawText": "LG420211614815 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MAZZALI SUPER FOOD\" MAS'ULIYATI CHEKLANGAN JAMIYAT Toshkent shahri, Mirobod tumani, Oybek MFY, Nukus ko'chasi, 16-uy, 16-xonadon 310964418 LG420211614815 Chek raqami : 6313 Onlayn NKM nomi : R_keeper 7 SN : 100894 24.05.2026, 13:32 Nomi Soni Narxi Гуляш из говядины с гречкой 1 35,000.00 QQS qiymati 3,750.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780105141148 MXIK kodi 10202001006000001 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan go’shtli O'lchov birligi dona (portsiya) Markirovka kodi Komitent STIR\/JSHSHIR Котлета куриная по-киевски с пюре 1 35,000.00 QQS qiymati 3,750.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780105141650 MXIK kodi 10202001006000002 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan parranda go’shtli O'lchov birligi sht. (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR Курица Карри с рисом 1 33,000.00 QQS qiymati 3,535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780105142138 MXIK kodi 10202001006000002 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan parranda go’shtli O'lchov birligi sht. (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR Курица по-азиатски с рисом 1 33,000.00 QQS qiymati 3,535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780105142121 MXIK kodi 10202001006000002 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan parranda go’shtli O'lchov birligi sht. (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 136,000.00 Bank kartalari 0.00 Jami to`lov: 136,000.00 Umumiy QQS qiymati 14,571.42 Markirovka kodlari ×",
+      "createdAt": 1779611576747
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779610560000,
+      "sellerName": "\"TIANA-REST\" MCHJ",
+      "totalAmountTiyin": 53130000,
+      "vatAmountTiyin": 5692497,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420004311&r=32072&c=20260524131625&s=925503684438",
+      "rawText": "VG343420004311 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"TIANA-REST\" MCHJ Тошкент шаҳар, Мирзо Улуғбек тумани, ул. Шахрисабз, дом 1 б 311400421 VG343420004311 Chek raqami : 32072 Onlayn NKM nomi : QPOS SN : UZB101518 24.05.2026, 13:16 Nomi Soni Narxi ЧАЙ БАРДАК С ЛИМОНОМ ( ЧАЙНИК) 2 64,000.00 QQS qiymati 6,857.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi qadoq=1 dona (set) Markirovka kodi Komitent STIR\/JSHSHIR Обслуживание 1 48,300.00 QQS qiymati 5,175.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi qadoq=1 dona (set) Markirovka kodi Komitent STIR\/JSHSHIR ХЛЕБ ПОРЦИЯ 2 24,000.00 QQS qiymati 2,571.42 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi qadoq=1 dona (set) Markirovka kodi Komitent STIR\/JSHSHIR ХАВУЧ ПАХЛАВА 1 44,000.00 QQS qiymati 4,714.28 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi qadoq=1 dona (set) Markirovka kodi Komitent STIR\/JSHSHIR ЧЕЧЕВИЧНЫЙ СУП АКЦИЯ 1 0.00 QQS qiymati 0.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi qadoq=1 dona (set) Markirovka kodi Komitent STIR\/JSHSHIR БИБЕР ПЕРЧИК МАРИНОВАННЫЙ ОСТРЫЙ 1 9,000.00 QQS qiymati 964.28 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi qadoq=1 dona (set) Markirovka kodi Komitent STIR\/JSHSHIR РИС ПО-ТУРЕЦКИ 1 18,000.00 QQS qiymati 1,928.57 QQS foizi 12",
+      "createdAt": 1779610626245
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779532140000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 23608000,
+      "vatAmountTiyin": 2529427,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644665&r=104823&c=20260523152908&s=544988441331",
+      "rawText": "LG420230644665 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644665 Chek raqami : 104823 Onlayn NKM nomi : POS2k SN : AFK-20250725-000665 23.05.2026, 15:29 Nomi Soni Narxi Logotipli paket Bio polietilen 7 k gacha 2 1,240.00 QQS qiymati 132.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 21310645 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Tort FRaffaello 100g 1 76,990.00 QQS qiymati 8,248.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8000500078617 MXIK kodi 01704001016019004 MXIK nomi Shakardan konfet Raffaello Bodom yong’oqli tort 100 gr quti O'lchov birligi dona (quti) 100 gramm Markirovka kodi Komitent STIR\/JSHSHIR Limonad \"Черноголовка\" Buratino, 1,5L 1 11,490.00 QQS qiymati 1,231.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780111550170 MXIK kodi 02202002001154029 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) Черноголовка Buratino, PET butilka 1,5 l O'lchov birligi dona (pэt butilka) 1,5 litr Markirovka kodi 010478011155017021EC5kZZtrfuyCd Komitent STIR\/JSHSHIR Ichimlik Coca Cola p\/b, 1,5L 2 27,780.00 QQS qiymati 2,976.42 QQS foizi 12 % Chegirma\/Boshqa 2400\/0 Shtrix kodi 4780069000154 MXIK kodi 02202002001010009 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) COCA-COLA shirin, PET butilka 1,5 l. O'lchov birligi dona (pэt butilka) 1,5 litr Markirovka kodi 0104780069000154217D&6OFC%rEle!0104780069000154217\"Lv4j!z'DmDy Komitent STIR\/JSHSHIR Gazsiz suv Hydrolife Eco p\/i 1,5L 2 9,780.00 QQS qiymati 1,047.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780012960092 MXIK kodi 02201001001011006 MXIK nomi Gazlanmagan suv Hydrolife pet butilka 1,5 l O'lchov birligi dona (pэt butilka) 1,5 litr Markirovka kodi 01047800129600922178=cFtS',Z\"9i0104780012960092217(_5nm\"QoI91% Komitent STIR\/JSHSHI",
+      "createdAt": 1779532239272
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779532140000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 999000,
+      "vatAmountTiyin": 107035,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644665&r=104824&c=20260523152955&s=433601551321",
+      "rawText": "LG420230644665 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644665 Chek raqami : 104824 Onlayn NKM nomi : POS2k SN : AFK-20250725-000665 23.05.2026, 15:29 Nomi Soni Narxi Shokbatoncha KitKat Chunky 2pack 64g 1 13,390.00 QQS qiymati 1,434.64 QQS foizi 12 % Chegirma\/Boshqa 3400\/0 Shtrix kodi 3800020453445 MXIK kodi 01806001001058012 MXIK nomi Shokoladli batonchik Kit-Kat 64 g O'lchov birligi dona (qadoq) 64 gramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 9,990.00 Bank kartasi turi Shaxsiy RRN 614315548910 Jami to`lov: 9,990.00 Umumiy QQS qiymati 1,070.35 Markirovka kodlari ×",
+      "createdAt": 1779532214472
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779531840000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 39723000,
+      "vatAmountTiyin": 4256035,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644664&r=114617&c=20260523152448&s=840126944117",
+      "rawText": "LG420230644664 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644664 Chek raqami : 114617 Onlayn NKM nomi : POS2k SN : AFK-20250725-000664 23.05.2026, 15:24 Nomi Soni Narxi Kakao Nesquik 420g 1 92,990.00 QQS qiymati 9,963.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8445290452979 MXIK kodi 01806002002000000 MXIK nomi Eruvchan kakao ichimligi (kukun) O'lchov birligi gramm Markirovka kodi Komitent STIR\/JSHSHIR Laktozasiz sut Lactel 2% 1L 2 45,980.00 QQS qiymati 4,926.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780100651642 MXIK kodi 00401001001052001 MXIK nomi Sut Lactel laktozasiz sut, karton quti 1 kg O'lchov birligi dona (quti) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Sariyog' Lactel 82,5% 200g 2 67,780.00 QQS qiymati 7,262.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470615 MXIK kodi 00405001001032005 MXIK nomi Sariyog’ (barcha turdagi) Nestle yog’lilik miqdori 82,5%, laminatlangan folga 200 g O'lchov birligi dona (folga) 200 gramm Markirovka kodi Komitent STIR\/JSHSHIR Jardin Deep Dark eriysubl sh\/b 95g 1 56,990.00 QQS qiymati 6,106.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4605246016448 MXIK kodi 00901001001047015 MXIK nomi Maydalangan (kukunsimon) kofe Jardin deep dark eruvchan 95g O'lchov birligi dona (banka) 95 gramm Markirovka kodi Komitent STIR\/JSHSHIR Zaytun yog'i Iberica 2-sovuq siq 500ml 1 83,990.00 QQS qiymati 8,998.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8436024294514 MXIK kodi 01509001001000000 MXIK nomi Zaytun moyi (tozalangan yoki tozalanmagan) O'lchov birligi litr Markirovka kodi Komitent STIR\/JSHSHIR Grek yong'og'i 365 kun 200g 1 34,990.00 QQS qiymati 3,748.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780094930785 MXIK kodi 00801003002000000 MXIK nomi Yeryong’oq O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Logotipli pa",
+      "createdAt": 1779531919784
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779526980000,
+      "sellerName": "\"IPAKCHI-SHUXRAT SAVDO\" MCHJ",
+      "totalAmountTiyin": 13915000,
+      "vatAmountTiyin": 1490893,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=UZ210317223649&r=61640&c=20260523140353&s=964145192390",
+      "rawText": "UZ210317223649 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"IPAKCHI-SHUXRAT SAVDO\" MCHJ Toshkent shah., Yakkasaroy tum., SH. Rustaveli ko'chasi, 12-uy 302296406 UZ210317223649 Chek raqami : 61640 Onlayn NKM nomi : PAX A-930 SN : 1170489326 23.05.2026, 14:03 Nomi Soni Narxi Асосий таомлар, умумий овқатланиш шахобчаларида тайёрланган бал 1 139,150.00 QQS qiymati 14,908.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000003 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan baliq va dengiz mahsulotlaridan O'lchov birligi dona (portsiya) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 139,150.00 Bank kartalari 0.00 Jami to`lov: 139,150.00 Umumiy QQS qiymati 14,908.93 Markirovka kodlari ×",
+      "createdAt": 1779527072256
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779466500000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 64700000,
+      "vatAmountTiyin": 6932143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26821&c=20260522211504&s=224099806921",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26821 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 21:15 Nomi Soni Narxi ПЕЛИКАН разлив (ПЕЛИКАН разлив ПЕЛИКАН Ф Золотистое (Пиво фил 4500 247,500.00 QQS qiymati 26,517.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001011000001 MXIK nomi Alkogolli kokteyllar (barcha turdagi) umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR ФОРЕЛЬ ЮКОЛА развес ( 003 Форель (Микижа) холодного копчения 570 399,000.00 QQS qiymati 42,750.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00305001002000000 MXIK nomi Dudlangan baliq O'lchov birligi gramm Markirovka kodi Komitent STIR\/JSHSHIR ПАКЕТ 1 500.00 QQS qiymati 53.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 647,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 647,000.00 Umumiy QQS qiymati 69,321.43 Markirovka kodlari ×",
+      "createdAt": 1779466635200
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779466260000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 13100000,
+      "vatAmountTiyin": 1403571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26820&c=20260522211141&s=416808149038",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26820 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 21:11 Nomi Soni Narxi ПИВО КРУЖКА (ПЕЛИКАН Ф Золотистое 05) 1 42,000.00 QQS qiymati 4,500.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001011000001 MXIK nomi Alkogolli kokteyllar (barcha turdagi) umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Пиво APPLE CIDER светлое пастеризованное нефильтрованное 6%, 1 33,000.00 QQS qiymati 3,535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02203001001120001 MXIK nomi Pivo APPLE JUICE CIDER FILTRLANMAGAN, Quvvati 6%, Shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 0104780067160140217SYLV'% Komitent STIR\/JSHSHIR КУРТ (Курт классический 8шт 60гр) 4 56,000.00 QQS qiymati 6,000.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00403999005000000 MXIK nomi Qurt O'lchov birligi pachka=60 gramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 131,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 131,000.00 Umumiy QQS qiymati 14,035.71 Markirovka kodlari ×",
+      "createdAt": 1779466550685
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779466140000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 18700000,
+      "vatAmountTiyin": 2003572,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26819&c=20260522210919&s=222924085369",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26819 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 21:09 Nomi Soni Narxi Рыбец копченый (30) 1 30,000.00 QQS qiymati 3,214.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00305001002000000 MXIK nomi Dudlangan baliq O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Арахис китайский карамельный развес 150 42,000.00 QQS qiymati 4,500.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00801003002000000 MXIK nomi Yeryong’oq O'lchov birligi gramm Markirovka kodi Komitent STIR\/JSHSHIR Кавказские Сулугуни (Сыр рассольный \"Danfor\" копченый МДЖ 1 31,000.00 QQS qiymati 3,321.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00406001001000000 MXIK nomi Pishloqlar (barcha turdagi) O'lchov birligi gramm Markirovka kodi Komitent STIR\/JSHSHIR ПИВО КРУЖКА (ГУННАРССОН НФ 05 (Gunnarsson Zwerg кег бочка, 4 3 84,000.00 QQS qiymati 9,000.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001011000001 MXIK nomi Alkogolli kokteyllar (barcha turdagi) umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 187,000.00 Bank kartasi turi Shaxsiy RRN 614216793385 Jami to`lov: 187,000.00 Umumiy QQS qiymati 20,035.72 Markirovka kodlari ×",
+      "createdAt": 1779466541296
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779466080000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 1200000,
+      "vatAmountTiyin": 128571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26818&c=20260522210832&s=116122445447",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26818 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 21:08 Nomi Soni Narxi КУРТ ЕРМАК (Биокурт, пу 10 гр тм \"ERMAK\") 4 12,000.00 QQS qiymati 1,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00403999005017001 MXIK nomi Qurt Ermak sutli qurt, vakuumli qadoq 0,001 kg O'lchov birligi dona (qadoq) 10 gramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 12,000.00 Bank kartalari 0.00 Jami to`lov: 12,000.00 Umumiy QQS qiymati 1,285.71 Markirovka kodlari ×",
+      "createdAt": 1779466529374
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779465600000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 54600000,
+      "vatAmountTiyin": 5850000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26813&c=20260522210056&s=685148209214",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26813 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 21:00 Nomi Soni Narxi ПИВО КРУЖКА (АМЕРИКАНСКИЙ ЛАГЕР 05 (Пиво светлое нефильтрова 3 84,000.00 QQS qiymati 9,000.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001011000001 MXIK nomi Alkogolli kokteyllar (barcha turdagi) umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR ПИВО КРУЖКА (ПЕЛИКАН Ф Золотистое 05) 10 420,000.00 QQS qiymati 45,000.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001011000001 MXIK nomi Alkogolli kokteyllar (barcha turdagi) umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Арахис китайский карамельный развес 150 42,000.00 QQS qiymati 4,500.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00801003002000000 MXIK nomi Yeryong’oq O'lchov birligi gramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 546,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 546,000.00 Umumiy QQS qiymati 58,500.00 Markirovka kodlari ×",
+      "createdAt": 1779465680902
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779463980000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 4700000,
+      "vatAmountTiyin": 503571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26804&c=20260522203334&s=373633496440",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26804 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 20:33 Nomi Soni Narxi Пиво (2) (Volfas Engelman IPA крепость 6% алюминиевая банка 0 1 47,000.00 QQS qiymati 5,035.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02203001001472011 MXIK nomi Pivo Volfas Engelman IPA quvvati 6% alyuminiy banka 0.568 l O'lchov birligi dona (butilka) 0.568 litr Markirovka kodi 010477030123082121isSJFhu Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 47,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 47,000.00 Umumiy QQS qiymati 5,035.71 Markirovka kodlari ×",
+      "createdAt": 1779466517518
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779463680000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 5200000,
+      "vatAmountTiyin": 557142,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26802&c=20260522202826&s=163511354451",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26802 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 20:28 Nomi Soni Narxi Пиво APPLE CIDER светлое пастеризованное нефильтрованное 6%, 1 26,000.00 QQS qiymati 2,785.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02203001001120001 MXIK nomi Pivo APPLE JUICE CIDER FILTRLANMAGAN, Quvvati 6%, Shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 0104780067160140217Bm?V2c Komitent STIR\/JSHSHIR Пиво APPLE CIDER светлое пастеризованное нефильтрованное 6%, 1 26,000.00 QQS qiymati 2,785.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02203001001120001 MXIK nomi Pivo APPLE JUICE CIDER FILTRLANMAGAN, Quvvati 6%, Shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 0104780067160140217*<;NGk Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 52,000.00 Bank kartasi turi Shaxsiy RRN 29697351465 Jami to`lov: 52,000.00 Umumiy QQS qiymati 5,571.42 Markirovka kodlari ×",
+      "createdAt": 1779466557442
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779461820000,
+      "sellerName": "\"BEER BERRY\" MCHJ",
+      "totalAmountTiyin": 30800000,
+      "vatAmountTiyin": 3300000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644864&r=26790&c=20260522195729&s=348960204636",
+      "rawText": "LG420230644864 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BEER BERRY\" MCHJ Toshkent sh, Yakkasaroy tum, Mirobod ko'chasi, 9A-uy,2-Ofis 310267342 LG420230644864 Chek raqami : 26790 Onlayn NKM nomi : PAX A-930 SN : 1170913021 22.05.2026, 19:57 Nomi Soni Narxi Жерех лента 1100 308,000.00 QQS qiymati 33,000.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00305001002000000 MXIK nomi Dudlangan baliq O'lchov birligi gramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 308,000.00 Bank kartasi turi Shaxsiy RRN 614214711589 Jami to`lov: 308,000.00 Umumiy QQS qiymati 33,000.00 Markirovka kodlari ×",
+      "createdAt": 1779466563274
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779374400000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 34000334,
+      "vatAmountTiyin": 3642893,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=482343&c=20260521194047&s=537018249743",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 482343 Onlayn NKM nomi : ARTIX SN : makro602 21.05.2026, 19:40 Nomi Soni Narxi OV OGUREC RAVA KG 0.444 3,103.56 QQS qiymati 332.52 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 02607 MXIK kodi 00707001001000000 MXIK nomi Bodring va kornishonlar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR OVZELEN UKROP SHT 1 3,490.00 QQS qiymati 373.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 08745 MXIK kodi 00709001002000000 MXIK nomi Shivit O'lchov birligi dona (puchok) Markirovka kodi Komitent STIR\/JSHSHIR OVZELEN PETRUSHKA SHT 1 2,690.00 QQS qiymati 288.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 08747 MXIK kodi 00709001003000000 MXIK nomi Petrushka ko’kati O'lchov birligi dona (puchok) Markirovka kodi Komitent STIR\/JSHSHIR STPOROSH PERSIL AVTO SOV 15KG 1 53,790.00 QQS qiymati 5,763.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 9000101585797 MXIK kodi 03402003002150020 MXIK nomi Kir yuvish kukuni (avtomat) Persil marvaridlar verneldan yangi ifor, paket 1,5kg O'lchov birligi dona (paket) 1.5 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR OV ZELEN LUK SHT 1 3,990.00 QQS qiymati 427.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 00146 MXIK kodi 00709001914000000 MXIK nomi Ko’k piyoz O'lchov birligi dona (puchok) Markirovka kodi Komitent STIR\/JSHSHIR KOLB SAGBAN PKOPCH OXOT KG 0.222 23,529.78 QQS qiymati 2,521.05 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 00885 MXIK kodi 01601001001000000 MXIK nomi Kolbasa (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SOL DVANN ELIXIRICA MORSKAYA 500GR 1 19,490.00 QQS qiymati 2,088.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4610117649601 MXIK kodi 03307001038000000 MXIK nomi Vanna qabul qilish uchun vosita O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR SOL DVANN ELIXIRICA MAGNEVAYA 500GR 1 19,4",
+      "createdAt": 1779374494395
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779123300000,
+      "sellerName": "\"ASIA GRADUS\" MCHJ",
+      "totalAmountTiyin": 17800000,
+      "vatAmountTiyin": 1907143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006006067&r=35732&c=20260518215514&s=851083234404",
+      "rawText": "YZ231006006067 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ASIA GRADUS\" MCHJ г. Ташкент, Мирабадский район, пересечение улиц Нукус дом 83-А 307489730 YZ231006006067 Chek raqami : 35732 Onlayn NKM nomi : Штрих-М Кассир 5 SN : 2320221101859 18.05.2026, 21:55 Nomi Soni Narxi Вино Laguna Riesling белое сухое 0,75л 1 90,000.00 QQS qiymati 9,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780011420764 MXIK kodi 02204001001707001 MXIK nomi Vino LAGUNA RIESLING Quvvati 11%, Shisha butilka 0,75 l O'lchov birligi dona (butilka) 0.75 litr Markirovka kodi 0104780011420764217>m_qUP Komitent STIR\/JSHSHIR Коньяк Bagizagan Samarkand 5 летний (простой) 05л 1 88,000.00 QQS qiymati 9,428.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780011421648 MXIK kodi 02208002001139004 MXIK nomi Konyak Bagizagan 5 yillik \"SAMARKAND BAGIZAGAN\" quvvati 40% shisha butilka 0.5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 0104780011421648217>SMn_Q Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 178,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 178,000.00 Umumiy QQS qiymati 19,071.43 Markirovka kodlari ×",
+      "createdAt": 1779372990465
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779121020000,
+      "sellerName": "\"ARIGEL GROUP\" MCHJ",
+      "totalAmountTiyin": 97800000,
+      "vatAmountTiyin": 10478571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006019918&r=4575&c=20260518211726&s=478220342725",
+      "rawText": "YZ231006019918 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ARIGEL GROUP\" MCHJ Toshkent shahar,Mirobod tumani,Nukus 4 Tor ko'chasi,90 A uy 304405038 YZ231006019918 Chek raqami : 4575 Onlayn NKM nomi : PAX A-930 SN : 1170915455 18.05.2026, 21:17 Nomi Soni Narxi Основные блюда, прочие, приготовленные в заведении общественног 1 788,000.00 QQS qiymati 84,428.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi qadoq=1 dona (set) Markirovka kodi Komitent STIR\/JSHSHIR Разлив Пиво: ZATECKY GUS, NEFILTROVANY 0,5 л 4 152,000.00 QQS qiymati 16,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780015832334 MXIK kodi 02203001001313007 MXIK nomi Pivo ZATECKY GUS NEFILTROVANY quvvati 4,4% keg bochka 30 l O'lchov birligi dona (keg bochka) 30 litr Markirovka kodi Komitent STIR\/JSHSHIR Разлив пиво Туборг 05 л 1 38,000.00 QQS qiymati 4,071.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780015831351 MXIK kodi 02203001001094002 MXIK nomi Pivo TUBORG Alkogolli 4,5%, KEG bochka 30 litr O'lchov birligi dona (KЭG bochka)30 litr Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 978,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 978,000.00 Umumiy QQS qiymati 104,785.71 Markirovka kodlari ×",
+      "createdAt": 1779121090785
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779115020000,
+      "sellerName": "\"ZOO LITTLE\" MCHJ",
+      "totalAmountTiyin": 14600000,
+      "vatAmountTiyin": 1564286,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG496170003078&r=696&c=20260518193729&s=300392932618",
+      "rawText": "VG496170003078 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ZOO LITTLE\" MCHJ Toshkent sh, Mirobod tum, Mirobod MFY, Nukus kochasi, 88 uy, 73 xonadon. 311067194 VG496170003078 Chek raqami : 696 Onlayn NKM nomi : PAX A-930 SN : 1171617875 18.05.2026, 19:37 Nomi Soni Narxi (LO-70112) 900 гр LOLO PREMIUM FOR HAMSTER 1 146,000.00 QQS qiymati 15,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02309001001000000 MXIK nomi Ozuqa va ozuqa qo’shimchalari (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 146,000.00 Bank kartalari 0.00 Jami to`lov: 146,000.00 Umumiy QQS qiymati 15,642.86 Markirovka kodlari ×",
+      "createdAt": 1779115096744
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779089280000,
+      "sellerName": "\"VILLA-POBEDA\" MCHJ",
+      "totalAmountTiyin": 88000000,
+      "vatAmountTiyin": 9428571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG544170011407&r=336&c=20260518122816&s=038488153334",
+      "rawText": "VG544170011407 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"VILLA-POBEDA\" MCHJ Toshkent shah., Yangihayot tum., Sputnik 7-mavze, 1-uy 310441198 VG544170011407 Chek raqami : 336 Onlayn NKM nomi : PAX A-930 SN : 1171586640 18.05.2026, 12:28 Nomi Soni Narxi Взрослый входной 1 880,000.00 QQS qiymati 94,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202002004000002 MXIK nomi To’lovlarning boshqa turlari umumiy ovqatlanish shaxobchasiga kirish uchun to’lov O'lchov birligi so’m Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 880,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 880,000.00 Umumiy QQS qiymati 94,285.71 Markirovka kodlari ×",
+      "createdAt": 1779092497279
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1779024240000,
+      "sellerName": "\"RETAIL TRADE EAST\" MCHJ",
+      "totalAmountTiyin": 1700000,
+      "vatAmountTiyin": 182143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420010643&r=37614&c=20260517182412&s=158986528105",
+      "rawText": "VG343420010643 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"RETAIL TRADE EAST\" MCHJ \"г. Ташкент, Мирабадский район, улица Авлиё ота в торговом ряду рядом с рынком \"\"Миробод\"\", д. 14-15\" 309532637 VG343420010643 Chek raqami : 37614 Onlayn NKM nomi : Set Retail-10 SN : 100136 17.05.2026, 18:24 Nomi Soni Narxi Tirnoq qisqichlari Glam&Glam 1 17,000.00 QQS qiymati 1,821.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4650274146544 MXIK kodi 08214001008000000 MXIK nomi Manikyur yoki pedikyur asboblari (shu jumladan to’plamlarda) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 17,000.00 Bank kartalari 0.00 Jami to`lov: 17,000.00 Umumiy QQS qiymati 1,821.43 Markirovka kodlari ×",
+      "createdAt": 1779024282418
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778994300000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 12842000,
+      "vatAmountTiyin": 1375930,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=478420&c=20260517100551&s=003667351553",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 478420 Onlayn NKM nomi : ARTIX SN : makro602 17.05.2026, 10:05 Nomi Soni Narxi JEV REZINKA RELAX PEPPERMINT 13,5 GR 1 5,490.00 QQS qiymati 476.79 QQS foizi 12 % Chegirma\/Boshqa 1040\/0 Shtrix kodi 7622201137861 MXIK kodi 02106999018090001 MXIK nomi Shakar qo’shilmagan saqich Relax peppermint 13,5g O'lchov birligi dona (qadoq) 3.5 gramm Markirovka kodi Komitent STIR\/JSHSHIR DETPECHFRUTO NYANYA PSHENS ZEM50GR 1 16,990.00 QQS qiymati 1,820.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338009957 MXIK kodi 01905012001000000 MXIK nomi Har xil turdagi pechenyelar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SALATIK FRUTO NYANYA IZ FRUKT 5+90GR 1 12,990.00 QQS qiymati 1,391.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338007700 MXIK kodi 01904001002027038 MXIK nomi Don va boshoqli o’simliklardan tayyor oziq-ovqat mahsulotlari ФрутоНяня mevali salat 90g O'lchov birligi dona (qadoq) 90 gramm Markirovka kodi Komitent STIR\/JSHSHIR FRUNYA PYURE YABLMALINMELISSA 90GR 1 13,490.00 QQS qiymati 1,445.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338011882 MXIK kodi 02007002005000000 MXIK nomi Meva pyuresi O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR FRUKKUSO FRUTNYAN YABLPERMAR 15GR 1 16,990.00 QQS qiymati 1,601.79 QQS foizi 12 % Chegirma\/Boshqa 2040\/0 Shtrix kodi 4600338010700 MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SANTAL SUV 05L BEZ GAZA 1 3,390.00 QQS qiymati 363.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470509 MXIK kodi 02201001001348003 MXIK nomi Gazlanmagan suv Santal pet butilka 0,5 l O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 0104780042470509217g>xeqTZCQdqx Komitent STIR\/JSHSHIR FRUKKUSO FRUTNYAN YABLPERMA",
+      "createdAt": 1778994857197
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778933640000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 10583000,
+      "vatAmountTiyin": 1133893,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420034178&r=91160&c=20260516171406&s=566024421831",
+      "rawText": "VG343420034178 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Яккасарайский р-он, Улица Бобура,6 дом 202099756 VG343420034178 Chek raqami : 91160 Onlayn NKM nomi : POS2k SN : STS-20200617-000053 16.05.2026, 17:14 Nomi Soni Narxi Banan Ekvador, kg 0.462 10,390.00 QQS qiymati 1,113.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2010077004625 MXIK kodi 00803001001000000 MXIK nomi Banan, yangi yoki quritilgan O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Desert \"ФрутоНяня\" qulolban 7oy 90g 1 12,990.00 QQS qiymati 1,391.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338006574 MXIK kodi 02004001004005001 MXIK nomi Sirka yoki sirka kislotasi qo’shilmagan holda pishirilgan yoki konservalangan muzlatilmagan sabzavotlar ФрутоНяня desert qulupnay olma banan 7m 90g O'lchov birligi dona (tetra pak) 90 gramm Markirovka kodi Komitent STIR\/JSHSHIR Pyure \"ФрутоНяня\" mevali salat 90g 1 12,490.00 QQS qiymati 1,338.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338007700 MXIK kodi 01904001002027038 MXIK nomi Don va boshoqli o’simliklardan tayyor oziq-ovqat mahsulotlari ФрутоНяня mevali salat 90g O'lchov birligi dona (qadoq) 90 gramm Markirovka kodi Komitent STIR\/JSHSHIR Biskvit Barni shokolad 30g 1 6,490.00 QQS qiymati 695.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 7622210336729 MXIK kodi 01905007001153005 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) Барни shokolad 30 gr. O'lchov birligi dona (quti) 30 gramm Markirovka kodi Komitent STIR\/JSHSHIR Biskvit Barni shokolad 30g 1 6,490.00 QQS qiymati 695.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600375913781 MXIK kodi 01905007001153005 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) Барни shokolad 30 gr. O'lchov birligi dona (quti) 30 gramm Markirovka kodi Komitent STIR\/JSHSHIR Sosiska ROZMETOV Sutlu vakuum, 400g 1 39,990.00 QQS qiymati 4,284.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtr",
+      "createdAt": 1778938093514
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778927460000,
+      "sellerName": "\"MADINA-QANDOLAT\" MCHJ",
+      "totalAmountTiyin": 6100000,
+      "vatAmountTiyin": 653571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420211642233&r=7393&c=20260516153101&s=545481595515",
+      "rawText": "LG420211642233 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MADINA-QANDOLAT\" MCHJ Мехржон кучаси, 45-уй 306080395 LG420211642233 Chek raqami : 7393 Onlayn NKM nomi : E-POS SN : 570277 16.05.2026, 15:31 Nomi Soni Narxi Имбирный пряник Капкейк 1 27,000.00 QQS qiymati 2,892.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Вода без газа 05л Bonaqua 1 5,000.00 QQS qiymati 535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02201001001268002 MXIK nomi Gazlanmagan suv Bonaqua pet butilka 0,5 l O'lchov birligi dona (pet butilka) 0.50 litr Markirovka kodi 0104780069000086217&9G(Y7UpNYbi Komitent STIR\/JSHSHIR ЛИМОНАД ЙОГУРТ АНАНАС Г\/П 1 29,000.00 QQS qiymati 3,107.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001010000002 MXIK nomi Alkogolsiz ichimliklar qahva va qahva tarkibli ichimliklar, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (krujka\/stakan) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 61,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 61,000.00 Umumiy QQS qiymati 6,535.71 Markirovka kodlari ×",
+      "createdAt": 1778927481823
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778912400000,
+      "sellerName": "\"UMAR SMART\" MCHJ",
+      "totalAmountTiyin": 15000000,
+      "vatAmountTiyin": 1607143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420211637818&r=588&c=20260516112021&s=590171155103",
+      "rawText": "LG420211637818 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"UMAR SMART\" MCHJ Toshkent shahri, Yangihayot tumani, Choshtepa MFY, Uzar ko'chasi, 130-uy (Toshkent shahri, Yangihayot tumani, Choshtepa MFY, Uzar ko'chasi, 130-uy) 306972432 LG420211637818 Chek raqami : 588 Onlayn NKM nomi : A-PAY P10 SN : P10A15251227001963 16.05.2026, 11:20 Nomi Soni Narxi Услуги развлекательных и тематических парков (аттракционы, кар 150000 150,000.00 QQS qiymati 16,071.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 6851 MXIK kodi 11003001002000000 MXIK nomi Ko’ngilochar va tematik parklar xizmatlari (attraksionlar, karusellar va boshqalar) O'lchov birligi xizmat (marta) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 150,000.00 Bank kartalari 0.00 Jami to`lov: 150,000.00 Umumiy QQS qiymati 16,071.43 Markirovka kodlari ×",
+      "createdAt": 1778913409224
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778856540000,
+      "sellerName": "\"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 13500000,
+      "vatAmountTiyin": 1446429,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230604913&r=18476&c=20260515194943&s=276922840530",
+      "rawText": "LG420230604913 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT ул. Нукус, дом 37 306080395 LG420230604913 Chek raqami : 18476 Onlayn NKM nomi : iiko Fiscal SN : iiko217 15.05.2026, 19:49 Nomi Soni Narxi Круассан шоколадный 1 шт 1 28,000.00 QQS qiymati 3,000.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Круассан Миндальный 1 шт 1 31,000.00 QQS qiymati 3,321.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Ватрушки 1 шт 1 10,000.00 QQS qiymati 1,071.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Пельмени мини цветные 1 шт 1 59,000.00 QQS qiymati 6,321.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR SV-50137 1 шт 1 7,000.00 QQS qiymati 750.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 03406001001000006 MXIK nomi Sham dekorativnыe dlya tortov O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 135,000.00 Bank kartalari 0.00 Jami to`lov: 135,000.00 Umumiy QQS qiymati 14,464.29 Markirovka kodlari ×",
+      "createdAt": 1778900189653
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778848560000,
+      "sellerName": "\"CHEESE DAY\" MCHJ",
+      "totalAmountTiyin": 8540000,
+      "vatAmountTiyin": 915000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420012599&r=89392&c=20260515173657&s=073845174171",
+      "rawText": "VG343420012599 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"CHEESE DAY\" MCHJ Миробод тумани, Миробод дехкон бозори худуди, 1 кават савдо дукони 309896398 VG343420012599 Chek raqami : 89392 Onlayn NKM nomi : Set Retail-10 SN : 101680 15.05.2026, 17:36 Nomi Soni Narxi TOYINTIRILGAN GREK YOGURTI DOBROYE DEREVENSKOYE UTRO 5% 180 GR 1 11,500.00 QQS qiymati 1,232.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780104701152 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR TVOROG KAMILKA 9% 200 GR 1 14,500.00 QQS qiymati 1,553.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780110080197 MXIK kodi 00406002001000000 MXIK nomi Tvorog (barcha turdagi) O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR ICHIMLIKLI YOGURT ACTIMEL KIDS IMUNNOVITAMIN 1X95 - QULUPNAY - 6 59,400.00 QQS qiymati 6,364.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8696368202617 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 85,400.00 Bank kartalari 0.00 Jami to`lov: 85,400.00 Umumiy QQS qiymati 9,150.00 Markirovka kodlari ×",
+      "createdAt": 1778850623108
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778736600000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 65641700,
+      "vatAmountTiyin": 7033039,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644665&r=100541&c=20260514103046&s=134073035349",
+      "rawText": "LG420230644665 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644665 Chek raqami : 100541 Onlayn NKM nomi : POS2k SN : AFK-20250725-000665 14.05.2026, 10:30 Nomi Soni Narxi Idish yuvu\/vosita FAIRY Olma, 500ml 1 29,990.00 QQS qiymati 3,213.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8700216992602 MXIK kodi 03402002001000000 MXIK nomi Idish yuvish vositasi O'lchov birligi plastik butilka=500 millilitr Markirovka kodi Komitent STIR\/JSHSHIR Tish pasta Splat prowhite plus 100g 1 36,990.00 QQS qiymati 3,963.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4603014023704 MXIK kodi 03306001001040002 MXIK nomi Tish pastasi Splat Professional WHITE PLUS, tuba 100ml O'lchov birligi dona (tuba) 100 millilitr Markirovka kodi Komitent STIR\/JSHSHIR Chuchvara Mali mol go'shtidan 500±3g 1 54,990.00 QQS qiymati 5,891.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780066080296 MXIK kodi 01905999001000000 MXIK nomi Yarim tayyor un mahsulotlari (barcha turlari) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Bodring , kg 0.438 4,376.00 QQS qiymati 468.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2010091004380 MXIK kodi 00707001001000000 MXIK nomi Bodring va kornishonlar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Sariyog' Musaffo 82,5% 200g 1 38,490.00 QQS qiymati 4,123.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780047220079 MXIK kodi 00405001001031004 MXIK nomi Sariyog’ (barcha turdagi) Musaffo yog’lilik miqdori 82,5%, metall paket 200 g O'lchov birligi dona (paket) 200 gramm Markirovka kodi Komitent STIR\/JSHSHIR Baqlajon oddiy issiqxona Ozb, kg 0.326 6,517.00 QQS qiymati 698.25 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2011780003264 MXIK kodi 00799999002000000 MXIK nomi Baqlajon O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Kaliforniya qalampir shir",
+      "createdAt": 1778769024884
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778503800000,
+      "sellerName": "\"GRAND PHARM TRADE\" MCHJ",
+      "totalAmountTiyin": 11870000,
+      "vatAmountTiyin": 1271786,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006033214&r=96032&c=20260511175008&s=559259631993",
+      "rawText": "YZ231006033214 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"GRAND PHARM TRADE\" MCHJ Миробод тумани, Нукус ва Мироншох 8-тор кучалари, кесишувида 303303592 YZ231006033214 Chek raqami : 96032 Onlayn NKM nomi : Pill SN : TS10012020049 11.05.2026, 17:50 Nomi Soni Narxi Гель-лубрикант Durex Play Sweet Strawbery 50мл, \"Reckitt Benc 1 118,700.00 QQS qiymati 12,717.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4680012392001 MXIK kodi 03304006007000000 MXIK nomi Intim gel (mus) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 118,700.00 Bank kartalari 0.00 Jami to`lov: 118,700.00 Umumiy QQS qiymati 12,717.86 Markirovka kodlari ×",
+      "createdAt": 1778504369565
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778503680000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 15135608,
+      "vatAmountTiyin": 1621672,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=472809&c=20260511174810&s=519050160109",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 472809 Onlayn NKM nomi : ARTIX SN : makro602 11.05.2026, 17:48 Nomi Soni Narxi SHAMELSEGIALNAPUVDOBTONKVOL400M 1 57,990.00 QQS qiymati 4,923.21 QQS foizi 12 % Chegirma\/Boshqa 12040\/0 Shtrix kodi 3600524196608 MXIK kodi 03305005001000000 MXIK nomi Shampun (barcha turlari) O'lchov birligi litr Markirovka kodi Komitent STIR\/JSHSHIR OV MORKOV KRASNMITIY KG 0.218 1,741.82 QQS qiymati 186.62 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 00689 MXIK kodi 00706001001000000 MXIK nomi Sabzi O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR OV LUK NOVIY KG 0.56 2,794.40 QQS qiymati 299.40 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 02602 MXIK kodi 00703001001000000 MXIK nomi Piyoz O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR FR YABL GOLDEN KRUPNIY KG 1.014 30,409.86 QQS qiymati 3,258.20 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 07965 MXIK kodi 00808001001000000 MXIK nomi Olma (barcha navlar) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KRUPA PASSIM PERLOVJEMCHVARPAK400GR 1 15,490.00 QQS qiymati 1,659.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4605093013041 MXIK kodi 01104001003001003 MXIK nomi Ovsyanka yormasi (barcha navlar) Passim Marvarid arpa yormalari 400 gr quti O'lchov birligi dona (quti) 400 gramm Markirovka kodi Komitent STIR\/JSHSHIR UVELKA KRUPA GRECHYADRICA BYSRAZ80GR 1 20,990.00 QQS qiymati 2,248.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4607016245485 MXIK kodi 01104002001000000 MXIK nomi Bug’doy yormalari - tariq (barcha navlar) O'lchov birligi gramm Markirovka kodi Komitent STIR\/JSHSHIR FRUKKUSOCFRUTNKLUBBAN12+15GR 1 16,990.00 QQS qiymati 1,820.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338008592 MXIK kodi 01704001019002002 MXIK nomi Pastila ФрутоНяня mevali qulupnay -banan bo’laklari 15g O'lchov birligi dona (qiyom) 15",
+      "createdAt": 1778504373051
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778502360000,
+      "sellerName": "\"PRIME ECO FOODS\" MCHJ",
+      "totalAmountTiyin": 66300000,
+      "vatAmountTiyin": 7103571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420008066&r=28182&c=20260511172649&s=051322266370",
+      "rawText": "VG343420008066 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"PRIME ECO FOODS\" MCHJ Toshkent sh.,mirobod tum.,Buxoro kochasi 24-uy 305218332 VG343420008066 Chek raqami : 28182 Onlayn NKM nomi : Smart One SN : 030700110020052240400925 11.05.2026, 17:26 Nomi Soni Narxi Комплекс овқатланиш рационлари, умумий овқатланиш шахобчаларида 1 663,000.00 QQS qiymati 71,035.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001009000002 MXIK nomi Kompleks ovqatlanish ratsionlari umumiy ovqatlanish shaxobchalarida tayyorlangan tushliklar (shu jumladan, tantanali marosimlarda) O'lchov birligi dona (set) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 663,000.00 Bank kartalari 0.00 Jami to`lov: 663,000.00 Umumiy QQS qiymati 71,035.71 Markirovka kodlari ×",
+      "createdAt": 1778502493214
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778494440000,
+      "sellerName": "\"PRIMAVERA\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 9600000,
+      "vatAmountTiyin": 1028571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230616171&r=23309&c=20260511151407&s=391410700599",
+      "rawText": "LG420230616171 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"PRIMAVERA\" MAS'ULIYATI CHEKLANGAN JAMIYAT Toshkent shahri, Shayxontohur tumani, Olmazor MFY, Yangi Toshkent ko'chasi, 1-uy 305363724 LG420230616171 Chek raqami : 23309 Onlayn NKM nomi : iiko Fiscal SN : iiko388 11.05.2026, 15:14 Nomi Soni Narxi Стакан 3 вкуса\/32000 3 96,000.00 QQS qiymati 10,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001008000003 MXIK nomi Desertlar boshqalar, umumiy ovqatlanish shaxobchalarida sotiladigan (shu jumladan tayyorlangan) O'lchov birligi dona (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 96,000.00 Bank kartalari 0.00 Jami to`lov: 96,000.00 Umumiy QQS qiymati 10,285.71 Markirovka kodlari ×",
+      "createdAt": 1778494949623
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778472600000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 1199000,
+      "vatAmountTiyin": 128464,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=472400&c=20260511091032&s=090214870481",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 472400 Onlayn NKM nomi : ARTIX SN : makro602 11.05.2026, 09:10 Nomi Soni Narxi MOY HLEB BATON REZANNIY 380GR 1 11,990.00 QQS qiymati 1,284.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780025510208 MXIK kodi 01905002008004004 MXIK nomi Baton Мой Хлеб Baton kesilgan, Polietilenpaket 1 dona 300 g. O'lchov birligi dona (paket) 300 gramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 11,990.00 Bank kartasi turi Shaxsiy Jami to`lov: 11,990.00 Umumiy QQS qiymati 1,284.64 Markirovka kodlari ×",
+      "createdAt": 1778472670765
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778405040000,
+      "sellerName": "\"PENTAZONE-5\" MCHJ",
+      "totalAmountTiyin": 12000000,
+      "vatAmountTiyin": 1285714,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006013935&r=15488&c=20260510142459&s=060036153832",
+      "rawText": "YZ231006013935 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"PENTAZONE-5\" MCHJ Toshkent shah., Yakkasaroy tum., Bobur ko'chasi, 6-uy 308929498 YZ231006013935 Chek raqami : 15488 Onlayn NKM nomi : PAX A-930 SN : 1170817690 10.05.2026, 14:24 Nomi Soni Narxi зеленый браслет 1 110,000.00 QQS qiymati 11,785.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11003001002000000 MXIK nomi Ko’ngilochar va tematik parklar xizmatlari (attraksionlar, karusellar va boshqalar) O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR сопровождение 1 10,000.00 QQS qiymati 1,071.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11003001002000000 MXIK nomi Ko’ngilochar va tematik parklar xizmatlari (attraksionlar, karusellar va boshqalar) O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 120,000.00 Bank kartasi turi Shaxsiy RRN 613014516182 Jami to`lov: 120,000.00 Umumiy QQS qiymati 12,857.14 Markirovka kodlari ×",
+      "createdAt": 1778405320651
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778403900000,
+      "sellerName": "\"MIRZO-BOBUR\" MCHJ",
+      "totalAmountTiyin": 11200000,
+      "vatAmountTiyin": 1200000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006023493&r=49518&c=20260510140552&s=462259047223",
+      "rawText": "YZ231006023493 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MIRZO-BOBUR\" MCHJ Toshkent shahar, Yakkasaroy tumani,Rakatboshi MFY, ko'ch. Bobur, 6-uy 200992329 YZ231006023493 Chek raqami : 49518 Onlayn NKM nomi : Fiscal Box SN : 10009259 10.05.2026, 14:05 Nomi Soni Narxi Фреш яблочно-морковный 350мл 2 100,000.00 QQS qiymati 10,714.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001010000003 MXIK nomi Alkogolsiz ichimliklar boshqalar (kompotlar, kvas, mors, limonadlar va boshqalar), umumiy ovqatlanish shaxobchalarida tayyorlangan (tayyorlash jarayonida raqamli markirovkalanadigan ichimliklardan foydalanilmagan) O'lchov birligi dona (krujka\/stakan\/grafin) Markirovka kodi Komitent STIR\/JSHSHIR Яблоко 150г 1 12,000.00 QQS qiymati 1,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001007000001 MXIK nomi Garnirlar, souslar va boshqa qo’shimchalar (topinglar) umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 112,000.00 Bank kartalari 0.00 Jami to`lov: 112,000.00 Umumiy QQS qiymati 12,000.00 Markirovka kodlari ×",
+      "createdAt": 1778403980791
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778397060000,
+      "sellerName": "\"GRAND PHARM TRADE\" MCHJ",
+      "totalAmountTiyin": 167300,
+      "vatAmountTiyin": 17925,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006033214&r=95798&c=20260510121146&s=252545824140",
+      "rawText": "YZ231006033214 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"GRAND PHARM TRADE\" MCHJ Миробод тумани, Нукус ва Мироншох 8-тор кучалари, кесишувида 303303592 YZ231006033214 Chek raqami : 95798 Onlayn NKM nomi : Pill SN : TS10012020049 10.05.2026, 12:11 Nomi Soni Narxi Аскорбиновая к-та с сахар со вкус апельсина таб 25мг №10, Ас 1 1,673.00 QQS qiymati 179.25 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2050000626685 MXIK kodi 02106999028000000 MXIK nomi Biologik faol qo’shimchalar ovqat uchun O'lchov birligi qadoq=10 dona (qadoq) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 1,673.00 Bank kartalari 0.00 Jami to`lov: 1,673.00 Umumiy QQS qiymati 179.25 Markirovka kodlari ×",
+      "createdAt": 1778397730037
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778394480000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 14003718,
+      "vatAmountTiyin": 1500398,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=336945&c=20260510112809&s=595341512335",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 336945 Onlayn NKM nomi : ARTIX SN : makro603 10.05.2026, 11:28 Nomi Soni Narxi OV BAKLAJAN TEPLICA KG 0.49 12,735.10 QQS qiymati 942.38 QQS foizi 12 % Chegirma\/Boshqa 3939.6\/0 Shtrix kodi 02587 MXIK kodi 00799999002000000 MXIK nomi Baqlajon O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR OV PEREC JELTIY KALFR KG 0.208 9,981.92 QQS qiymati 1,069.49 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 00720 MXIK kodi 00799999010000000 MXIK nomi Bulg’or qalampiri O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR OV MORKOV KRASN NOVAYA KG 0.214 2,565.86 QQS qiymati 274.91 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 03961 MXIK kodi 00706001001000000 MXIK nomi Sabzi O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR OV LUK NOVIY KG 0.282 1,407.18 QQS qiymati 119.35 QQS foizi 12 % Chegirma\/Boshqa 293.28\/0 Shtrix kodi 02602 MXIK kodi 00703001001000000 MXIK nomi Piyoz O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR OVZELEN UKROP SHT 1 2,690.00 QQS qiymati 288.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 08745 MXIK kodi 00709001002000000 MXIK nomi Shivit O'lchov birligi dona (puchok) Markirovka kodi Komitent STIR\/JSHSHIR KOFE V KAPS BRASILE 52GR 1 44,990.00 QQS qiymati 4,820.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8000604900487 MXIK kodi 00901001001000000 MXIK nomi Maydalangan (kukunsimon) kofe O'lchov birligi pachka=52 gramm Markirovka kodi Komitent STIR\/JSHSHIR JEV REZINKA RELAX PEPPERMINT 13,5 GR 1 5,490.00 QQS qiymati 476.79 QQS foizi 12 % Chegirma\/Boshqa 1040\/0 Shtrix kodi 7622201137861 MXIK kodi 02106999018090001 MXIK nomi Shakar qo’shilmagan saqich Relax peppermint 13,5g O'lchov birligi dona (qadoq) 3.5 gramm Markirovka kodi Komitent STIR\/JSHSHIR MILO OLIVIA MUSKUSNAYA MALVA 140GR 1 6,990.00 QQS qiymati 748.93 QQS foizi 12 % Chegirma\/Boshqa",
+      "createdAt": 1778395002744
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778318340000,
+      "sellerName": "\"UZUMFERMER\" MCHJ",
+      "totalAmountTiyin": 43000000,
+      "vatAmountTiyin": 2892858,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420038658&r=7107&c=20260509141909&s=881288275441",
+      "rawText": "VG343420038658 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"UZUMFERMER\" MCHJ Тошкент вилояти Кибрай тумани Хайдаробод мфй, Миробод кучаси 1\/1 уй 306636484 VG343420038658 Chek raqami : 7107 Onlayn NKM nomi : iiko Fiscal SN : iiko58 09.05.2026, 14:19 Nomi Soni Narxi RieZling 1 90,000.00 QQS qiymati 9,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02204001001658002 MXIK nomi Vino Riezling Oq yarim shirin, Quvvati 14%, Shisha butilka 0,75 l O'lchov birligi dona (butilka) 0.75 litr Markirovka kodi 010478008182008221+YHa.YH Komitent STIR\/JSHSHIR 302912366 ИП РР 25 2 50,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11199001127000000 MXIK nomi Boshqa toifaga kiritilmagan shaxsiy xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR 52805046600013 ИП ДК 25 2 50,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11199001127000000 MXIK nomi Boshqa toifaga kiritilmagan shaxsiy xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR Callisto 1 90,000.00 QQS qiymati 9,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02204001001828001 MXIK nomi Vino Callisto Quvvati 13%, Shisha butilka 0,75 l O'lchov birligi dona (butilka) 0.75 litr Markirovka kodi 010478008182011221CNhZnNM Komitent STIR\/JSHSHIR 302912366 ИП РИ 30 1 30,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11199001127000000 MXIK nomi Boshqa toifaga kiritilmagan shaxsiy xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR ИП РР 30 1 30,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11199001127000000 MXIK nomi Boshqa toifaga kiritilmagan shaxsiy xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR 52805046600013 RieSling 1 90,000.00 QQS qiymati 9,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02204001001910001 MXIK nomi Vino Riesling Oq yarim quru",
+      "createdAt": 1778320675039
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778305920000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 6226000,
+      "vatAmountTiyin": 667071,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=336317&c=20260509105226&s=256507586308",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 336317 Onlayn NKM nomi : ARTIX SN : makro603 09.05.2026, 10:52 Nomi Soni Narxi RED BULL ENERGY DRINK 473ML 1 39,490.00 QQS qiymati 4,231.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 9002490276539 MXIK kodi 02202003001004001 MXIK nomi Energetik ichimlik Flash Apelsinlik, Temir banka 0,45 l O'lchov birligi dona (alyumin banka) 0.45 litr Markirovka kodi 01090024902765392176)Lpsr)X=<sl Komitent STIR\/JSHSHIR HYDROLIFE 05L BEZ GAZ 1 3,290.00 QQS qiymati 352.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780012960153 MXIK kodi 02201001001011003 MXIK nomi Gazlanmagan suv Hydrolife pet butilka 0,5 l O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 0104780012960153217?)3<9UDEZ?QY Komitent STIR\/JSHSHIR HYDROLIFE 1L ECO BEZ GAZ 1 4,490.00 QQS qiymati 481.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780012960177 MXIK kodi 02201001001011005 MXIK nomi Gazlanmagan suv Hydrolife pet butilka 1,0 l O'lchov birligi dona (pэt butilka) 1 litr Markirovka kodi 0104780012960177217)GlVWaWfB:Ge Komitent STIR\/JSHSHIR SHOKOBATON KINDER BUENO WHITE 39GR 1 14,990.00 QQS qiymati 1,606.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 80761761 MXIK kodi 01806001001000000 MXIK nomi Shokoladli batonchik O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 62,260.00 Bank kartasi turi Shaxsiy Jami to`lov: 62,260.00 Umumiy QQS qiymati 6,670.71 Markirovka kodlari ×",
+      "createdAt": 1778306133241
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778252220000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 19344000,
+      "vatAmountTiyin": 2072571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644664&r=104319&c=20260508195746&s=219521840668",
+      "rawText": "LG420230644664 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644664 Chek raqami : 104319 Onlayn NKM nomi : POS2k SN : AFK-20250725-000664 08.05.2026, 19:57 Nomi Soni Narxi Laktozasiz sut Lactel 2% 1L 2 45,980.00 QQS qiymati 4,926.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780100651642 MXIK kodi 00401001001052001 MXIK nomi Sut Lactel laktozasiz sut, karton quti 1 kg O'lchov birligi dona (quti) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Del Т\/ Dudlangan gosht 300±20g 1 75,990.00 QQS qiymati 8,141.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780014591621 MXIK kodi 00210001009000000 MXIK nomi Dudlangan mol go’shti va uning ozuqabop mahsulotlari O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Tvorogli pishloq Valio ko'kpiyozli 180g 1 32,990.00 QQS qiymati 3,534.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 6408432000072 MXIK kodi 00406001001000000 MXIK nomi Pishloqlar (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Sosiskali bulochka, dona* 1 5,490.00 QQS qiymati 588.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 22296320 MXIK kodi 00207001001000000 MXIK nomi Yangi so’yilgan sovutilgan tovuq go’shti (tovuq) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Sara tovuq tuxumi \"Из Корзинки\" 15dona 1 32,990.00 QQS qiymati 3,534.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780094934554 MXIK kodi 00407001001000000 MXIK nomi Tovuq tuxumi O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 193,440.00 Bank kartasi turi Shaxsiy RRN 612819511366 Jami to`lov: 193,440.00 Umumiy QQS qiymati 20,725.71 Markirovka kodlari ×",
+      "createdAt": 1778252289004
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778251620000,
+      "sellerName": "\"UZUM MARKET\" MCHJ XK",
+      "totalAmountTiyin": 47259000,
+      "vatAmountTiyin": 244285,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/epi?t=EP000000000552&r=60887220&c=20260508194738&s=593444424163",
+      "rawText": "EP000000000552 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"UZUM MARKET\" MCHJ XK Damariq MFY, Kichik Beshyog‘och ko'chasi , 132-a-uy 309376127 EP000000000552 Chek raqami : 60887220 Marketpleys nomi : UZUM MARKET 08.05.2026, 19:47 Nomi Soni Narxi Пластиковый шпатель для поклейки пленки, обоев, Ракель 1 29,990.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000031556285 MXIK kodi 08205001010000000 MXIK nomi Shpatel O'lchov birligi to’plam Markirovka kodi Komitent STIR\/JSHSHIR 52011056520111 Крючки 4 шт, самоклеящиеся крючки для ванной и кухни настенные, 2 28,900.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000043880811 MXIK kodi 08302001059000000 MXIK nomi Qimmat bo’lmagan metalldan karniz, ilgak va ilmoqlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 42304985680063 Точилка для ножей и ножниц механическая, ручная ножеточка, кухо 1 170,900.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Voucher(chegirma) 5130 Shtrix kodi 1000072885443 MXIK kodi 08205001018000000 MXIK nomi Pichoqlar uchun charx O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 30407826520012 Солнцезащитная стеклянная пленка для окон, до 4 метров (Цвет: С 4 220,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Voucher(chegirma) 2200 Shtrix kodi 1000031279443 MXIK kodi 03701001003000000 MXIK nomi Termografik plyonka O'lchov birligi yuz kvadrat metr (sotka) Markirovka kodi Komitent STIR\/JSHSHIR 31907891831125 Магниты 15мм. 12шт. Deli (Цвет: Синий) 2 22,800.00 QQS qiymati 2,442.85 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Voucher(chegirma) 3420 Shtrix kodi 1000034172659 MXIK kodi 03926001003000000 MXIK nomi Plastmassadan tayyorlangan kanselyariya va maktab mahsulotlari O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 309376127 Naqd pul 0.00 Bank kartalari 472,590.00 Bank kartasi turi Shaxsiy RRN 612814104696 Jami to`lov: 472,590.00 Jami voucher(chegirma) 10,750.00 Umumiy QQS qiymati 2,442.85 Fiskal belgi 593444424163 M",
+      "createdAt": 1778255812588
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778251620000,
+      "sellerName": "\"UZUM MARKET\" MCHJ XK",
+      "totalAmountTiyin": 4283000,
+      "vatAmountTiyin": 53571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/epi?t=EP000000000552&r=60887261&c=20260508194742&s=901122484648",
+      "rawText": "EP000000000552 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"UZUM MARKET\" MCHJ XK Damariq MFY, Kichik Beshyog‘och ko'chasi , 132-a-uy 309376127 EP000000000552 Chek raqami : 60887261 Marketpleys nomi : UZUM MARKET 08.05.2026, 19:47 Nomi Soni Narxi Налобный фонарь аккумуляторный с зарядкой и магнитом мощный 1 37,830.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Voucher(chegirma) 1140 Shtrix kodi 1000049702797 MXIK kodi 08513001002000000 MXIK nomi Shaxtyor fonari O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 60110005910025 Доставка 1 5,000.00 QQS qiymati 535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10112006002000000 MXIK nomi Maxsulotlarni yetkazib berish xizmati O'lchov birligi xizmat (marta) Markirovka kodi Komitent STIR\/JSHSHIR 309376127 Naqd pul 0.00 Bank kartalari 42,830.00 Bank kartasi turi Shaxsiy RRN 612814110217 Jami to`lov: 42,830.00 Jami voucher(chegirma) 1,140.00 Umumiy QQS qiymati 535.71 Fiskal belgi 901122484648 Markirovka kodlari ×",
+      "createdAt": 1778255766417
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778139900000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 13845428,
+      "vatAmountTiyin": 1483438,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=468989&c=20260507124548&s=832035454929",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 468989 Onlayn NKM nomi : ARTIX SN : makro602 07.05.2026, 12:45 Nomi Soni Narxi KASSA PAKET 7 KG SHT 1 500.00 QQS qiymati 53.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000103957 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR SOS ASL BARAKA ASL KURINNIY 400GR 1 35,490.00 QQS qiymati 3,802.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780080861833 MXIK kodi 01601002002000000 MXIK nomi Sosiskalar (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR GOLD LAVASH MEGA 3SHT 350GR 1 8,990.00 QQS qiymati 963.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780031520253 MXIK kodi 01905999001000000 MXIK nomi Yarim tayyor un mahsulotlari (barcha turlari) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SIROK GLAZMUSA VAFELJIYAN 90GR 5SHT 1 11,490.00 QQS qiymati 1,231.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780023400532 MXIK kodi 02105001004046076 MXIK nomi Qadoqlangan muzqaymoq MUSA-SERVIS Musa-Servis Senior qaymoqli Polietilen paket 1000 g. O'lchov birligi dona (paket) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR YOGURT PITACTIMEL KLUBNIKA BANAN 95GR 1 9,890.00 QQS qiymati 1,059.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8696368202617 MXIK kodi 00403002001135009 MXIK nomi Yogurt Actimel lcasei imunitass 100 gr O'lchov birligi dona (qadoq) 100 gramm Markirovka kodi Komitent STIR\/JSHSHIR KUR FILE KURICA KG 1.146 51,558.54 QQS qiymati 5,524.13 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 02464 MXIK kodi 00207001001000000 MXIK nomi Yangi so’yilgan sovutilgan tovuq go’shti (tovuq) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR YOGURT PITACTIMEL KLUBNIKA BANAN 95GR 1 9,890.00 QQS qiymati 1,059.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 86",
+      "createdAt": 1778142454028
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778045760000,
+      "sellerName": "ИП ООО \"DEFACTO RETAIL LIMITED\"",
+      "totalAmountTiyin": 14990000,
+      "vatAmountTiyin": 1606071,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420049436&r=22965&c=20260506103608&s=370890516142",
+      "rawText": "VG343420049436 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv ИП ООО \"DEFACTO RETAIL LIMITED\" Чилонзор тумани, массив Олмазор 183 а-уй 306779118 VG343420049436 Chek raqami : 22965 Onlayn NKM nomi : E-POS SN : 187271 06.05.2026, 10:36 Nomi Soni Narxi G5033AX Футболка с коротким рукавом (L, BR232-BORDEAUX, 26 SP) 1 149,900.00 QQS qiymati 16,060.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8684582269851 MXIK kodi 06109002001000000 MXIK nomi Futbolkalar ayollar uchun O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 149,900.00 Bank kartalari 0.00 Jami to`lov: 149,900.00 Umumiy QQS qiymati 16,060.71 Markirovka kodlari ×",
+      "createdAt": 1778079594093
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1778045040000,
+      "sellerName": "\"STARGATE SYSTEMS\" MCHJ",
+      "totalAmountTiyin": 39700000,
+      "vatAmountTiyin": 4253571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006041040&r=109932&c=20260506102406&s=083572056668",
+      "rawText": "YZ231006041040 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"STARGATE SYSTEMS\" MCHJ Тошкент шаҳри, Чилонзор тумани, Алмазар дахаси, Уй 183а 205894217 YZ231006041040 Chek raqami : 109932 Onlayn NKM nomi : Fiscal Box SN : 10005439 06.05.2026, 10:24 Nomi Soni Narxi Билет 3 390,000.00 QQS qiymati 41,785.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10302001005000000 MXIK nomi Kino, videofilmlar, televizion dasturlar va videokontentni namoyish qilish xizmatlari (shu jumladan kinoteatrlar xizmatlari) O'lchov birligi dona (bilet) Markirovka kodi Komitent STIR\/JSHSHIR Dena sok 250ml 1 7,000.00 QQS qiymati 750.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02009001006035035 MXIK nomi Meva va sabzavot sharbatlari, jumladan shinnisi (barcha turdagi) Dena Olma, Tetra pak 0,2 l O'lchov birligi dona (tetra pak) 200 millilitr Markirovka kodi 0104780016370897217owL!dycDKIky Komitent STIR\/JSHSHIR Naqd pul 397,000.00 Bank kartalari 0.00 Jami to`lov: 397,000.00 Umumiy QQS qiymati 42,535.71 Markirovka kodlari ×",
+      "createdAt": 1778923470107
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777990260000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 12000000,
+      "vatAmountTiyin": 1285718,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=333597&c=20260505191118&s=831831514565",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 333597 Onlayn NKM nomi : ARTIX SN : makro603 05.05.2026, 19:11 Nomi Soni Narxi COCA-COLA 05L PET 1 6,890.00 QQS qiymati 730.97 QQS foizi 12 % Chegirma\/Boshqa 0\/67.66 Shtrix kodi 4780069000130 MXIK kodi 02202002001010007 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) COCA-COLA shirin, PET butilka 0,5 l. O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 0104780069000130217>KXL&he%Hl>w Komitent STIR\/JSHSHIR COCA-COLA 05L PET 1 6,890.00 QQS qiymati 730.97 QQS foizi 12 % Chegirma\/Boshqa 0\/67.66 Shtrix kodi 4780069000130 MXIK kodi 02202002001010007 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) COCA-COLA shirin, PET butilka 0,5 l. O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 0104780069000130217!2pTNUfiVr58 Komitent STIR\/JSHSHIR COCA-COLA 05L PET 1 6,890.00 QQS qiymati 730.97 QQS foizi 12 % Chegirma\/Boshqa 0\/67.65 Shtrix kodi 4780069000130 MXIK kodi 02202002001010007 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) COCA-COLA shirin, PET butilka 0,5 l. O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 0104780069000130217F=ZTI9AI;g_T Komitent STIR\/JSHSHIR COCA-COLA 05L PET 1 6,890.00 QQS qiymati 730.97 QQS foizi 12 % Chegirma\/Boshqa 0\/67.66 Shtrix kodi 4780069000130 MXIK kodi 02202002001010007 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) COCA-COLA shirin, PET butilka 0,5 l. O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 0104780069000130217OPzDeFEBi<1- Komitent STIR\/JSHSHIR COCA-COLA 05L PET 1 6,890.00 QQS qiymati 730.97 QQS foizi 12 % Chegirma\/Boshqa 0\/67.65 Shtrix kodi 4780069000130 MXIK kodi 02202002001010007 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) COCA-COLA shirin, PET butilka 0,5 l. O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 0104780069000130217-e:\"qs,Qhb2\/ Komitent STIR\/JS",
+      "createdAt": 1778249609192
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777989900000,
+      "sellerName": "\"ASIA GRADUS\" MCHJ",
+      "totalAmountTiyin": 27000000,
+      "vatAmountTiyin": 2892858,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006006067&r=35381&c=20260505190543&s=767515146570",
+      "rawText": "YZ231006006067 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ASIA GRADUS\" MCHJ г. Ташкент, Мирабадский район, пересечение улиц Нукус дом 83-А 307489730 YZ231006006067 Chek raqami : 35381 Onlayn NKM nomi : Штрих-М Кассир 5 SN : 2320221101859 05.05.2026, 19:05 Nomi Soni Narxi Вино Laguna Riesling белое сухое 0,75л 1 90,000.00 QQS qiymati 9,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780011420764 MXIK kodi 02204001001707001 MXIK nomi Vino LAGUNA RIESLING Quvvati 11%, Shisha butilka 0,75 l O'lchov birligi dona (butilka) 0.75 litr Markirovka kodi 0104780011420764217<7Y0Qv Komitent STIR\/JSHSHIR Вино Laguna Riesling белое сухое 0,75л 1 90,000.00 QQS qiymati 9,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780011420764 MXIK kodi 02204001001707001 MXIK nomi Vino LAGUNA RIESLING Quvvati 11%, Shisha butilka 0,75 l O'lchov birligi dona (butilka) 0.75 litr Markirovka kodi 0104780011420764217z!Xvcp Komitent STIR\/JSHSHIR Вино Laguna Riesling белое сухое 0,75л 1 90,000.00 QQS qiymati 9,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780011420764 MXIK kodi 02204001001707001 MXIK nomi Vino LAGUNA RIESLING Quvvati 11%, Shisha butilka 0,75 l O'lchov birligi dona (butilka) 0.75 litr Markirovka kodi 0104780011420764217\"N,1=4 Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 270,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 270,000.00 Umumiy QQS qiymati 28,928.58 Markirovka kodlari ×",
+      "createdAt": 1778249592758
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777962360000,
+      "sellerName": "\"CHEESE DAY\" MCHJ",
+      "totalAmountTiyin": 18395520,
+      "vatAmountTiyin": 1970950,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006036711&r=154408&c=20260505112616&s=214210450725",
+      "rawText": "YZ231006036711 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"CHEESE DAY\" MCHJ Mirobod tumani, A.Avloniy MFY, Nukus ko'chasi 309896398 YZ231006036711 Chek raqami : 154408 Onlayn NKM nomi : Set Retail-10 SN : 101679 05.05.2026, 11:26 Nomi Soni Narxi TORTILLA LAVASH (10 DONA) 5%200GR 1 6,500.00 QQS qiymati 696.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780104960061 MXIK kodi 01905002004000000 MXIK nomi Boshqa non turlari O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR ICHIMLIKLI YOGURT ACTIMEL KIDS IMUNNOVITAMIN 1X95 - QULUPNAY - 6 59,400.00 QQS qiymati 6,364.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8696368202617 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR SUT NESQUIK QULUPNAY 0%200 GR SHT 1 6,900.00 QQS qiymati 739.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470103 MXIK kodi 02202004006000000 MXIK nomi: MXIK KODI XATO! O'lchov birligi pachka=0.2 litr Markirovka kodi Komitent STIR\/JSHSHIR POLIETILEN PАKETI 7 KG 1 500.00 QQS qiymati 53.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2700000000250 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR MINSKAYA MARKA STERILLANGAN QAYMOQ 10% 200 GR 1 10,900.00 QQS qiymati 1,167.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4810093015678 MXIK kodi 00401002001000000 MXIK nomi Qaymoq (yog’siz va shakar qo’shilmagan-har qanday yog’ miqdorli) O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR ITALIYA BURATTA PISHLOGI 1 35,900.00 QQS qiymati 3,846.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780911563455 MXIK kodi 00406001001000000 MXIK nomi Pishloqlar (barcha turdagi) O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR DVARO YARIMQATTIQ PISHLOQ 50% 0.408 55,855.20 QQS qiymati 5,984.49 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2000584 MXIK kodi 00406001001000000 MXIK nomi Pishloqlar (b",
+      "createdAt": 1778056787707
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777905900000,
+      "sellerName": "\"MAK FOOD SERVIS\" MCHJ",
+      "totalAmountTiyin": 16100000,
+      "vatAmountTiyin": 1724999,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006034767&r=346750&c=20260504194541&s=614443346717",
+      "rawText": "YZ231006034767 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MAK FOOD SERVIS\" MCHJ Юнусобод тумани, Амир Темур кучаси, Олой дехкон бозори блок А 301422146 YZ231006034767 Chek raqami : 346750 Onlayn NKM nomi : E-POS SN : 313219 04.05.2026, 19:45 Nomi Soni Narxi Детский сок, яблочный, 0,2 л (комбо) 1 5,000.00 QQS qiymati 535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02202002005025001 MXIK nomi Sharbat tarkibli ichimliklar Denazavrik Tetra Pak 0,2 l O'lchov birligi dona (tetra pak) 0.20 litr Markirovka kodi 0104780016370897217=Kww_qIMD:&D Komitent STIR\/JSHSHIR Magic Box 1 с машинкой 1 25,000.00 QQS qiymati 2,678.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001002000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan fast-fudlar O'lchov birligi dona (set) Markirovka kodi Komitent STIR\/JSHSHIR Фиттер 1 34,000.00 QQS qiymati 3,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001002000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan fast-fudlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Мачо Триндвич 1 61,000.00 QQS qiymati 6,535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001002000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan fast-fudlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Пепси, стакан 0,4л 2 20,000.00 QQS qiymati 2,142.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001010000003 MXIK nomi Alkogolsiz ichimliklar boshqalar (kompotlar, kvas, mors, limonadlar va boshqalar), umumiy ovqatlanish shaxobchalarida tayyorlangan (tayyorlash jarayonida raqamli markirovkalanadigan ichimliklardan foydalanilmagan) O'lchov birligi stakan=1 dona (krujka\/stakan\/grafin) Markirovka kodi Komitent STIR\/JSHSHIR Стрипсы S 1 12,000.00 QQS qiymati 1,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001002000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan fast-fudlar O'lchov birligi dona",
+      "createdAt": 1778249438157
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777883340000,
+      "sellerName": "\"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 29000000,
+      "vatAmountTiyin": 3107143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230604913&r=17839&c=20260504132927&s=022146153349",
+      "rawText": "LG420230604913 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT ул. Нукус, дом 37 306080395 LG420230604913 Chek raqami : 17839 Onlayn NKM nomi : iiko Fiscal SN : iiko217 04.05.2026, 13:29 Nomi Soni Narxi Ягодно - творожный торт NEW 1 шт 1 259,000.00 QQS qiymati 27,750.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Ватрушки 1 шт 1 10,000.00 QQS qiymati 1,071.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR SV-50137 3 шт 1 21,000.00 QQS qiymati 2,250.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 03406001001000006 MXIK nomi Sham dekorativnыe dlya tortov O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 290,000.00 Bank kartalari 0.00 Jami to`lov: 290,000.00 Umumiy QQS qiymati 31,071.43 Markirovka kodlari ×",
+      "createdAt": 1778055685923
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777824300000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 34414006,
+      "vatAmountTiyin": 3687217,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=465299&c=20260503210525&s=523443231082",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 465299 Onlayn NKM nomi : ARTIX SN : makro602 03.05.2026, 21:05 Nomi Soni Narxi OPOLASKCOLGATE TRIPLE ACTION 500ML 1 61,990.00 QQS qiymati 6,641.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8718951178779 MXIK kodi 03306001002000000 MXIK nomi Og’izni chayish vositasi O'lchov birligi butilka=1 dona Markirovka kodi Komitent STIR\/JSHSHIR OPOLASKCOLGATE TRIPLE ACTION 500ML 1 61,990.00 QQS qiymati 6,641.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8718951178779 MXIK kodi 03306001002000000 MXIK nomi Og’izni chayish vositasi O'lchov birligi butilka=1 dona Markirovka kodi Komitent STIR\/JSHSHIR OPOLASKCOLGATE TRIPLE ACTION 500ML 1 61,990.00 QQS qiymati 6,641.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8718951178779 MXIK kodi 03306001002000000 MXIK nomi Og’izni chayish vositasi O'lchov birligi butilka=1 dona Markirovka kodi Komitent STIR\/JSHSHIR KORM DKOSHEK THUNDER CHIKEN VES KG 0.492 22,135.08 QQS qiymati 2,371.62 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 11078 MXIK kodi 02309001001000000 MXIK nomi Ozuqa va ozuqa qo’shimchalari (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KORM DKOSHEK THUNDER CHIKEN VES KG 0.502 22,584.98 QQS qiymati 2,419.82 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 11078 MXIK kodi 02309001001000000 MXIK nomi Ozuqa va ozuqa qo’shimchalari (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KIPPERS VLAJSALFETKI ALOE 120SHT 1 15,490.00 QQS qiymati 1,659.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780026394494 MXIK kodi 03307001002050005 MXIK nomi Gigiyenik salfetkalar (nam va qurutuvchi ) Kippers bolalar uchun o’lchami 13sm x 28sm iforli aloe pet paket 120 dona O'lchov birligi dona (paket) Markirovka kodi Komitent STIR\/JSHSHIR KIPPERS VLAJSALFETKI ALOE 120SHT 1 15,490.00 QQS qiymati 1,659.64 QQS foizi 12 ",
+      "createdAt": 1778055722315
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777807500000,
+      "sellerName": "\"PRIMAVERA\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 6400000,
+      "vatAmountTiyin": 685714,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230616171&r=21843&c=20260503162555&s=811245049933",
+      "rawText": "LG420230616171 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"PRIMAVERA\" MAS'ULIYATI CHEKLANGAN JAMIYAT Toshkent shahri, Shayxontohur tumani, Olmazor MFY, Yangi Toshkent ko'chasi, 1-uy 305363724 LG420230616171 Chek raqami : 21843 Onlayn NKM nomi : iiko Fiscal SN : iiko388 03.05.2026, 16:25 Nomi Soni Narxi Стакан 3 вкуса\/32000 2 64,000.00 QQS qiymati 6,857.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001008000003 MXIK nomi Desertlar boshqalar, umumiy ovqatlanish shaxobchalarida sotiladigan (shu jumladan tayyorlangan) O'lchov birligi dona (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 64,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 64,000.00 Umumiy QQS qiymati 6,857.14 Markirovka kodlari ×",
+      "createdAt": 1778249464891
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777782300000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 22000000,
+      "vatAmountTiyin": 2357144,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=464804&c=20260503092524&s=410383617003",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 464804 Onlayn NKM nomi : ARTIX SN : makro602 03.05.2026, 09:25 Nomi Soni Narxi MOROJENOE AJOYIB SLIVOCHNOE 1KG 1 33,990.00 QQS qiymati 3,593.92 QQS foizi 12 % Chegirma\/Boshqa 0\/446.73 Shtrix kodi 4780080790225 MXIK kodi 02105001004000000 MXIK nomi Qadoqlangan muzqaymoq O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR DJEM MAXEEV KLUBNIKA 400GR 1 49,990.00 QQS qiymati 5,285.68 QQS foizi 12 % Chegirma\/Boshqa 0\/657.03 Shtrix kodi 4604248006952 MXIK kodi 02007002002009005 MXIK nomi Jemlar va murabbo Махеевъ qulupnayli djem 400 gr. O'lchov birligi dona (banka) 400 gramm Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL SUTTETBEZLAKTOZ2% 1L 1 21,990.00 QQS qiymati 2,325.11 QQS foizi 12 % Chegirma\/Boshqa 0\/289.02 Shtrix kodi 4780100651642 MXIK kodi 00401001001052001 MXIK nomi Sut Lactel laktozasiz sut, karton quti 1 kg O'lchov birligi dona (quti) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SMETANA PRESIDEN 20% 400GR 1 32,490.00 QQS qiymati 3,435.32 QQS foizi 12 % Chegirma\/Boshqa 0\/427.02 Shtrix kodi 4870207315162 MXIK kodi 00403999008145003 MXIK nomi Smetana Президент 20 % 400 gr O'lchov birligi dona (qadoq) 400 gramm Markirovka kodi Komitent STIR\/JSHSHIR IGR MINI ELEKTRONNIY VENTILYATOR 1 24,990.00 QQS qiymati 2,642.31 QQS foizi 12 % Chegirma\/Boshqa 0\/328.45 Shtrix kodi 2428000294188 MXIK kodi 09503001001000000 MXIK nomi Bolalar uchun uch g’ildirakli velosipedlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR SGUSHMOL ALEKSEES SAH 85% 650GR D\/P 1 47,990.00 QQS qiymati 5,074.21 QQS foizi 12 % Chegirma\/Boshqa 0\/630.73 Shtrix kodi 4607109470237 MXIK kodi 00402001001000000 MXIK nomi Quyultirilgan yoki shakar qo’shilgan sut (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SIROK GLAZMUSA VAFELJIYAN 90GR 5SHT 1 11,490.00 QQS qiymati 1,214.89 QQS foizi 12 % Ch",
+      "createdAt": 1778055751279
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777723440000,
+      "sellerName": "\"PRIMAVERA\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 7000000,
+      "vatAmountTiyin": 750000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230616171&r=21589&c=20260502170455&s=045114486460",
+      "rawText": "LG420230616171 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"PRIMAVERA\" MAS'ULIYATI CHEKLANGAN JAMIYAT Toshkent shahri, Shayxontohur tumani, Olmazor MFY, Yangi Toshkent ko'chasi, 1-uy 305363724 LG420230616171 Chek raqami : 21589 Onlayn NKM nomi : iiko Fiscal SN : iiko388 02.05.2026, 17:04 Nomi Soni Narxi Стакан 3 вкуса\/35000 2 70,000.00 QQS qiymati 7,500.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001008000003 MXIK nomi Desertlar boshqalar, umumiy ovqatlanish shaxobchalarida sotiladigan (shu jumladan tayyorlangan) O'lchov birligi dona (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 70,000.00 Bank kartalari 0.00 Jami to`lov: 70,000.00 Umumiy QQS qiymati 7,500.00 Markirovka kodlari ×",
+      "createdAt": 1778249416659
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777722720000,
+      "sellerName": "\"SMART TANDIRIY\" MCHJ",
+      "totalAmountTiyin": 95500000,
+      "vatAmountTiyin": 10232143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420011560&r=24201&c=20260502165250&s=175843005048",
+      "rawText": "VG343420011560 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"SMART TANDIRIY\" MCHJ Toskent sh., Shayxontohur tum., Uqchi kochasi, 5-uy. 310141262 VG343420011560 Chek raqami : 24201 Onlayn NKM nomi : PAX A-930 SN : 1171624989 02.05.2026, 16:52 Nomi Soni Narxi Основные блюда, из овощей, круп и макаронных изделий, приготовл 1 955,000.00 QQS qiymati 102,321.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000004 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan sabzavot, don va makaron mahsulotlaridan O'lchov birligi dona (portsiya) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 955,000.00 Bank kartalari 0.00 Jami to`lov: 955,000.00 Umumiy QQS qiymati 102,321.43 Markirovka kodlari ×",
+      "createdAt": 1778249406078
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777710180000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 12000000,
+      "vatAmountTiyin": 1285715,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=331193&c=20260502132316&s=552123000475",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 331193 Onlayn NKM nomi : ARTIX SN : makro603 02.05.2026, 13:23 Nomi Soni Narxi KOFE V KAPS ALU HAZELNUT FLAVORED 55GR 1 51,990.00 QQS qiymati 5,549.55 QQS foizi 12 % Chegirma\/Boshqa 0\/194.24 Shtrix kodi 8000604003485 MXIK kodi 00901001001000000 MXIK nomi Maydalangan (kukunsimon) kofe O'lchov birligi pachka=55 gramm Markirovka kodi Komitent STIR\/JSHSHIR YAYCA MAYSKIY MAKRO 2-SORT 15SHT 1 24,490.00 QQS qiymati 2,614.13 QQS foizi 12 % Chegirma\/Boshqa 0\/91.49 Shtrix kodi 4780140170059 MXIK kodi 00407001001000000 MXIK nomi Tovuq tuxumi O'lchov birligi fleyka=15 dona Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL SUTTETBEZLAKTOZ2% 1L 1 21,990.00 QQS qiymati 2,347.27 QQS foizi 12 % Chegirma\/Boshqa 0\/82.15 Shtrix kodi 4780100651642 MXIK kodi 00401001001052001 MXIK nomi Sut Lactel laktozasiz sut, karton quti 1 kg O'lchov birligi dona (quti) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KOKTEYL NESTLE NESQUIK BANAN 200ML 1 7,990.00 QQS qiymati 852.87 QQS foizi 12 % Chegirma\/Boshqa 0\/29.85 Shtrix kodi 4780042470363 MXIK kodi 02202004006002004 MXIK nomi Nestle banan tamli kokteyl Tetra Brick Aseptic 200 ml O'lchov birligi dona (tetra pak) 200 millilitr Markirovka kodi Komitent STIR\/JSHSHIR LIMONAD LIM BY BORJOMI TARXUN 033L J\/B 1 13,490.00 QQS qiymati 1,439.96 QQS foizi 12 % Chegirma\/Boshqa 0\/50.4 Shtrix kodi 4860019003104 MXIK kodi 02202002001439007 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) BORJOMI LIMONATI tarxun alyuminiy banka 0.33 l O'lchov birligi dona (alyuminiy banka) 0.33 litr Markirovka kodi 0104860019003104218wFktaB=JNRys Komitent STIR\/JSHSHIR KASSA PAKET 7 KG SHT 1 500.00 QQS qiymati 53.37 QQS foizi 12 % Chegirma\/Boshqa 0\/1.87 Shtrix kodi 1000103957 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naq",
+      "createdAt": 1778055717918
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777637940000,
+      "sellerName": "\"MAGNIT SREDNYAYA AZIYA\" MCHJ",
+      "totalAmountTiyin": 16170000,
+      "vatAmountTiyin": 1732500,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006041388&r=61494&c=20260501171952&s=977862418131",
+      "rawText": "YZ231006041388 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MAGNIT SREDNYAYA AZIYA\" MCHJ г. Ташкент Мирабадский район, Абдулла Авлоний МСГ, ул. Авлиё Ота, дом-65Б 309167892 YZ231006041388 Chek raqami : 61494 Onlayn NKM nomi : Set Retail-10 SN : 101022 01.05.2026, 17:19 Nomi Soni Narxi ROSTI RASTI O'yinlar to'plami Qum o'yinchoqlari 10 ta UZ 1 36,900.00 QQS qiymati 2,164.00 QQS foizi 12 % Chegirma\/Boshqa 16700\/0 Shtrix kodi 4780051720688 MXIK kodi 09503013006000000 MXIK nomi To’plamdagi o’yinchoqlar O'lchov birligi to’plam Markirovka kodi Komitent STIR\/JSHSHIR CASPER PERFORIERT SALFETKALAR UNIVERSAL 3D 1 13,100.00 QQS qiymati 1,189.00 QQS foizi 12 % Chegirma\/Boshqa 2000\/0 Shtrix kodi 4780024520673 MXIK kodi 06307001002000000 MXIK nomi Tozalash salfetkalari O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR CHORTOQ Ichimlik Shakarsiz Limon gazlangan 330ml 1 8,500.00 QQS qiymati 771.00 QQS foizi 12 % Chegirma\/Boshqa 1300\/0 Shtrix kodi 4780051070127 MXIK kodi 02201002001017003 MXIK nomi Gazlangan suv Chortoq Limon tamli shisha butilka 0,33 l. O'lchov birligi dona (butilka) 0.33 litr Markirovka kodi 010478005107012721EX!QS\/RBXLGCS Komitent STIR\/JSHSHIR LAF Краб для волос средний коричневый глянец(СИ):3\/480 (шт) 1 5,100.00 QQS qiymati 461.00 QQS foizi 12 % Chegirma\/Boshqa 800\/0 Shtrix kodi 2080000103572 MXIK kodi 09615001006000000 MXIK nomi Elastik tasmalar, soch to’g’nag’ichi, bosh tasmalari, nevidimka va shunga o’xshash narsalar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR STELLARY Tirnoq\/u lak tus 49 8 ml (Oktopas):3\/144 (шт) 1 20,000.00 QQS qiymati 1,179.00 QQS foizi 12 % Chegirma\/Boshqa 9000\/0 Shtrix kodi 7640166614272 MXIK kodi 03304007001000000 MXIK nomi Tirnoqlar uchun laklar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR VIVIENNE SABO Cabaret Kipr\/u tush jigarra 05:12\/204 (шт) 1 87,000.00 QQS qiymati 7,918.00 QQS foizi 12 % Chegirma\/Boshqa 13100\/0 Shtrix kodi 3700971311637 MXIK kodi 03304016002000000 MXIK",
+      "createdAt": 1778055733142
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777637100000,
+      "sellerName": "\"CHEESE DAY\" MCHJ",
+      "totalAmountTiyin": 10830000,
+      "vatAmountTiyin": 1160358,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006036711&r=153721&c=20260501170514&s=436810450707",
+      "rawText": "YZ231006036711 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"CHEESE DAY\" MCHJ Mirobod tumani, A.Avloniy MFY, Nukus ko'chasi 309896398 YZ231006036711 Chek raqami : 153721 Onlayn NKM nomi : Set Retail-10 SN : 101679 01.05.2026, 17:05 Nomi Soni Narxi KOLBASA ROZ DEL ZOLOTOY SLITOK VAK 0% 350 GR 1 39,900.00 QQS qiymati 4,275.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780128110015 MXIK kodi 01601001001000000 MXIK nomi Kolbasa (barcha turdagi) O'lchov birligi dona (tayoq (palka)) Markirovka kodi Komitent STIR\/JSHSHIR ICHIMLIKLI YOGURT ACTIMEL KIDS IMUNNOVITAMIN 1X95 - QULUPNAY - 6 59,400.00 QQS qiymati 6,364.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8696368202617 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR LAVASH YUPKA LAVASH 7% DONA 1 9,000.00 QQS qiymati 964.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780041950132 MXIK kodi 01901002005044001 MXIK nomi Non-bulka, un va boshqa mahsulotlarni tayyorlash uchun aralashmalar Lavash Polipropilen paket 3 dona O'lchov birligi dona (paket) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 108,300.00 Bank kartalari 0.00 Jami to`lov: 108,300.00 Umumiy QQS qiymati 11,603.58 Markirovka kodlari ×",
+      "createdAt": 1778055727048
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777626240000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 61901984,
+      "vatAmountTiyin": 6632355,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=330350&c=20260501140436&s=434315694655",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 330350 Onlayn NKM nomi : ARTIX SN : makro603 01.05.2026, 14:04 Nomi Soni Narxi MOLOKO ALPRO ALMOND ORIGINAL 1L 1 50,990.00 QQS qiymati 5,463.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 5411188110835 MXIK kodi 02202002005134005 MXIK nomi Sharbat tarkibli ichimliklar ALPRO bodomli 1,1% TBA 1 l O'lchov birligi dona (tetra pak) 1 litr Markirovka kodi Komitent STIR\/JSHSHIR AYRAN MASIS TAN 500ML 1 10,990.00 QQS qiymati 1,177.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780026720118 MXIK kodi 00403999003039002 MXIK nomi Ayron, shu jumladan tan Тан Супер Масис sutli ayron ichimligi, plastik butilka 0,5 l O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL BEZ LAKTOZ TETRA 32% 1L 1 22,990.00 QQS qiymati 2,463.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470790 MXIK kodi 00401001001000000 MXIK nomi Sut O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL BEZ LAKTOZ TETRA 32% 1L 1 22,990.00 QQS qiymati 2,463.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470790 MXIK kodi 00401001001000000 MXIK nomi Sut O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR KONFETI CHIO RIO KG 0.222 17,757.78 QQS qiymati 1,902.62 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 09238 MXIK kodi 01806003001000000 MXIK nomi Konfet kakao bilan O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR STPOROSH ARIEL AVTO COLOR 15KG 1 79,990.00 QQS qiymati 8,570.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 5413149333529 MXIK kodi 03402003002146012 MXIK nomi Kir yuvish kukuni (avtomat) ARIEL color, yashil, paket 1,5kg O'lchov birligi dona (paket) 1.5 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KASSA PAKET 7 KG SHT 1 500.00 QQS qiymati 53.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000103957 MXIK kodi 03923001002000000 MXI",
+      "createdAt": 1778055852453
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777623180000,
+      "sellerName": "\"U-MAX PROPERTIES\" MAS`ULIYATI CHEKLANGAN JAMIYAT QO`SHMA KORXONA",
+      "totalAmountTiyin": 25000000,
+      "vatAmountTiyin": 2678571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006046464&r=31832&c=20260501131331&s=552931122182",
+      "rawText": "YZ231006046464 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"U-MAX PROPERTIES\" MAS`ULIYATI CHEKLANGAN JAMIYAT QO`SHMA KORXONA Toshkent shahri, Yashnobod tumani, Choʻlpon MFY, Maxtumquli ko'chasi, 47-uy 308357790 YZ231006046464 Chek raqami : 31832 Onlayn NKM nomi : iiko Fiscal SN : iiko709 01.05.2026, 13:13 Nomi Soni Narxi 50% скидка МУЖ 3-х часовой входной билет 1 175,000.00 QQS qiymati 18,750.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001002000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan fast-fudlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Плавки трикотажные 1 75,000.00 QQS qiymati 8,035.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202002003000001 MXIK nomi Boshqa xizmatlar umumiy ovqatlanish shaxobchalarida servis xizmati O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 250,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 250,000.00 Umumiy QQS qiymati 26,785.71 Markirovka kodlari ×",
+      "createdAt": 1778249426171
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777569120000,
+      "sellerName": "\"LEGION CO\" MAS'ULIYATI CHEKLANGAN JAMIYAT QO`SHMA KORXONA",
+      "totalAmountTiyin": 12600000,
+      "vatAmountTiyin": 1350001,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006027465&r=38157&c=20260430221204&s=754825475243",
+      "rawText": "YZ231006027465 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"LEGION CO\" MAS'ULIYATI CHEKLANGAN JAMIYAT QO`SHMA KORXONA ул. Нукус, дом 83а 207043276 YZ231006027465 Chek raqami : 38157 Onlayn NKM nomi : \"Micros24.Виртуальная касса\" SN : VK250109121716 30.04.2026, 22:12 Nomi Soni Narxi Пиво \"Sarbast Original\" стекло 0,50 л 3 14,000.00 QQS qiymati 1,500.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780015832228 MXIK kodi 02203001001084075 MXIK nomi Pivo SARBAST ORIGINAL quvvati 4.2% shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 0104780015832228217,BJ-0+ Komitent STIR\/JSHSHIR Пиво \"Sarbast Original\" стекло 0,50 л 3 14,000.00 QQS qiymati 1,500.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780015832228 MXIK kodi 02203001001084075 MXIK nomi Pivo SARBAST ORIGINAL quvvati 4.2% shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 01047800158322282170&cvY3 Komitent STIR\/JSHSHIR Пиво \"Sarbast Original\" стекло 0,50 л 3 14,000.00 QQS qiymati 1,500.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780015832228 MXIK kodi 02203001001084075 MXIK nomi Pivo SARBAST ORIGINAL quvvati 4.2% shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 01047800158322282170wbk:l Komitent STIR\/JSHSHIR Пиво \"Sarbast Special\" стекло 0,50 л 2 16,000.00 QQS qiymati 1,714.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780015832235 MXIK kodi 02203001001084076 MXIK nomi Pivo SARBAST SPECIAL quvvati 5% shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 0104780015832235217A(c?Z\/ Komitent STIR\/JSHSHIR Пиво \"Sarbast Special\" стекло 0,50 л 2 16,000.00 QQS qiymati 1,714.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780015832235 MXIK kodi 02203001001084076 MXIK nomi Pivo SARBAST SPECIAL quvvati 5% shisha butilka 0,5 l O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 0104780015832235217-=Kup> Komitent STIR\/JSHSHIR Пиво \"Kriek\" стекло 0,50 л 1 24,000.00 QQS qiymati 2,571.43 QQ",
+      "createdAt": 1778125130877
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777444800000,
+      "sellerName": "\"CHEESE DAY\" MCHJ",
+      "totalAmountTiyin": 11290000,
+      "vatAmountTiyin": 1209643,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420012599&r=84775&c=20260429114017&s=194167710346",
+      "rawText": "VG343420012599 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"CHEESE DAY\" MCHJ Миробод тумани, Миробод дехкон бозори худуди, 1 кават савдо дукони 309896398 VG343420012599 Chek raqami : 84775 Onlayn NKM nomi : Set Retail-10 SN : 101680 29.04.2026, 11:40 Nomi Soni Narxi MINSKAYA MARKA STERILLANGAN QAYMOQ 10% 200 GR 2 21,800.00 QQS qiymati 2,335.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4810093015678 MXIK kodi 00401002001000000 MXIK nomi Qaymoq (yog’siz va shakar qo’shilmagan-har qanday yog’ miqdorli) O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR ICHIMLIKLI YOGURT ACTIMEL KIDS IMUNNOVITAMIN 1X95 - QULUPNAY - 6 59,400.00 QQS qiymati 5,400.00 QQS foizi 12 % Chegirma\/Boshqa 9000\/0 Shtrix kodi 8696368202617 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR SUT NESQUIK BANAN 0%200 GR SHT 1 6,900.00 QQS qiymati 739.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470363 MXIK kodi 02202004006000000 MXIK nomi: MXIK KODI XATO! O'lchov birligi pachka=0.2 litr Markirovka kodi Komitent STIR\/JSHSHIR SARIYOG LACTEL 82% 200 GR 1 33,500.00 QQS qiymati 3,589.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470615 MXIK kodi 00405001001000000 MXIK nomi Sariyog’ (barcha turdagi) O'lchov birligi dona (upakovka) Markirovka kodi Komitent STIR\/JSHSHIR POLIETILEN PАKETI 3KG 1 300.00 QQS qiymati 32.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2700000000212 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 112,900.00 Bank kartalari 0.00 Jami to`lov: 112,900.00 Umumiy QQS qiymati 12,096.43 Markirovka kodlari ×",
+      "createdAt": 1778055473121
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777289880000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 20239096,
+      "vatAmountTiyin": 2168475,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=327123&c=20260427163835&s=763101329266",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 327123 Onlayn NKM nomi : ARTIX SN : makro603 27.04.2026, 16:38 Nomi Soni Narxi YAYCA DOBRIE DEREVENSKIE 15SHT 3 SORT 1 22,490.00 QQS qiymati 2,409.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780155580096 MXIK kodi 00407001001000000 MXIK nomi Tovuq tuxumi O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL SUTTETBEZLAKTOZ2% 1L 1 21,990.00 QQS qiymati 2,356.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780100651642 MXIK kodi 00401001001052001 MXIK nomi Sut Lactel laktozasiz sut, karton quti 1 kg O'lchov birligi dona (quti) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR AYSHA SWEETS NAPOLEON 575GR 1 42,990.00 QQS qiymati 4,606.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780107620399 MXIK kodi 01905012001000000 MXIK nomi Har xil turdagi pechenyelar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR FR YABL GOLDEN KRUPNIY KG 0.734 22,012.66 QQS qiymati 2,358.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 07965 MXIK kodi 00808001001000000 MXIK nomi Olma (barcha navlar) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KASSA PAKET 7 KG SHT 1 500.00 QQS qiymati 53.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000103957 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR FR LIMON IMPORT KG 0.17 7,988.30 QQS qiymati 855.89 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 02528 MXIK kodi 00805002001000000 MXIK nomi Limon O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR JOKEY COFFE 100GR KLASICHESKIY VAKUM 1 33,990.00 QQS qiymati 3,641.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4605246002670 MXIK kodi 00901001001054001 MXIK nomi Maydalangan (kukunsimon) kofe Жокей Klassik qovurib maydalangan qahva 100 gr v\/u O'lchov birligi dona (pachka) 100 gram",
+      "createdAt": 1778055891482
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777205940000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 19580730,
+      "vatAmountTiyin": 2097935,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=326350&c=20260426171935&s=850418380108",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 326350 Onlayn NKM nomi : ARTIX SN : makro603 26.04.2026, 17:19 Nomi Soni Narxi MOY HLEB BATON REZANNIY 380GR 1 11,990.00 QQS qiymati 1,284.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780025510208 MXIK kodi 01905002008004004 MXIK nomi Baton Мой Хлеб Baton kesilgan, Polietilenpaket 1 dona 300 g. O'lchov birligi dona (paket) 300 gramm Markirovka kodi Komitent STIR\/JSHSHIR MIN VODA CHORTOQ LAYM GAZ 05L STKL 1 12,490.00 QQS qiymati 1,338.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780051070080 MXIK kodi 02201002001017013 MXIK nomi Gazlangan suv Chortoq Yalpiz tamli shisha butilka 0,5 l. O'lchov birligi dona (butilka) 0.50 litr Markirovka kodi 010478005107008021MEsCPACScIVDo Komitent STIR\/JSHSHIR SMES PECHEM DOMA DLYA KEKSA VANILNY300G 1 21,990.00 QQS qiymati 2,356.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4602112505174 MXIK kodi 01901002005000000 MXIK nomi Non-bulka, un va boshqa mahsulotlarni tayyorlash uchun aralashmalar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SMES PECHEM DOMA DLYA KEKSA VANILNY300G 1 21,990.00 QQS qiymati 2,356.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4602112505174 MXIK kodi 01901002005000000 MXIK nomi Non-bulka, un va boshqa mahsulotlarni tayyorlash uchun aralashmalar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR FRUKKUSO FRUTNYAN YABLPERMAR 15GR 1 16,990.00 QQS qiymati 1,820.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338010700 MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR FRUTO NYANYA PYURE YABGRUSHABAN90GR 1 12,990.00 QQS qiymati 1,391.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338009094 MXIK kodi 01904001002027054 MXIK nomi Don va boshoqli o’simliklardan tayyor oziq-ovqat mahsulotlari",
+      "createdAt": 1778055885569
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777184580000,
+      "sellerName": "MCHJ DEFACTO RETAIL LIMITED",
+      "totalAmountTiyin": 39990000,
+      "vatAmountTiyin": 4284643,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006042735&r=60440&c=20260426112301&s=081964481707",
+      "rawText": "YZ231006042735 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv MCHJ DEFACTO RETAIL LIMITED Шайхонтохур тумани, Олмазор МФЙ, Ботир Зокиров кучаси, 7-уй 306779118 YZ231006042735 Chek raqami : 60440 Onlayn NKM nomi : E-POS SN : 363055 26.04.2026, 11:23 Nomi Soni Narxi G4952AX Брюки (32, BK81-BLACK, 26 SM) 1 399,900.00 QQS qiymati 42,846.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8684582455209 MXIK kodi 06203004001000000 MXIK nomi Shimlar erkaklar uchun (trikotaj bo’lmagan) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 399,900.00 Bank kartalari 0.00 Jami to`lov: 399,900.00 Umumiy QQS qiymati 42,846.43 Markirovka kodlari ×",
+      "createdAt": 1778055843450
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777141080000,
+      "sellerName": "\"ALFA-BETA SAVDO\" MCHJ",
+      "totalAmountTiyin": 157800000,
+      "vatAmountTiyin": 16907136,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420010627&r=49060&c=20260425231824&s=041240104348",
+      "rawText": "VG343420010627 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ALFA-BETA SAVDO\" MCHJ г. Ташкент, Яшнабадский районн, улица С Машхадий, дом 74 303930881 VG343420010627 Chek raqami : 49060 Onlayn NKM nomi : R_keeper 7 SN : 100599 25.04.2026, 23:18 Nomi Soni Narxi КРЕВЕТКИ ХРУСТЯЩИЕ 2 220,000.00 QQS qiymati 23,571.42 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001001000004 MXIK nomi Gazaklar Gazaklar, baliq va dengiz mahsulotlaridan, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR СЫРНЫЕ ШАРИКИ 1 45,000.00 QQS qiymati 4,821.42 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001001000001 MXIK nomi Gazaklar Gazaklar, sabzavotli, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (portsiya) Markirovka kodi Komitent STIR\/JSHSHIR КАЛЬМАР ФРИ 1 115,000.00 QQS qiymati 12,321.42 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001001000005 MXIK nomi Gazaklar Gazaklar, boshqalar, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (portsiya) Markirovka kodi Komitent STIR\/JSHSHIR КРЕВЕТКИ ХРУСТЯЩИЕ 2 220,000.00 QQS qiymati 23,571.42 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001001000004 MXIK nomi Gazaklar Gazaklar, baliq va dengiz mahsulotlaridan, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (porsiya) Markirovka kodi Komitent STIR\/JSHSHIR ЖАРЕНЫЙ СУЛУГУНИ 1 37,000.00 QQS qiymati 3,964.28 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001001000005 MXIK nomi Gazaklar Gazaklar, boshqalar, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (portsiya) Markirovka kodi Komitent STIR\/JSHSHIR КАРТОШЕЧКА С ГРИБОЧКАМИ 1 48,000.00 QQS qiymati 5,142.85 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001007000001 MXIK nomi Garnirlar, souslar va boshqa qo’shimchalar (topinglar) umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (porsiy",
+      "createdAt": 1778055784937
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777140960000,
+      "sellerName": "\"ALFA-BETA SAVDO\" MCHJ",
+      "totalAmountTiyin": 128000000,
+      "vatAmountTiyin": 13714284,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420010627&r=49059&c=20260425231631&s=062402256564",
+      "rawText": "VG343420010627 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ALFA-BETA SAVDO\" MCHJ г. Ташкент, Яшнабадский районн, улица С Машхадий, дом 74 303930881 VG343420010627 Chek raqami : 49059 Onlayn NKM nomi : R_keeper 7 SN : 100599 25.04.2026, 23:16 Nomi Soni Narxi ПИВО HOEGAARDEN WHITE 0,5 Л 4000 440,000.00 QQS qiymati 47,142.85 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600721023645 MXIK kodi 02203001001237005 MXIK nomi Pivo Hoegaarden WHITE quvvati 4.9% keg bochka 20 l O'lchov birligi Markirovka kodi Komitent STIR\/JSHSHIR FRONTERA SAUVIGNON BLANC 750 400,000.00 QQS qiymati 42,857.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 7804320556000 MXIK kodi 02204001001790001 MXIK nomi Vino Frontera Sauvignon Blanc oq quruq quvvati 13% shisha butilka 0,75 l O'lchov birligi Markirovka kodi 010780432055600021xHoXHqm Komitent STIR\/JSHSHIR ПИВО HOEGAARDEN WHITE 0,5 Л 4000 440,000.00 QQS qiymati 47,142.85 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600721023645 MXIK kodi 02203001001237005 MXIK nomi Pivo Hoegaarden WHITE quvvati 4.9% keg bochka 20 l O'lchov birligi Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 1,280,000.00 Bank kartasi turi Shaxsiy Jami to`lov: 1,280,000.00 Umumiy QQS qiymati 137,142.84 Markirovka kodlari ×",
+      "createdAt": 1778055738615
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777118880000,
+      "sellerName": "\"BLOOMSHOP\" MCHJ",
+      "totalAmountTiyin": 14000000,
+      "vatAmountTiyin": 1500000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006003094&r=40473&c=20260425170809&s=121355210512",
+      "rawText": "YZ231006003094 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BLOOMSHOP\" MCHJ Тошкент шаҳар, Шайхонтоҳур тумани, ул. Ботир Зокиров, дом 5-7 308170528 YZ231006003094 Chek raqami : 40473 Onlayn NKM nomi : E-POS SN : 56734 25.04.2026, 17:08 Nomi Soni Narxi Art Visage Карандаш для бровей автоматический CINEMA BROWS 02 п 1 141,000.00 QQS qiymati 15,000.00 QQS foizi 12 % Chegirma\/Boshqa 0\/1000 Shtrix kodi 4690327116261 MXIK kodi 03304010003000000 MXIK nomi Ko’z uchun qalam O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 140,000.00 Bank kartalari 0.00 Jami to`lov: 140,000.00 Umumiy QQS qiymati 15,000.00 Markirovka kodlari ×",
+      "createdAt": 1778055744605
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777118100000,
+      "sellerName": "MCHJ DEFACTO RETAIL LIMITED",
+      "totalAmountTiyin": 24990000,
+      "vatAmountTiyin": 2677500,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006042735&r=60358&c=20260425165548&s=315115044102",
+      "rawText": "YZ231006042735 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv MCHJ DEFACTO RETAIL LIMITED Шайхонтохур тумани, Олмазор МФЙ, Ботир Зокиров кучаси, 7-уй 306779118 YZ231006042735 Chek raqami : 60358 Onlayn NKM nomi : E-POS SN : 363055 25.04.2026, 16:55 Nomi Soni Narxi H0115AX Брюки (38, ER37-STONE, 26 SP) 1 249,900.00 QQS qiymati 26,775.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8684582986819 MXIK kodi 06204006001000000 MXIK nomi Shimlar ayollar uchun (trikotaj bo’lmagan) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 249,900.00 Bank kartalari 0.00 Jami to`lov: 249,900.00 Umumiy QQS qiymati 26,775.00 Markirovka kodlari ×",
+      "createdAt": 1778055864030
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777115400000,
+      "sellerName": "\"MEGACAPITAL\" MAS`ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 16200000,
+      "vatAmountTiyin": 1735715,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006022304&r=13736&c=20260425161051&s=321710172030",
+      "rawText": "YZ231006022304 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MEGACAPITAL\" MAS`ULIYATI CHEKLANGAN JAMIYAT ул. Ботир Зокиров, дом 5-7 309580024 YZ231006022304 Chek raqami : 13736 Onlayn NKM nomi : iiko Fiscal SN : iiko206 25.04.2026, 16:10 Nomi Soni Narxi 07 Удон с морским коктейлем в соусе терияки WK 1 79,000.00 QQS qiymati 8,464.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001002000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan fast-fudlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 08 Удон с лососем в соусе якитори WK 1 83,000.00 QQS qiymati 8,892.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001002000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan fast-fudlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 162,000.00 Bank kartalari 0.00 Jami to`lov: 162,000.00 Umumiy QQS qiymati 17,357.15 Markirovka kodlari ×",
+      "createdAt": 1778055767634
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777103820000,
+      "sellerName": "\"RETAIL TRADE EAST\" MCHJ",
+      "totalAmountTiyin": 3500000,
+      "vatAmountTiyin": 375000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420010689&r=106512&c=20260425125711&s=506558191937",
+      "rawText": "VG343420010689 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"RETAIL TRADE EAST\" MCHJ \"г. Ташкент, Мирабадский район, улица Авлиё ота в торговом ряду рядом с рынком \"\"Миробод\"\", д. 14-15\" 309532637 VG343420010689 Chek raqami : 106512 Onlayn NKM nomi : Set Retail-10 SN : 100135 25.04.2026, 12:57 Nomi Soni Narxi O'yinchoq Sport&Fun Let disk s pist d\/zapuska assort 1 25,000.00 QQS qiymati 2,678.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4650274109686 MXIK kodi 09503018001000000 MXIK nomi Boshqa o’yinchoqlar, shu jumladan to’plamladagi o’yinchoqlar (boshqa subpozitsiyalarga kiritilmagan barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Lidskiy Tim qora kvasi 0,45l al\/b 1 12,000.00 QQS qiymati 1,071.43 QQS foizi 12 % Chegirma\/Boshqa 2000\/0 Shtrix kodi 4810285011327 MXIK kodi 02202004008009004 MXIK nomi Kvas alkogolsiz Лидский Tyomniy alyuminiy banka 0,45 l O'lchov birligi dona (alyuminiy banka) 0.45 litr Markirovka kodi 010481028501132721j))BAQ21qh4pn Komitent STIR\/JSHSHIR Naqd pul 35,000.00 Bank kartalari 0.00 Jami to`lov: 35,000.00 Umumiy QQS qiymati 3,750.00 Markirovka kodlari ×",
+      "createdAt": 1778055880113
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777044060000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 5097000,
+      "vatAmountTiyin": 546108,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031960&r=73806&c=20260424202138&s=166315435545",
+      "rawText": "VG343420031960 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031960 Chek raqami : 73806 Onlayn NKM nomi : ARTIX SN : makro606 24.04.2026, 20:21 Nomi Soni Narxi SOK ABRIKOSOVIY ERMAK STKL 640ML 1 20,490.00 QQS qiymati 2,195.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780099470842 MXIK kodi 02202002005131011 MXIK nomi Sharbat tarkibli ichimliklar ERMAK O’RIKLI SOK ASIL shisha butilka 0,64 l O'lchov birligi dona (butilka) 0.64 litr Markirovka kodi 0104780099470842217qgjORy!Nd9\"-002993iAaa Komitent STIR\/JSHSHIR ENERGETIK ADRENALIN RUSH 025L UZB 1 9,990.00 QQS qiymati 1,070.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780022620931 MXIK kodi 02202003001027009 MXIK nomi Energetik ichimlik Adrenaline Rush Alyuminiy banka 0,25 l O'lchov birligi dona (alyumin banka) 0.25 litr Markirovka kodi 0104780022620931217Xs8?EI=xn>EV002993isX\/ Komitent STIR\/JSHSHIR SOK ABRIKOSOVIY ERMAK STKL 640ML 1 20,490.00 QQS qiymati 2,195.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780099470842 MXIK kodi 02202002005131011 MXIK nomi Sharbat tarkibli ichimliklar ERMAK O’RIKLI SOK ASIL shisha butilka 0,64 l O'lchov birligi dona (butilka) 0.64 litr Markirovka kodi 0104780099470842217'ihLN<i3lKTZ002993HfDc Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 50,970.00 Bank kartasi turi Shaxsiy Jami to`lov: 50,970.00 Umumiy QQS qiymati 5,461.08 Markirovka kodlari ×",
+      "createdAt": 1778055763963
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1777027380000,
+      "sellerName": "\"MAGNIT SREDNYAYA AZIYA\" MCHJ XK",
+      "totalAmountTiyin": 23100000,
+      "vatAmountTiyin": 2474900,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230628121&r=25649&c=20260424154352&s=141813336527",
+      "rawText": "LG420230628121 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MAGNIT SREDNYAYA AZIYA\" MCHJ XK г. Ташкент, Чиланзарский район, массив Олмазор, 183а 309167892 LG420230628121 Chek raqami : 25649 Onlayn NKM nomi : Set Retail-10 SN : 100461 24.04.2026, 15:43 Nomi Soni Narxi PRELEST Turmak\/u lak kuch fiks 160sm3 (Arnest) :24 (шт (аэрозо 1 29,600.00 QQS qiymati 3,171.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600104010705 MXIK kodi 03305006001000000 MXIK nomi Soch uchun lak O'lchov birligi dona (aэrozol qadoq) Markirovka kodi Komitent STIR\/JSHSHIR GARNIER Termo Himoya Dezodor sprey a\/u150ml(GARNIER):6 (шт) 1 38,500.00 QQS qiymati 2,882.00 QQS foizi 12 % Chegirma\/Boshqa 11600\/0 Shtrix kodi 3600541739963 MXIK kodi 03307002001000000 MXIK nomi Dezodorant O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR SPLAT Bola t\/p Juicy Tutti-Frutti 35ml(Organik):12 1 26,900.00 QQS qiymati 2,207.00 QQS foizi 12 % Chegirma\/Boshqa 6300\/0 Shtrix kodi 4603014004949 MXIK kodi 03306001001000000 MXIK nomi Tish pastasi O'lchov birligi dona (tuba) Markirovka kodi Komitent STIR\/JSHSHIR BARNI Pishiriq biskvitli Sut 30g 1 7,400.00 QQS qiymati 621.00 QQS foizi 12 % Chegirma\/Boshqa 1600\/0 Shtrix kodi 7622210336743 MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR MOYA SENA Nam salfet universal 15dona:36 (шт) 1 4,900.00 QQS qiymati 525.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4680328052798 MXIK kodi 03307001002000000 MXIK nomi Gigiyenik salfetkalar (nam va qurutuvchi ) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR LIKATO Professional Magic Oil 100ml:4 (шт) 1 143,200.00 QQS qiymati 15,343.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4603757311236 MXIK kodi 03304011006000000 MXIK nomi Badan uchun krem O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 231,000.00 Bank kartalari 0.00 Jami to`lov: 231,000.00 Umumiy QQS qiymati 24,749.00 Mark",
+      "createdAt": 1778055297478
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776960420000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 18000000,
+      "vatAmountTiyin": 1928571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=324166&c=20260423210735&s=154501240597",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 324166 Onlayn NKM nomi : ARTIX SN : makro603 23.04.2026, 21:07 Nomi Soni Narxi SOL HERBION GIMALAYROZOVMELNITSA 225GR 1 37,990.00 QQS qiymati 4,058.93 QQS foizi 12 % Chegirma\/Boshqa 0\/106.67 Shtrix kodi 8964002385317 MXIK kodi 02501001007000000 MXIK nomi Inson istemoli uchun mos tuz O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SOL GIMALAY ROZOV SREDN 450G 1 7,990.00 QQS qiymati 853.67 QQS foizi 12 % Chegirma\/Boshqa 0\/22.43 Shtrix kodi 4780130090053 MXIK kodi 02501001007032020 MXIK nomi Inson istemoli uchun mos tuz Orzu Osh Tuzi yodlangan 1-nav 1 kg O'lchov birligi dona (paket) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SAHAR 2KG 1 25,990.00 QQS qiymati 2,776.82 QQS foizi 12 % Chegirma\/Boshqa 0\/72.98 Shtrix kodi 3000000007 MXIK kodi 01701001001000000 MXIK nomi Qadoqlangan shakar O'lchov birligi pachka=2 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL SUTTETBEZLAKTOZ2% 1L 1 21,990.00 QQS qiymati 2,349.46 QQS foizi 12 % Chegirma\/Boshqa 0\/61.74 Shtrix kodi 4780100651642 MXIK kodi 00401001001052001 MXIK nomi Sut Lactel laktozasiz sut, karton quti 1 kg O'lchov birligi dona (quti) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SUXARIKI XRUS TEAM SHASHLIK 95GR 1 8,990.00 QQS qiymati 960.51 QQS foizi 12 % Chegirma\/Boshqa 0\/25.24 Shtrix kodi 4780073120299 MXIK kodi 01905002004000000 MXIK nomi Boshqa non turlari O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR GRENKI RJANNIE FLINT SO VKUS TOMAT 180GR 1 13,490.00 QQS qiymati 1,441.30 QQS foizi 12 % Chegirma\/Boshqa 0\/37.88 Shtrix kodi 4870254130480 MXIK kodi 01905002004000000 MXIK nomi Boshqa non turlari O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR SUXARIKI XRUS TEAM SHASHLICHNIY 60GR 1 5,490.00 QQS qiymati 586.56 QQS foizi 12 % Chegirma\/Boshqa 0\/15.41 Shtrix kodi 4780073120367 MXIK kodi 0190500200400000",
+      "createdAt": 1778055710272
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776689880000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 37154000,
+      "vatAmountTiyin": 3980783,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=321588&c=20260420175802&s=538484540230",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 321588 Onlayn NKM nomi : ARTIX SN : makro603 20.04.2026, 17:58 Nomi Soni Narxi SOLOMKA KREKER 250GR ASSORTI 1 22,490.00 QQS qiymati 2,409.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4785504100031 MXIK kodi 02004001004090003 MXIK nomi Sirka yoki sirka kislotasi qo’shilmagan holda pishirilgan yoki konservalangan muzlatilmagan sabzavotlar PROGRESS Polipropilen paket 250 g O'lchov birligi dona (paket) 250 gramm Markirovka kodi Komitent STIR\/JSHSHIR HALLS LEDENCI 25GR ORIGINAL 1 5,490.00 QQS qiymati 588.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 7622202051234 MXIK kodi 01704001016135003 MXIK nomi Shakardan konfet Halls asl lolipop 25 gr knvrt O'lchov birligi dona (qadoq) 25 gramm Markirovka kodi Komitent STIR\/JSHSHIR HALLS LEDENCI 25GR ORIGINAL 1 5,490.00 QQS qiymati 588.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 7622202051234 MXIK kodi 01704001016135003 MXIK nomi Shakardan konfet Halls asl lolipop 25 gr knvrt O'lchov birligi dona (qadoq) 25 gramm Markirovka kodi Komitent STIR\/JSHSHIR HALLS LEDENCI 25GR ORIGINAL 1 5,490.00 QQS qiymati 588.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 7622202051234 MXIK kodi 01704001016135003 MXIK nomi Shakardan konfet Halls asl lolipop 25 gr knvrt O'lchov birligi dona (qadoq) 25 gramm Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL SUTIM 2% 200ML 1 6,490.00 QQS qiymati 695.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470059 MXIK kodi 00401001001076003 MXIK nomi Sut lactel yog’liligi 2% tetra brik 200 ml O'lchov birligi dona (tetra brik) 200 millilitr Markirovka kodi Komitent STIR\/JSHSHIR MOLOKO LACTEL SUTIM 2% 200ML 1 6,490.00 QQS qiymati 695.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470059 MXIK kodi 00401001001076003 MXIK nomi Sut lactel yog’liligi 2% tetra brik 200 ml O'lchov birligi dona (tetra brik) 200 millilitr Markiro",
+      "createdAt": 1778055795915
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776666480000,
+      "sellerName": "\"BUFET17\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 5800000,
+      "vatAmountTiyin": 621428,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230621050&r=4833&c=20260420112835&s=526555150725",
+      "rawText": "LG420230621050 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"BUFET17\" MAS'ULIYATI CHEKLANGAN JAMIYAT ш. Амир Темур, дом 49 312315794 LG420230621050 Chek raqami : 4833 Onlayn NKM nomi : iiko Fiscal SN : iiko779 20.04.2026, 11:28 Nomi Soni Narxi Кофе Капучино 1 43,000.00 QQS qiymati 4,607.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001010000002 MXIK nomi Alkogolsiz ichimliklar qahva va qahva tarkibli ichimliklar, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (krujka\/stakan) Markirovka kodi Komitent STIR\/JSHSHIR Молоко миндальное (доп опция) 1 15,000.00 QQS qiymati 1,607.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02106999035000000 MXIK nomi Tayyor asosiy taomlar (savdo shaxobchalarida realizatsiya qilingan) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 58,000.00 Bank kartalari 0.00 Jami to`lov: 58,000.00 Umumiy QQS qiymati 6,214.28 Markirovka kodlari ×",
+      "createdAt": 1778055775949
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776600240000,
+      "sellerName": "\"UZUM MARKET\" MCHJ XK",
+      "totalAmountTiyin": 3074000,
+      "vatAmountTiyin": 329356,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/epi?t=EP000000000552&r=58957505&c=20260419170406&s=843435502387",
+      "rawText": "EP000000000552 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"UZUM MARKET\" MCHJ XK Damariq MFY, Kichik Beshyog‘och ko'chasi , 132-a-uy 309376127 EP000000000552 Chek raqami : 58957505 Marketpleys nomi : UZUM MARKET 19.04.2026, 17:04 Nomi Soni Narxi Патч-корд GCR LSZH cat.5e 1 Гбит\/с RJ45 LAN кабель для интернет 1 25,740.00 QQS qiymati 2,757.85 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4603768524793 MXIK kodi 08544002016000014 MXIK nomi Ulagichlar bilan jihozlangan o’tkazgichlar (barcha turdagi) Birlashtiruvchi qurilmalar bilan jihozlangan o'tkazgichlar (barcha turdagi) O'lchov birligi metr Markirovka kodi Komitent STIR\/JSHSHIR 311405454 Доставка 1 5,000.00 QQS qiymati 535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10112006002000000 MXIK nomi Maxsulotlarni yetkazib berish xizmati O'lchov birligi xizmat (marta) Markirovka kodi Komitent STIR\/JSHSHIR 309376127 Naqd pul 30,740.00 Bank kartalari 0.00 Jami to`lov: 30,740.00 Umumiy QQS qiymati 3,293.56 Fiskal belgi 843435502387 Markirovka kodlari ×",
+      "createdAt": 1778255892658
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776586080000,
+      "sellerName": "\"SHASHLEEK\" MCHJ",
+      "totalAmountTiyin": 50500000,
+      "vatAmountTiyin": 5410714,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230622878&r=8945&c=20260419130800&s=570752927641",
+      "rawText": "LG420230622878 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"SHASHLEEK\" MCHJ Toshkent viloyati, Bo‘stonliq tumani, Gʻazalkent MFY, Amirsoy ko'chasi, 56-uy 306061814 LG420230622878 Chek raqami : 8945 Onlayn NKM nomi : PAX A-930 SN : 2820249204 19.04.2026, 13:08 Nomi Soni Narxi 1Шашлык в ассортименты 1 505,000.00 QQS qiymati 54,107.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 11 MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi dona (set) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 505,000.00 Bank kartalari 0.00 Jami to`lov: 505,000.00 Umumiy QQS qiymati 54,107.14 Markirovka kodlari ×",
+      "createdAt": 1778055714020
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776437880000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 10885000,
+      "vatAmountTiyin": 1166249,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=452034&c=20260417195834&s=635650765763",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 452034 Onlayn NKM nomi : ARTIX SN : makro602 17.04.2026, 19:58 Nomi Soni Narxi SMETANA KAMILKA 20% 350GR 1 21,490.00 QQS qiymati 2,302.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780110080500 MXIK kodi 00403999008134002 MXIK nomi Smetana Kamilka polipropilen stakan 450 g O'lchov birligi dona (stakan) 450 gramm Markirovka kodi Komitent STIR\/JSHSHIR KOTEX PROKLULTRA SOFT NORMAL 10SHT 1 30,990.00 QQS qiymati 2,673.21 QQS foizi 12 % Chegirma\/Boshqa 6040\/0 Shtrix kodi 5029053542669 MXIK kodi 09619001001003006 MXIK nomi Ayollar uchun sanitariya yostiqchalari (shu jumladan erkaklar uchun) Kotex Ayollar uchun Ultra soft normal 4 10 dona pl O'lchov birligi dona (prokladka) Markirovka kodi Komitent STIR\/JSHSHIR SIROK GLAZMUSA VAFELJIYAN 90GR 5SHT 1 11,490.00 QQS qiymati 1,231.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780023400532 MXIK kodi 02105001004046076 MXIK nomi Qadoqlangan muzqaymoq MUSA-SERVIS Musa-Servis Senior qaymoqli Polietilen paket 1000 g. O'lchov birligi dona (paket) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR ORBIT 13,6GR 10 DRAJE YAGODNIY MIKS 1 3,990.00 QQS qiymati 427.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 46116482 MXIK kodi 02106999018092020 MXIK nomi Shakar qo’shilmagan saqich Orbit mevali miks 13,6g O'lchov birligi dona (saqich) 13.6 gramm Markirovka kodi Komitent STIR\/JSHSHIR ORBIT 13,6GR 10 DRAJE YAGODNIY MIKS 1 3,990.00 QQS qiymati 427.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 46116482 MXIK kodi 02106999018092020 MXIK nomi Shakar qo’shilmagan saqich Orbit mevali miks 13,6g O'lchov birligi dona (saqich) 13.6 gramm Markirovka kodi Komitent STIR\/JSHSHIR COCA-COLA 15L PET 1 13,990.00 QQS qiymati 1,387.50 QQS foizi 12 % Chegirma\/Boshqa 1040\/0 Shtrix kodi 4780069000154 MXIK kodi 02202002001010009 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) COC",
+      "createdAt": 1778055806699
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776406380000,
+      "sellerName": "\"MAZZALI SUPER FOOD\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 7700000,
+      "vatAmountTiyin": 825000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420211614815&r=4085&c=20260417111321&s=837894012045",
+      "rawText": "LG420211614815 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MAZZALI SUPER FOOD\" MAS'ULIYATI CHEKLANGAN JAMIYAT Toshkent shahri, Mirobod tumani, Oybek MFY, Nukus ko'chasi, 16-uy, 16-xonadon 310964418 LG420211614815 Chek raqami : 4085 Onlayn NKM nomi : R_keeper 7 SN : 100894 17.04.2026, 11:13 Nomi Soni Narxi Королевский с орехами 3 48,000.00 QQS qiymati 5,142.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780105140769 MXIK kodi 10202001003000000 MXIK nomi Umumiy ovqatlanish shaxobchalarida tayyorlangan salatlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Смузи Тропический 1 29,000.00 QQS qiymati 3,107.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780105142299 MXIK kodi 10202001010000003 MXIK nomi Alkogolsiz ichimliklar boshqalar (kompotlar, kvas, mors, limonadlar va boshqalar), umumiy ovqatlanish shaxobchalarida tayyorlangan (tayyorlash jarayonida raqamli markirovkalanadigan ichimliklardan foydalanilmagan) O'lchov birligi dona (krujka\/stakan\/grafin) Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 77,000.00 Bank kartalari 0.00 Jami to`lov: 77,000.00 Umumiy QQS qiymati 8,250.00 Markirovka kodlari ×",
+      "createdAt": 1778057048228
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776349680000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 40000000,
+      "vatAmountTiyin": 4285711,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031938&r=220220&c=20260416192839&s=545112200892",
+      "rawText": "VG343420031938 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031938 Chek raqami : 220220 Onlayn NKM nomi : ARTIX SN : makro604 16.04.2026, 19:28 Nomi Soni Narxi SUXOFRUKT BONUZ SOLE50GR 1 14,490.00 QQS qiymati 1,462.76 QQS foizi 12 % Chegirma\/Boshqa 0\/837.59 Shtrix kodi 4780067100481 MXIK kodi 00811004002000000 MXIK nomi Quritilgan mevalar assortisi O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR GEL DDUSHA+SHAM TAIGA LEGEND 500ML 1 59,990.00 QQS qiymati 6,055.96 QQS foizi 12 % Chegirma\/Boshqa 0\/3467.7 Shtrix kodi 4610141226205 MXIK kodi 03401002005000000 MXIK nomi Dush uchun gel O'lchov birligi flakon=500 millilitr Markirovka kodi Komitent STIR\/JSHSHIR GRISSINI FELICITA XLEBPALS CHESN180GR 1 14,990.00 QQS qiymati 1,513.23 QQS foizi 12 % Chegirma\/Boshqa 0\/866.48 Shtrix kodi 4780020460294 MXIK kodi 01905012001000000 MXIK nomi Har xil turdagi pechenyelar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR REXONA DEO STICK 50ML COBALT 1 42,990.00 QQS qiymati 4,339.82 QQS foizi 12 % Chegirma\/Boshqa 0\/2485.02 Shtrix kodi 73103714 MXIK kodi 03307002001026043 MXIK nomi Dezodorant Rexona Cobalt Men 50ml O'lchov birligi dona (butilka ) 50 millilitr Markirovka kodi Komitent STIR\/JSHSHIR XLEB PAL GRISSINI FELICITA PIZZA 90GR 1 9,990.00 QQS qiymati 1,008.48 QQS foizi 12 % Chegirma\/Boshqa 0\/577.48 Shtrix kodi 4780020460232 MXIK kodi 01905012001000000 MXIK nomi Har xil turdagi pechenyelar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR GRISSINI FELICITA XLEBPALS TOMAT 90GR 1 9,990.00 QQS qiymati 1,008.49 QQS foizi 12 % Chegirma\/Boshqa 0\/577.47 Shtrix kodi 4780020460188 MXIK kodi 01905012001000000 MXIK nomi Har xil turdagi pechenyelar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KOLB SAGBAN PKOPCH OXOT KG 0.238 25,225.62 QQS qiymati 2,546.51 QQS foizi 12 % Chegirma\/Boshqa 0\/1458.16 Shtrix kodi 00885 MXIK kodi 01601001001000000 MXIK nomi Kol",
+      "createdAt": 1778055904083
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776347340000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 17430700,
+      "vatAmountTiyin": 1867574,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644666&r=20054&c=20260416184903&s=035588114552",
+      "rawText": "LG420230644666 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644666 Chek raqami : 20054 Onlayn NKM nomi : POS2k SN : AFK-20250725-000666 16.04.2026, 18:49 Nomi Soni Narxi Mol Rosto (S), kg 0.432 71,276.00 QQS qiymati 7,636.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2079395004328 MXIK kodi 00201001001000000 MXIK nomi Sovutilgan lahm mol go’shti O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Kokteyl Nesquik banan ta'mi b-n 200ml 1 8,490.00 QQS qiymati 909.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470363 MXIK kodi 02202004006002004 MXIK nomi Nestle banan tamli kokteyl Tetra Brick Aseptic 200 ml O'lchov birligi dona (tetra pak) 200 millilitr Markirovka kodi Komitent STIR\/JSHSHIR Sosiska Asl Baraka mol v\/q 400±20g 1 41,990.00 QQS qiymati 4,498.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780080861406 MXIK kodi 01601002002030004 MXIK nomi Sosiskalar (barcha turdagi) Asl Baraka Sosiska qaynatilgan mol go’shtidan tovuq terisi qo’shilgan 1 nav Govyaji Asl O'lchov birligi dona (qadoq) Markirovka kodi Komitent STIR\/JSHSHIR Konfet Korivka Roshen, kg 0.876 52,551.00 QQS qiymati 5,630.46 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2063403008767 MXIK kodi 01704001016000000 MXIK nomi Shakardan konfet O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 174,307.00 Bank kartalari 0.00 Jami to`lov: 174,307.00 Umumiy QQS qiymati 18,675.74 Markirovka kodlari ×",
+      "createdAt": 1778055860533
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776174540000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 7668000,
+      "vatAmountTiyin": 821571,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644665&r=87527&c=20260414184918&s=167182432479",
+      "rawText": "LG420230644665 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644665 Chek raqami : 87527 Onlayn NKM nomi : POS2k SN : AFK-20250725-000665 14.04.2026, 18:49 Nomi Soni Narxi Teshikkulcha 365 kun vanilli 200g 1 6,490.00 QQS qiymati 695.36 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780094938255 MXIK kodi 01905012001000000 MXIK nomi Har xil turdagi pechenyelar O'lchov birligi pachka=200 gramm Markirovka kodi Komitent STIR\/JSHSHIR Pyure \"ФрутоНяня\" olchernikapech 90g 1 12,990.00 QQS qiymati 1,391.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4600338011196 MXIK kodi 01904001002027052 MXIK nomi Don va boshoqli o’simliklardan tayyor oziq-ovqat mahsulotlari ФрутоНяня olma-chernika pechenye bilan 90g O'lchov birligi dona (qadoq) 90 gramm Markirovka kodi Komitent STIR\/JSHSHIR Tvorog Essi 5% 200g 1 15,490.00 QQS qiymati 1,659.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780048130261 MXIK kodi 00406002001000000 MXIK nomi Tvorog (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Smetana Kamilka 20% 180g 1 13,990.00 QQS qiymati 1,498.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780110080517 MXIK kodi 00403999008000000 MXIK nomi Smetana O'lchov birligi stakan=180 gramm Markirovka kodi Komitent STIR\/JSHSHIR Kokteyl Nesquik banan ta'mi b-n 200ml 1 8,490.00 QQS qiymati 909.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470363 MXIK kodi 02202004006002004 MXIK nomi Nestle banan tamli kokteyl Tetra Brick Aseptic 200 ml O'lchov birligi dona (tetra pak) 200 millilitr Markirovka kodi Komitent STIR\/JSHSHIR Yog ich Actimel Kids malina-muzqa2,5 2 18,780.00 QQS qiymati 2,012.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8696368202655 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Logotipli paket Bio poelitilen 4 k g",
+      "createdAt": 1778055898602
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776173220000,
+      "sellerName": "\"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 8600000,
+      "vatAmountTiyin": 921428,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006034585&r=243605&c=20260414182743&s=660335156123",
+      "rawText": "YZ231006034585 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT ул. Нукус, дом 37 306080395 YZ231006034585 Chek raqami : 243605 Onlayn NKM nomi : iiko Fiscal SN : iiko320 14.04.2026, 18:27 Nomi Soni Narxi Лочира мини сет 1 шт 1 12,000.00 QQS qiymati 1,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Ватрушки 1 шт 1 10,000.00 QQS qiymati 1,071.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Пельмени мини цветные 1 шт 1 59,000.00 QQS qiymati 6,321.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Сок яблочный 200мл 1 шт 1 5,000.00 QQS qiymati 535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02009001006076062 MXIK nomi Meva va sabzavot sharbatlari, jumladan shinnisi (barcha turdagi) Сочная долина Olma Tetra Pak 0.2 l O'lchov birligi dona (tetra pak) 0.20 litr Markirovka kodi 0104780032051176217Uxmo8juU5:x) Komitent STIR\/JSHSHIR Naqd pul 86,000.00 Bank kartalari 0.00 Jami to`lov: 86,000.00 Umumiy QQS qiymati 9,214.28 Markirovka kodlari ×",
+      "createdAt": 1778055800554
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1776150600000,
+      "sellerName": "\"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 8486000,
+      "vatAmountTiyin": 909214,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006034675&r=156259&c=20260414121033&s=215928197700",
+      "rawText": "YZ231006034675 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT Яккасарой тумани, Бобур кучаси, 6-уй 306080395 YZ231006034675 Chek raqami : 156259 Onlayn NKM nomi : E-POS SN : 159511 14.04.2026, 12:10 Nomi Soni Narxi КАПУЧИНО ДВОЙНОЙ - МИНДАЛЬ 1 39,000.00 QQS qiymati 4,178.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001010000002 MXIK nomi Alkogolsiz ichimliklar qahva va qahva tarkibli ichimliklar, umumiy ovqatlanish shaxobchalarida tayyorlangan O'lchov birligi dona (krujka\/stakan) Markirovka kodi Komitent STIR\/JSHSHIR Имбирный пряник Капкейк 1 27,000.00 QQS qiymati 2,892.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Яблочный пирог 0.063 13,860.00 QQS qiymati 1,485.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Печенье \"Крошка\" 1 5,000.00 QQS qiymati 535.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 84,860.00 Bank kartalari 0.00 Jami to`lov: 84,860.00 Umumiy QQS qiymati 9,092.14 Markirovka kodlari ×",
+      "createdAt": 1778055828973
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775991000000,
+      "sellerName": "\"SINTEKS OZB\" MCHJ XK",
+      "totalAmountTiyin": 17990000,
+      "vatAmountTiyin": 1927500,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420008651&r=15493&c=20260412155057&s=374104430453",
+      "rawText": "VG343420008651 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"SINTEKS OZB\" MCHJ XK Toshkent shahar, Shayxontohur tumani,Oqcha MFY, Olmazor kochasi, Toshkent city , 3 lot 310638315 VG343420008651 Chek raqami : 15493 Onlayn NKM nomi : Fiscal Box SN : 10010963 12.04.2026, 15:50 Nomi Soni Narxi Рубашка 1 179,900.00 QQS qiymati 19,275.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 100080730739 MXIK kodi 06206001003000000 MXIK nomi Bluzka va ko’ylaklar ayollar uchun (trikotaj bo’lmagan) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 179,900.00 Bank kartalari 0.00 Jami to`lov: 179,900.00 Umumiy QQS qiymati 19,275.00 Markirovka kodlari ×",
+      "createdAt": 1778055810314
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775909340000,
+      "sellerName": "\"KREDO BEST\" MCHJ",
+      "totalAmountTiyin": 10000000,
+      "vatAmountTiyin": 1071429,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420026083&r=47661&c=20260411170938&s=218671833170",
+      "rawText": "VG343420026083 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"KREDO BEST\" MCHJ Toshkent shahar,Mirobod tumani,Nukus ko'chasi,83 A uy 309542584 VG343420026083 Chek raqami : 47661 Onlayn NKM nomi : PAX A-930 SN : 1170778951 11.04.2026, 17:09 Nomi Soni Narxi Живое пиво 15л 1 100,000.00 QQS qiymati 10,714.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780011640308 MXIK kodi 02203001001333001 MXIK nomi Pivo ЖИВОЕ ПИВО och rangli pasterizatsiyalangan quvvati 4,5% pet butilka 1,5 l O'lchov birligi dona (pet butilka) 1.5 litr Markirovka kodi 010478001164030821736gHLO Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 100,000.00 Bank kartasi turi Shaxsiy RRN 3637626089 Jami to`lov: 100,000.00 Umumiy QQS qiymati 10,714.29 Markirovka kodlari ×",
+      "createdAt": 1778055822546
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775839200000,
+      "sellerName": "\"UZUM TEZKOR\" MCHJ XK",
+      "totalAmountTiyin": 90640000,
+      "vatAmountTiyin": 9605356,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/epi?t=EP000000000654&r=9459253&c=20260410214000&s=243123702333",
+      "rawText": "EP000000000654 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"UZUM TEZKOR\" MCHJ XK Damariq MFY, Kichik Beshyog‘och ko'chasi , 132-a-uy 310088368 EP000000000654 Chek raqami : 9459253 Marketpleys nomi : UZUM TEZKOR 10.04.2026, 21:40 Nomi Soni Narxi Сувлаки из креветок 2 480,000.00 QQS qiymati 51,428.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi dona (set) Markirovka kodi Komitent STIR\/JSHSHIR 304405038 Сувлаки из лосося 2 340,000.00 QQS qiymati 36,428.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi dona (set) Markirovka kodi Komitent STIR\/JSHSHIR 304405038 Овощи на огне 1 49,000.00 QQS qiymati 5,250.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10202001006000007 MXIK nomi Asosiy taomlar umumiy ovqatlanish shaxobchalarida tayyorlangan boshqa O'lchov birligi dona (set) Markirovka kodi Komitent STIR\/JSHSHIR 304405038 Упаковка 11 27,500.00 QQS qiymati 2,946.42 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 06305001002000000 MXIK nomi Paket O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 304405038 Услуги сервиса 1 9,900.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 10305008002000000 MXIK nomi Uchinchi shaxslarga dasturiy taminot (malumotlar bazasi)dan foydalanish imkoniyatini berish (shu jumladan, dasturiy taminotning qo’shimcha funksiyalarini taqdim etish) xizmatlari O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR 310088368 Naqd pul 906,400.00 Bank kartalari 0.00 Jami to`lov: 906,400.00 Umumiy QQS qiymati 96,053.56 Fiskal belgi 243123702333 Markirovka kodlari ×",
+      "createdAt": 1778253723817
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775836380000,
+      "sellerName": "\"KREDO BEST\" MCHJ",
+      "totalAmountTiyin": 10800000,
+      "vatAmountTiyin": 1157143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420026083&r=47555&c=20260410205306&s=331638885541",
+      "rawText": "VG343420026083 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"KREDO BEST\" MCHJ Toshkent shahar,Mirobod tumani,Nukus ko'chasi,83 A uy 309542584 VG343420026083 Chek raqami : 47555 Onlayn NKM nomi : PAX A-930 SN : 1170778951 10.04.2026, 20:53 Nomi Soni Narxi winston caster 1 108,000.00 QQS qiymati 11,571.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 47802049 MXIK kodi 02402001001009003 MXIK nomi Filtrli sigaretlar Winston Winston Compact Caster O'lchov birligi dona (pachka) Markirovka kodi 000000478020497fQpaQp Komitent STIR\/JSHSHIR Naqd pul 0.00 Bank kartalari 108,000.00 Bank kartasi turi Shaxsiy RRN 3634705759 Jami to`lov: 108,000.00 Umumiy QQS qiymati 11,571.43 Markirovka kodlari ×",
+      "createdAt": 1778055835388
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775638440000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 22508400,
+      "vatAmountTiyin": 2411613,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644665&r=84479&c=20260408135416&s=136893116314",
+      "rawText": "LG420230644665 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644665 Chek raqami : 84479 Onlayn NKM nomi : POS2k SN : AFK-20250725-000665 08.04.2026, 13:54 Nomi Soni Narxi Yopgan non Korzinka, dona** 1 3,700.00 QQS qiymati 396.43 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 21103872 MXIK kodi 01905002007000000 MXIK nomi Yopgan non O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR ЯЙЦА КУРИНЫЕ ОТБОРНЫЕ ИЗ КОРЗИНКИ 10ШТ 1 21,990.00 QQS qiymati 2,356.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780094934547 MXIK kodi 00407001001000000 MXIK nomi Tovuq tuxumi O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Laktozasiz sut Lactel 2% 1L 1 22,990.00 QQS qiymati 2,463.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780100651642 MXIK kodi 00401001001052001 MXIK nomi Sut Lactel laktozasiz sut, karton quti 1 kg O'lchov birligi dona (quti) 1 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Konfet Korivka Roshen, kg 0.476 28,555.00 QQS qiymati 3,059.46 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2063403004769 MXIK kodi 01704001016000000 MXIK nomi Shakardan konfet O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Smetana Kamilka 20% 350g 1 21,990.00 QQS qiymati 2,356.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780110080500 MXIK kodi 00403999008000000 MXIK nomi Smetana O'lchov birligi stakan=350 gramm Markirovka kodi Komitent STIR\/JSHSHIR Yog ich Actimel Kids malina-muzqa2,5 6 53,340.00 QQS qiymati 5,715.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8696368202655 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Mol Suyak (S), kg 0.658 16,443.00 QQS qiymati 1,761.75 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 2079390006587 MXIK kodi 00206001012000000 MXIK nomi Qoramol suyagi O'lchov birligi kilogramm Markirovk",
+      "createdAt": 1779887681806
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775541420000,
+      "sellerName": "\"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA",
+      "totalAmountTiyin": 16701000,
+      "vatAmountTiyin": 1789392,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=LG420230644664&r=84229&c=20260407105718&s=054387142715",
+      "rawText": "LG420230644664 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ANGLESEY FOOD\" MAS`ULIYATI CHEKLANGAN JAMIYAT XORIJIY KORXONA Toshkent shahri, Mirobod tumani, Baynalminal MFY, Nukus ko'chasi, 89-uy 202099756 LG420230644664 Chek raqami : 84229 Onlayn NKM nomi : POS2k SN : AFK-20250725-000664 07.04.2026, 10:57 Nomi Soni Narxi Nescafe classic crema s\/i 95g 1 56,990.00 QQS qiymati 6,106.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4606272038763 MXIK kodi 00901001001000000 MXIK nomi Maydalangan (kukunsimon) kofe O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Saqich Alif tropical, dona 1 10,990.00 QQS qiymati 1,177.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780048052617 MXIK kodi 02106999018005017 MXIK nomi Shakar qo’shilmagan saqich Alif Saqich tamli Tropic 2.7 g., metall qog’ozli o’ram O'lchov birligi dona (saqich) 2.7 gramm Markirovka kodi Komitent STIR\/JSHSHIR Saqich Alif Strawberry, dona 1 10,990.00 QQS qiymati 1,177.50 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780048056264 MXIK kodi 02106999018005016 MXIK nomi Shakar qo’shilmagan saqich Alif Saqich qulupnay tamli 2.7 g., metall qog’ozli o’ram O'lchov birligi dona (saqich) 2.7 gramm Markirovka kodi Komitent STIR\/JSHSHIR Yog ich Actimel Kids qulup-banan 2,5% 2 17,780.00 QQS qiymati 1,905.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8696368202617 MXIK kodi 00403002001000000 MXIK nomi Yogurt O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Kokteyl Nesquik banan ta'mi b-n 200ml 1 8,490.00 QQS qiymati 909.64 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780042470363 MXIK kodi 02202004006002004 MXIK nomi Nestle banan tamli kokteyl Tetra Brick Aseptic 200 ml O'lchov birligi dona (tetra pak) 200 millilitr Markirovka kodi Komitent STIR\/JSHSHIR Qahva Mehmet efendi 100g* 1 33,490.00 QQS qiymati 3,588.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8690627121206 MXIK kodi 00901001001112002 MXIK nomi Maydalangan (kukunsimon) kofe Mehmet Efendi Kurukahveci turk uchun ",
+      "createdAt": 1778055909273
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775540280000,
+      "sellerName": "\"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT",
+      "totalAmountTiyin": 19200000,
+      "vatAmountTiyin": 2057143,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006034585&r=239245&c=20260407103812&s=029441353159",
+      "rawText": "YZ231006034585 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"MADINA-QANDOLAT\" MAS'ULIYATI CHEKLANGAN JAMIYAT ул. Нукус, дом 37 306080395 YZ231006034585 Chek raqami : 239245 Onlayn NKM nomi : iiko Fiscal SN : iiko320 07.04.2026, 10:38 Nomi Soni Narxi Пельмени мини цветные 2 шт 1 118,000.00 QQS qiymati 12,642.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Пельмени Говяжьи 1 шт 1 55,000.00 QQS qiymati 5,892.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Круассан Классический 1 шт 1 19,000.00 QQS qiymati 2,035.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 01905007001000000 MXIK nomi Un qandolat mahsulotlari va pishiriqlar (barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 192,000.00 Bank kartalari 0.00 Jami to`lov: 192,000.00 Umumiy QQS qiymati 20,571.43 Markirovka kodlari ×",
+      "createdAt": 1778055305677
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775390340000,
+      "sellerName": "\"RETAIL TRADE EAST\" MCHJ",
+      "totalAmountTiyin": 4150000,
+      "vatAmountTiyin": 444642,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420010689&r=103182&c=20260405165909&s=578451453057",
+      "rawText": "VG343420010689 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"RETAIL TRADE EAST\" MCHJ \"г. Ташкент, Мирабадский район, улица Авлиё ота в торговом ряду рядом с рынком \"\"Миробод\"\", д. 14-15\" 309532637 VG343420010689 Chek raqami : 103182 Onlayn NKM nomi : Set Retail-10 SN : 100135 05.04.2026, 16:59 Nomi Soni Narxi O'rtacha Mayka paket 1 500.00 QQS qiymati 53.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 5025296 MXIK kodi 03923001002000000 MXIK nomi Sumkalar va poliyetilen paketlar O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR O'yinchoq Sport&Fun Let disk s pist d\/zapuska assort 1 25,000.00 QQS qiymati 2,678.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4650274109686 MXIK kodi 09503018001000000 MXIK nomi Boshqa o’yinchoqlar, shu jumladan to’plamladagi o’yinchoqlar (boshqa subpozitsiyalarga kiritilmagan barcha turdagi) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Gazlanmagan suv Family Time shaftoli 0,5l p\/b 1 4,000.00 QQS qiymati 428.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780044571211 MXIK kodi 02202002001335022 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) Family Shaftoli, PET butilka 0,5 l O'lchov birligi dona (pэt butilka) 0.50 litr Markirovka kodi 010478004457121121Kp(6l-GhW!JsT Komitent STIR\/JSHSHIR Lidskiy Tim qora kvasi 0,45l al\/b 1 12,000.00 QQS qiymati 1,285.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4810285011327 MXIK kodi 02202004008009004 MXIK nomi Kvas alkogolsiz Лидский Tyomniy alyuminiy banka 0,45 l O'lchov birligi dona (alyuminiy banka) 0.45 litr Markirovka kodi 010481028501132721T\"dKjNKDuS\/Px Komitent STIR\/JSHSHIR Naqd pul 41,500.00 Bank kartalari 0.00 Jami to`lov: 41,500.00 Umumiy QQS qiymati 4,446.42 Markirovka kodlari ×",
+      "createdAt": 1778056828935
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775387040000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 42562138,
+      "vatAmountTiyin": 4560229,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031936&r=310101&c=20260405160430&s=719518343044",
+      "rawText": "VG343420031936 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031936 Chek raqami : 310101 Onlayn NKM nomi : ARTIX SN : makro603 05.04.2026, 16:04 Nomi Soni Narxi KOLBROZMKOPCHASL FARHOD STAKAN 220GR 1 29,990.00 QQS qiymati 3,213.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780032401063 MXIK kodi 01601001001036042 MXIK nomi Kolbasa (barcha turdagi) Rozmetov mol va tovuq go’shtidan yarim dudlangan kolbasa O'lchov birligi dona (tayoq (palka)) 200 gramm Markirovka kodi Komitent STIR\/JSHSHIR SMETANA DOBROE DEREVUTRO 15% 200GR 1 15,390.00 QQS qiymati 1,648.93 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780104700179 MXIK kodi 00403999008064002 MXIK nomi Smetana Nazarmaxram milk smetana yog’liligi 20%, plastik stakan 0,2 kg O'lchov birligi dona (stakan) 0.20 kilogramm Markirovka kodi Komitent STIR\/JSHSHIR KETCHUP KLASS3 JELANIYA 250G 1 9,890.00 QQS qiymati 905.36 QQS foizi 12 % Chegirma\/Boshqa 1440\/0 Shtrix kodi 4870035002692 MXIK kodi 02103004001000000 MXIK nomi Ketchup O'lchov birligi paket=250 gramm Markirovka kodi Komitent STIR\/JSHSHIR SIR HOCHLAND FETAKSA 200GR 1 40,990.00 QQS qiymati 4,391.79 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4607004892608 MXIK kodi 00406001001000000 MXIK nomi Pishloqlar (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR SMES PECHEM DOMA DLYA KEKSA VANILNY300G 1 21,990.00 QQS qiymati 2,356.07 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4602112505174 MXIK kodi 01901002005000000 MXIK nomi Non-bulka, un va boshqa mahsulotlarni tayyorlash uchun aralashmalar O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR TVOROG KAMILKA 9% 200GR 1 15,990.00 QQS qiymati 1,713.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 4780110080197 MXIK kodi 00406002001103001 MXIK nomi Tvorog (barcha turdagi) Kamilka polipropilen stakan 200 g O'lchov birligi dona (stakan) 200 gramm Markirovka kodi Komitent STIR\/JSHSHIR MICELVODA CHLIN ",
+      "createdAt": 1778055290440
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775385780000,
+      "sellerName": "\"ZOO LITTLE\" MCHJ",
+      "totalAmountTiyin": 37546000,
+      "vatAmountTiyin": 4022786,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420021451&r=16312&c=20260405154318&s=242642240512",
+      "rawText": "VG343420021451 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"ZOO LITTLE\" MCHJ Toshkent sh, Mirobod tum, Mirobod MFY, Nukus kochasi, 88 uy, 73 xonadon. 311067194 VG343420021451 Chek raqami : 16312 Onlayn NKM nomi : - SN : 05.04.2026, 15:43 Nomi Soni Narxi (LO-70105) 600 гр LOLO FOODY LIFE FOR HAMSTER 600G 1 375,460.00 QQS qiymati 40,227.86 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 02309001001000000 MXIK nomi Ozuqa va ozuqa qo’shimchalari (barcha turdagi) O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 375,460.00 Bank kartalari 0.00 Jami to`lov: 375,460.00 Umumiy QQS qiymati 40,227.86 Markirovka kodlari ×",
+      "createdAt": 1778055692442
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775384520000,
+      "sellerName": "\"LC WAIKIKI RETAIL TASHKENT\" MCHJ XK",
+      "totalAmountTiyin": 6990000,
+      "vatAmountTiyin": 748929,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=YZ231006016396&r=59915&c=20260405152236&s=175335744583",
+      "rawText": "YZ231006016396 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"LC WAIKIKI RETAIL TASHKENT\" MCHJ XK Toshkent shahri, Chilonzor tumani, Olmazor massivi, 183a uy 306421208 YZ231006016396 Chek raqami : 59915 Onlayn NKM nomi : Fiscal Box SN : 10002654 05.04.2026, 15:22 Nomi Soni Narxi Посуда 1 69,900.00 QQS qiymati 7,489.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8685000188921 MXIK kodi 06111001001000000 MXIK nomi Bolalar kiyimi O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 69,900.00 Bank kartalari 0.00 Jami to`lov: 69,900.00 Umumiy QQS qiymati 7,489.29 Markirovka kodlari ×",
+      "createdAt": 1778055679639
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775382600000,
+      "sellerName": "ИП ООО \"DEFACTO RETAIL LIMITED\"",
+      "totalAmountTiyin": 49970000,
+      "vatAmountTiyin": 5353928,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420049436&r=19089&c=20260405145013&s=357293364414",
+      "rawText": "VG343420049436 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv ИП ООО \"DEFACTO RETAIL LIMITED\" Чилонзор тумани, массив Олмазор 183 а-уй 306779118 VG343420049436 Chek raqami : 19089 Onlayn NKM nomi : E-POS SN : 187271 05.04.2026, 14:50 Nomi Soni Narxi D2671AX Брюки (34, KH422-LTKHAKI, 26 SM) 1 249,900.00 QQS qiymati 26,775.00 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8684582244551 MXIK kodi 06203004001000000 MXIK nomi Shimlar erkaklar uchun (trikotaj bo’lmagan) O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR X3926AZ Футболка с коротким рукавом (XL, WT34-WHITE, 26 SP) 1 149,900.00 QQS qiymati 16,060.71 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8684582249310 MXIK kodi 06109001001000000 MXIK nomi Futbolkalar erkaklar uchun O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR G1730AX Упаковка трусов (L, BN307-LTBROWN, 26 SP) 1 99,900.00 QQS qiymati 10,703.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 8684582432606 MXIK kodi 06108001002000000 MXIK nomi Ichki kiyim ayollar uchun O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR Naqd pul 499,700.00 Bank kartalari 0.00 Jami to`lov: 499,700.00 Umumiy QQS qiymati 53,539.28 Markirovka kodlari ×",
+      "createdAt": 1778056815544
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775309520000,
+      "sellerName": "\"GOLDEN FISH GROUP\" MCHJ",
+      "totalAmountTiyin": 417020000,
+      "vatAmountTiyin": 30750000,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420007223&r=5515&c=20260404183250&s=557442054089",
+      "rawText": "VG343420007223 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"GOLDEN FISH GROUP\" MCHJ Ташкентская обл., Уртачирчикский район, Уртасарой МФЙ, ул. Уртасарой, дом 146 300990067 VG343420007223 Chek raqami : 5515 Onlayn NKM nomi : iiko Fiscal SN : iiko334 04.04.2026, 18:32 Nomi Soni Narxi Аренда топчана на выходные дни RELAX 1 3,500,000.00 QQS qiymati 272,678.57 QQS foizi 12 % Chegirma\/Boshqa 955000\/0 Shtrix kodi MXIK kodi 11099001001000000 MXIK nomi Boshqa sanat va dam olish xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR прочие услуги 1 60,000.00 QQS qiymati 6,428.57 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11099001001000000 MXIK nomi Boshqa sanat va dam olish xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR прочие услуги 1 100,000.00 QQS qiymati 10,714.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11099001001000000 MXIK nomi Boshqa sanat va dam olish xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR прочие услуги 1 120,000.00 QQS qiymati 12,857.14 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11099001001000000 MXIK nomi Boshqa sanat va dam olish xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR прочие услуги 1 30,000.00 QQS qiymati 3,214.29 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 11099001001000000 MXIK nomi Boshqa sanat va dam olish xizmatlar O'lchov birligi xizmat (so’m) Markirovka kodi Komitent STIR\/JSHSHIR Сибирский Осетр живой товарный (от 1кг и выше) 5.4 1,031,400.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00301001006000000 MXIK nomi Tirik osyotr O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Рыба живая Сазан 2.4 268,800.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi MXIK kodi 00301001001000000 MXIK nomi Tirik sazan O'lchov birligi kilogramm Markirovka kodi Komitent STIR\/JSHSHIR Услуги по чистке рыбы 1 15,000.00 QQS qiy",
+      "createdAt": 1778055330064
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775232360000,
+      "sellerName": "\"DARVOZA SAVDO\" MCHJ",
+      "totalAmountTiyin": 30200000,
+      "vatAmountTiyin": 3235716,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/check?t=VG343420031939&r=441858&c=20260403210633&s=601998152806",
+      "rawText": "VG343420031939 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"DARVOZA SAVDO\" MCHJ Миробод тумани Нуку кучаси 83 А уй 302849293 VG343420031939 Chek raqami : 441858 Onlayn NKM nomi : ARTIX SN : makro602 03.04.2026, 21:06 Nomi Soni Narxi BONAQUA VODA 15L STILL PET 1 6,990.00 QQS qiymati 747.59 QQS foizi 12 % Chegirma\/Boshqa 0\/12.47 Shtrix kodi 4780069000093 MXIK kodi 02201001001268001 MXIK nomi Gazlanmagan suv Bonaqua pet butilka 1,5 l O'lchov birligi dona (pet butilka) 1.5 litr Markirovka kodi 0104780069000093217k!w7SPZ&3N-a Komitent STIR\/JSHSHIR SOK YABLOCHNO-SVEKOLNIY STKL 640ML 1 20,490.00 QQS qiymati 2,191.44 QQS foizi 12 % Chegirma\/Boshqa 0\/36.55 Shtrix kodi 4780099470873 MXIK kodi 02009001006122004 MXIK nomi Meva va sabzavot sharbatlari, jumladan shinnisi (barcha turdagi) ERMAK OLMA VA LAVLAGILI SOK ASIL shisha butilka 0,64 l O'lchov birligi dona (butilka) 0.64 litr Markirovka kodi 0104780099470873217&)D;g_(DOm-k Komitent STIR\/JSHSHIR BONAQUA VODA 15L STILL PET 1 6,990.00 QQS qiymati 747.59 QQS foizi 12 % Chegirma\/Boshqa 0\/12.47 Shtrix kodi 4780069000093 MXIK kodi 02201001001268001 MXIK nomi Gazlanmagan suv Bonaqua pet butilka 1,5 l O'lchov birligi dona (pet butilka) 1.5 litr Markirovka kodi 0104780069000093217+U0'Pvpu*z:R Komitent STIR\/JSHSHIR PEPSI 1,75L PET 1 13,990.00 QQS qiymati 1,496.25 QQS foizi 12 % Chegirma\/Boshqa 0\/24.96 Shtrix kodi 4780022622379 MXIK kodi 02202002001039059 MXIK nomi Alkogolsiz ichimliklar (gazlangan va gazlanmagan) PEPSI pet butilka 1.75 l O'lchov birligi dona (pet butilka) 1.75 litr Markirovka kodi 0104780022622379217KL'ipk7z\/uF. Komitent STIR\/JSHSHIR ODNOSTAKAN ZOOLPACK REF15SHT 1 37,490.00 QQS qiymati 4,009.62 QQS foizi 12 % Chegirma\/Boshqa 0\/66.88 Shtrix kodi 21093098 MXIK kodi 03924001002000000 MXIK nomi Plastik oshxona idishlari, priborlar va oshxona anjomlari O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR KOLBSHERIN OXOTV\/U 200GR 1 25,990.00 QQS qiymati 2,779.68 QQS foizi 12 % Chegirma\/Boshqa 0\/46.36 Shtrix ko",
+      "createdAt": 1778055705199
+    },
+    {
+      "userId": 2,
+      "purchasedAt": 1775144040000,
+      "sellerName": "\"UZUM MARKET\" MCHJ XK",
+      "totalAmountTiyin": 58007000,
+      "vatAmountTiyin": 389142,
+      "qrUrl": "https:\/\/ofd.soliq.uz\/epi?t=EP000000000552&r=57337655&c=20260402203431&s=223901234208",
+      "rawText": "EP000000000552 SOLIQ mobile ilovasi Yuklab olish Savdo cheki\/Sotuv \"UZUM MARKET\" MCHJ XK Damariq MFY, Kichik Beshyog‘och ko'chasi , 132-a-uy 309376127 EP000000000552 Chek raqami : 57337655 Marketpleys nomi : UZUM MARKET 02.04.2026, 20:34 Nomi Soni Narxi Медаль призовая, металлическая на ленте, 1 место золото, 2 мест 4 99,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000029659820 MXIK kodi 07117001016000000 MXIK nomi Qimmatbaxo bulmagan metalldan yasalgan sport medali O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 51901046800035 Проводная игровая мышка Inphic PG1 Supernova, с RGB подсветкой, 1 128,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000036986087 MXIK kodi 08471012005000000 MXIK nomi Kompyuter sichqonchasi O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 31512851330019 Нож канцелярский Deli TD201, 9 мм (Цвет: Синий) 1 8,850.00 QQS qiymati 948.21 QQS foizi 12 % Chegirma\/Boshqa 0\/0 Shtrix kodi 6975239288625 MXIK kodi 08214001002000000 MXIK nomi Kanselyariya pichoqlari va o’tkirlagichlar O'lchov birligi to’plam Markirovka kodi Komitent STIR\/JSHSHIR 309376127 Медаль призовая, металлическая на ленте, 1 место золото, 2 мест 4 99,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000038329868 MXIK kodi 07117001016000000 MXIK nomi Qimmatbaxo bulmagan metalldan yasalgan sport medali O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 51901046800035 Медаль призовая, металлическая на ленте, 1 место золото, 2 мест 1 24,750.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000038329882 MXIK kodi 07117001016000000 MXIK nomi Qimmatbaxo bulmagan metalldan yasalgan sport medali O'lchov birligi dona Markirovka kodi Komitent STIR\/JSHSHIR 51901046800035 Удлинитель электрический 2 м, 3.5 м, 6 м (Цвет: Белый, длина: 3 1 32,000.00 QQS qiymati 0.00 QQS foizi 0 % Chegirma\/Boshqa 0\/0 Shtrix kodi 1000068224751 MXIK kodi 08544002014000000 MXIK nomi Tarmoq filtri O'lchov b",
+      "createdAt": 1778255943386
+    }
+  ]
+}

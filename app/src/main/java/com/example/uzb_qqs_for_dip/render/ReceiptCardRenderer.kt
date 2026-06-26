@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.text.TextPaint
+import com.example.uzb_qqs_for_dip.data.model.PaymentType
 import com.example.uzb_qqs_for_dip.data.model.Receipt
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
@@ -68,41 +69,41 @@ object ReceiptCardRenderer {
 
         val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
-            textSize = 11f * unit
+            textSize = 9f * unit
             color = 0xFF111827.toInt()
             textAlign = Paint.Align.CENTER
         }
         val companyPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typefaceBold
-            textSize = 14f * unit
+            textSize = 11.5f * unit
             color = 0xFF000000.toInt()
             textAlign = Paint.Align.CENTER
         }
         val datePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
-            textSize = 11f * unit
+            textSize = 9f * unit
             color = 0xFF111827.toInt()
-            textAlign = Paint.Align.CENTER
+            textAlign = Paint.Align.LEFT
         }
         val labelPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
-            textSize = 11f * unit
+            textSize = 9f * unit
             color = 0xFF111827.toInt()
         }
         val valuePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
-            textSize = 11f * unit
+            textSize = 9f * unit
             color = 0xFF111827.toInt()
             textAlign = Paint.Align.RIGHT
         }
         val totalLabelPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typefaceBold
-            textSize = 14.5f * unit
+            textSize = 12f * unit
             color = 0xFF000000.toInt()
         }
         val totalValuePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typefaceBold
-            textSize = 14.5f * unit
+            textSize = 12f * unit
             color = 0xFF000000.toInt()
             textAlign = Paint.Align.RIGHT
         }
@@ -129,64 +130,88 @@ object ReceiptCardRenderer {
         val cx = left + width / 2f
 
         // 1) Шапка
-        canvas.drawText("Savdo cheki / Sotuv", cx, y + 11f * unit, titlePaint)
-        y += 16f * unit
+        canvas.drawText("Savdo cheki / Sotuv", cx, y + 9f * unit, titlePaint)
+        y += 13f * unit
 
         val sellerRaw = (sellerNameOverride ?: receipt.sellerName).trim().ifEmpty { "—" }
         val sellerLines = wrapToLines(companyPaint, formatSeller(sellerRaw), width - 2 * padX)
         sellerLines.forEach { line ->
-            canvas.drawText(line, cx, y + 14f * unit, companyPaint)
-            y += 17f * unit
+            canvas.drawText(line, cx, y + 11.5f * unit, companyPaint)
+            y += 14f * unit
         }
-        y += 2f * unit
-        canvas.drawText(DateFormat.formatDateTime(receipt.purchasedAt), cx, y + 11f * unit, datePaint)
-        y += 16f * unit
+        y += 1f * unit
+
+        // Дополнительные данные заголовка
+        // 1. Адрес — по центру после названия
+        receipt.address?.let {
+            val addrLines = wrapToLines(titlePaint, it, width - 2 * padX)
+            addrLines.forEach { line ->
+                canvas.drawText(line, cx, y + 9f * unit, titlePaint)
+                y += 11f * unit
+            }
+        }
+
+        // 2. ИНН (STIR) продавца — по центру под адресом
+        receipt.tin?.let {
+            canvas.drawText(it, cx, y + 9f * unit, titlePaint)
+            y += 11f * unit
+        }
+        y += 1f * unit
+
+        // 3. Остальные строки — по левому краю
+        receipt.terminalId?.let {
+            canvas.drawText(it, left + padX, y + 9f * unit, datePaint)
+            y += 11f * unit
+        }
+
+        receipt.receiptNumber?.let {
+            canvas.drawText("Chek raqami : $it", left + padX, y + 9f * unit, datePaint)
+            y += 11f * unit
+        }
+
+        receipt.nkmName?.let {
+            // Если это Uzum или маркетплейс, на сайте пишется "Marketpleys nomi : ...", иначе "Onlayn NKM nomi : ..."
+            val prefix = if (it.contains("market", ignoreCase = true) || it.contains("uzum", ignoreCase = true)) "Marketpleys nomi" else "Onlayn NKM nomi"
+            canvas.drawText("$prefix : $it", left + padX, y + 9f * unit, datePaint)
+            y += 11f * unit
+        }
+
+        receipt.sn?.let {
+            canvas.drawText("SN : $it", left + padX, y + 9f * unit, datePaint)
+            y += 11f * unit
+        }
+
+        canvas.drawText(DateFormat.formatDateTime(receipt.purchasedAt), left + padX, y + 9f * unit, datePaint)
+        y += 13f * unit
 
         // Разделитель
         canvas.drawLine(left + padX, y, left + width - padX, y, dividerPaint)
-        y += 10f * unit
+        y += 9f * unit
 
-        // 2) Строки оплаты — у нас есть только итог, поэтому отображаем
-        //    «Naqd pul ... 0.00» и «Bank kartalari ... <total>».
+        // 2) Данные оплаты — убираем Naqd/Bank по просьбе пользователя,
+        // оставляем только Jami и QQS под чертой.
         val total = receipt.totalAmountTiyin
         val vat = receipt.vatAmountTiyin
 
-        drawKeyValue(canvas, "Naqd pul", "0.00", left + padX, left + width - padX, y, labelPaint, valuePaint)
-        y += 16f * unit
-        drawKeyValue(
-            canvas, "Bank kartalari", MoneyFormat.fromTiyin(total),
-            left + padX, left + width - padX, y, labelPaint, valuePaint
-        )
-        y += 18f * unit
-
         // 3) Jami to`lov
-        canvas.drawText("Jami to`lov:", left + padX, y + 14f * unit, totalLabelPaint)
-        canvas.drawText(MoneyFormat.fromTiyin(total), left + width - padX, y + 14f * unit, totalValuePaint)
-        y += 22f * unit
+        canvas.drawText("Jami to`lov:", left + padX, y + 11f * unit, totalLabelPaint)
+        canvas.drawText(MoneyFormat.fromTiyinDot(total), left + width - padX, y + 11f * unit, totalValuePaint)
+        y += 13f * unit
 
-        // 4) Umumiy QQS qiymati (НДС)
-        drawKeyValue(
-            canvas, "Umumiy QQS qiymati", MoneyFormat.fromTiyin(vat),
-            left + padX, left + width - padX, y, labelPaint, valuePaint
-        )
-        y += 16f * unit
+        // 4) Umumiy QQS qiymati (НДС) — межстрочный интервал сжат, чтобы освободить место под QR
+        canvas.drawText("Umumiy QQS qiymati", left + padX, y + 9f * unit, labelPaint)
+        canvas.drawText(MoneyFormat.fromTiyinDot(vat), left + width - padX, y + 9f * unit, valuePaint)
+        y += 11f * unit
 
-        // 5) Fiskal belgi — пробуем достать из URL, иначе считаем стабильный псевдо-номер.
-        val fiscal = extractFiscalSign(receipt.qrUrl) ?: deterministicFiscal(receipt.qrUrl)
-        drawKeyValue(
-            canvas, "Fiskal belgi", fiscal,
-            left + padX, left + width - padX, y, labelPaint, valuePaint
-        )
-        y += 14f * unit
-
-        // 6) QR — занимает оставшееся пространство, не залезая на нижний бейдж номера.
-        val badgeSide = 36f * unit
-        val bottom = top + height - 10f * unit
-        val qrTopMin = y + 6f * unit
-        val qrAreaBottom = bottom - badgeSide - 6f * unit
+        // 5) QR — занимает оставшееся пространство. Шрифты выше уменьшены, поэтому
+        // под QR освобождается больше места; делаем его крупнее для удобного скана.
+        val badgeSide = 32f * unit
+        val bottom = top + height - 8f * unit
+        val qrTopMin = y + 4f * unit
+        // QR держим над бейджем номера (он рисуется поверх), чтобы не перекрыть угол кода.
+        val qrAreaBottom = bottom - badgeSide - 4f * unit
         val qrAvailH = (qrAreaBottom - qrTopMin).coerceAtLeast(40f * unit)
-        // Ранее было 130*unit — под QR обычно больше высоты; крупнее QR проще отсканировать с бумаги/PDF.
-        val qrSide = minOf(qrAvailH, width - 2 * padX, 200f * unit)
+        val qrSide = minOf(qrAvailH, width - 1.2f * padX, 300f * unit)
         val qrLeft = left + (width - qrSide) / 2f
         val qrTop = qrTopMin
         QrEncoder.draw(canvas, receipt.qrUrl, qrLeft, qrTop, qrSide)
@@ -199,20 +224,6 @@ object ReceiptCardRenderer {
             top = bottom - badgeSide,
             side = badgeSide
         )
-    }
-
-    private fun drawKeyValue(
-        canvas: Canvas,
-        label: String,
-        value: String,
-        leftEdge: Float,
-        rightEdge: Float,
-        y: Float,
-        labelPaint: TextPaint,
-        valuePaint: TextPaint
-    ) {
-        canvas.drawText(label, leftEdge, y + 11f, labelPaint)
-        canvas.drawText(value, rightEdge, y + 11f, valuePaint)
     }
 
     private fun drawOrdinalBadge(canvas: Canvas, ordinal: Int, left: Float, top: Float, side: Float) {

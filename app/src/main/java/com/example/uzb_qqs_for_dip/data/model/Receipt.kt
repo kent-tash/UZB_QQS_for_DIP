@@ -15,6 +15,14 @@ data class Receipt(
     val totalAmountTiyin: Long,
     val vatAmountTiyin: Long,
     val qrUrl: String,
+    val paymentType: PaymentType = PaymentType.CARD,
+    val fiscalSign: String? = null,
+    val address: String? = null,
+    val tin: String? = null,
+    val terminalId: String? = null,
+    val receiptNumber: String? = null,
+    val nkmName: String? = null,
+    val sn: String? = null,
     val rawText: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

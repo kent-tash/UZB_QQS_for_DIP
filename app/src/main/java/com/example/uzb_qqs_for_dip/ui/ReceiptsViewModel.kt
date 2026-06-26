@@ -190,6 +190,53 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         PdfPrint.print(context, file, jobName)
     }
 
+    private val _isUpdating = MutableStateFlow(false)
+    val isUpdating: StateFlow<Boolean> = _isUpdating.asStateFlow()
+
+    /** Прогресс обновления данных с сайта в диапазоне 0f..1f (для заполнения кнопки). */
+    private val _updateProgress = MutableStateFlow(0f)
+    val updateProgress: StateFlow<Float> = _updateProgress.asStateFlow()
+
+    fun updateVisibleReceiptsFromSite() {
+        val list = receipts.value
+        if (list.isEmpty()) return
+        
+        viewModelScope.launch {
+            _isUpdating.value = true
+            _updateProgress.value = 0f
+            val total = list.size
+            try {
+                list.forEachIndexed { index, item ->
+                    val r = item.receipt
+                    val result = container.receiptParser.fetchAndParse(r.qrUrl)
+                    result.onSuccess { parsed ->
+                        val updated = r.copy(
+                            purchasedAt = parsed.purchasedAt ?: r.purchasedAt,
+                            sellerName = parsed.sellerName ?: r.sellerName,
+                            totalAmountTiyin = parsed.totalAmountTiyin ?: r.totalAmountTiyin,
+                            vatAmountTiyin = parsed.vatAmountTiyin ?: r.vatAmountTiyin,
+                            paymentType = parsed.paymentType,
+                            fiscalSign = parsed.fiscalSign ?: r.fiscalSign,
+                            address = parsed.address ?: r.address,
+                            tin = parsed.tin ?: r.tin,
+                            terminalId = parsed.terminalId ?: r.terminalId,
+                            receiptNumber = parsed.receiptNumber ?: r.receiptNumber,
+                            nkmName = parsed.nkmName ?: r.nkmName,
+                            sn = parsed.sn ?: r.sn,
+                            rawText = parsed.rawSnippet ?: r.rawText
+                        )
+                        container.receiptRepository.update(updated)
+                    }
+                    _updateProgress.value = (index + 1).toFloat() / total
+                }
+            } finally {
+                _isUpdating.value = false
+                _updateProgress.value = 0f
+                container.receiptRepository.refresh()
+            }
+        }
+    }
+
     fun deleteReceipt(id: Long) {
         viewModelScope.launch {
             container.receiptRepository.delete(id)

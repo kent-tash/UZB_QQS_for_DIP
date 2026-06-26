@@ -46,6 +46,7 @@ fun RegisterScreen(
     var fullName by rememberSaveable { mutableStateOf("") }
     var position by rememberSaveable { mutableStateOf("") }
     var initialsSurname by rememberSaveable { mutableStateOf("") }
+    var organization by rememberSaveable { mutableStateOf("") }
     var submitted by remember { mutableStateOf(false) }
     val initialUserCount = remember { users.size }
 
@@ -111,6 +112,16 @@ fun RegisterScreen(
                 supportingText = { Text("Например: И.И. Иванов") }
             )
 
+            OutlinedTextField(
+                value = organization,
+                onValueChange = { organization = it; appViewModel.clearRegisterError() },
+                label = { Text("Организация (необязательно)") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+                supportingText = { Text("Например: ООО «Ромашка»") }
+            )
+
             error?.let {
                 Text(
                     it,
@@ -123,7 +134,7 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     submitted = true
-                    appViewModel.register(fullName, position, initialsSurname)
+                    appViewModel.register(fullName, position, initialsSurname, organization = organization)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)

@@ -3,9 +3,11 @@ package com.example.uzb_qqs_for_dip.data
 import android.content.Context
 import com.example.uzb_qqs_for_dip.data.backup.AppBackup
 import com.example.uzb_qqs_for_dip.data.db.DbHelper
+import com.example.uzb_qqs_for_dip.data.repository.AuditorRepository
 import com.example.uzb_qqs_for_dip.data.repository.ReceiptRepository
 import com.example.uzb_qqs_for_dip.data.repository.UserRepository
 import com.example.uzb_qqs_for_dip.data.session.SessionManager
+import com.example.uzb_qqs_for_dip.data.settings.AuditorSettingsHolder
 import com.example.uzb_qqs_for_dip.data.settings.ReportSettingsHolder
 import com.example.uzb_qqs_for_dip.network.ReceiptParser
 
@@ -20,11 +22,15 @@ class AppContainer(context: Context) {
 
     val userRepository: UserRepository = UserRepository(dbHelper)
     val receiptRepository: ReceiptRepository = ReceiptRepository(dbHelper)
+    val auditorRepository: AuditorRepository = AuditorRepository(dbHelper)
     val sessionManager: SessionManager = SessionManager(appContext)
     val receiptParser: ReceiptParser = ReceiptParser()
 
     /** Общие настройки отчёта (фильтр + сортировка), общие для вкладок «Отчёт» и «Чеки». */
     val reportSettings: ReportSettingsHolder = ReportSettingsHolder()
+
+    /** Настройки аудитора: название организации, руководитель, бухгалтер. */
+    val auditorSettings: AuditorSettingsHolder = AuditorSettingsHolder(appContext)
 
     /** Экспорт/импорт одного JSON-файла: профили, чеки, настройки отчёта. */
     val appBackup: AppBackup = AppBackup(

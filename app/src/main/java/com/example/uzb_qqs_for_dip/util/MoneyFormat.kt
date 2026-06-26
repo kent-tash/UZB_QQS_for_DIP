@@ -12,11 +12,23 @@ object MoneyFormat {
     private val moneyFormat = DecimalFormat("#,##0.00", symbols).apply {
         isGroupingUsed = true
     }
+    private val dotFormat = DecimalFormat("#,##0.00", DecimalFormatSymbols(Locale.US).apply {
+        groupingSeparator = ','
+        decimalSeparator = '.'
+    }).apply {
+        isGroupingUsed = true
+    }
 
     /** Форматирует сумму в тийинах: 85337400 -> "853 374,00". */
     fun fromTiyin(tiyin: Long): String {
         val sum = tiyin / 100.0
         return moneyFormat.format(sum)
+    }
+
+    /** Форматирует сумму в тийинах через точку: 70000000 -> "700,000.00". */
+    fun fromTiyinDot(tiyin: Long): String {
+        val sum = tiyin / 100.0
+        return dotFormat.format(sum)
     }
 
     /** Парсит строку вида "853 374,00" / "853,374.00" / "853374" в тийины. */
