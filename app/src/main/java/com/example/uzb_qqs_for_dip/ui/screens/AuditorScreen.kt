@@ -95,6 +95,9 @@ fun AuditorScreen(
     val context = LocalContext.current
     val vm: AuditorViewModel = viewModel()
 
+    // Обновляем сводку при возврате с экрана проверки чеков.
+    LaunchedEffect(Unit) { vm.refresh() }
+
     val quarter by vm.quarter.collectAsStateWithLifecycle()
     val year by vm.year.collectAsStateWithLifecycle()
     val search by vm.search.collectAsStateWithLifecycle()
@@ -110,7 +113,10 @@ fun AuditorScreen(
     val totalSum = filtered.sumOf { it.totalTiyin }
     val totalVat = filtered.sumOf { it.vatTiyin }
     // Считаем сотрудников, у которых ВСЕ чеки подтверждены аудитором.
-    val verifiedEmployees = filtered.count { s -> s.receiptCount > 0 && s.verifiedCount >= s.receiptCount }
+    val verifiedEmployees = filtered.count { s ->
+        s.declaration?.status == AuditStatus.APPROVED ||
+            (s.receiptCount > 0 && s.verifiedCount >= s.receiptCount)
+    }
 
     var showExportMenu by remember { mutableStateOf(false) }
     var showDeclarationDialog by remember { mutableStateOf<EmployeeSummary?>(null) }

@@ -9,8 +9,11 @@ import com.example.uzb_qqs_for_dip.QqsApp
 import com.example.uzb_qqs_for_dip.data.AppContainer
 import com.example.uzb_qqs_for_dip.data.model.Receipt
 import com.example.uzb_qqs_for_dip.data.model.ReceiptOwner
+import com.example.uzb_qqs_for_dip.data.model.AuditDeclaration
+import com.example.uzb_qqs_for_dip.data.model.AuditStatus
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.data.model.UserRole
+import com.example.uzb_qqs_for_dip.data.repository.UserReceiptStats
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.data.settings.ReportSettings
 import com.example.uzb_qqs_for_dip.network.ParsedReceipt
@@ -18,6 +21,8 @@ import com.example.uzb_qqs_for_dip.render.QrFromImageDecoder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /** Результат скана в контексте аудиторской проверки. */
@@ -57,14 +62,13 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
     private val _verifyResult = MutableStateFlow<VerifyResult>(VerifyResult.Idle)
     val verifyResult: StateFlow<VerifyResult> = _verifyResult.asStateFlow()
 
-    private val _verifiedCount = MutableStateFlow(0)
-    val verifiedCount: StateFlow<Int> = _verifiedCount.asStateFlow()
+    /** Актуальная статистика проверки из БД за выбранный период. */
+    private val _employeeStats = MutableStateFlow(UserReceiptStats(0, 0, 0L, 0L, 0L, 0L))
+    val employeeStats: StateFlow<UserReceiptStats> = _employeeStats.asStateFlow()
 
-    private val _verifiedTotal = MutableStateFlow(0L)
-    val verifiedTotal: StateFlow<Long> = _verifiedTotal.asStateFlow()
-
-    private val _verifiedVat = MutableStateFlow(0L)
-    val verifiedVat: StateFlow<Long> = _verifiedVat.asStateFlow()
+    /** Запись о ручной проверке / итогах из PDF за квартал. */
+    private val _declaration = MutableStateFlow<AuditDeclaration?>(null)
+    val declaration: StateFlow<AuditDeclaration?> = _declaration.asStateFlow()
 
     private val _addEmployeeError = MutableStateFlow<String?>(null)
     val addEmployeeError: StateFlow<String?> = _addEmployeeError.asStateFlow()
@@ -75,20 +79,105 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
     private val _year = MutableStateFlow(ReportSettings.currentYear())
     val year: StateFlow<Int> = _year.asStateFlow()
 
-    fun selectEmployee(user: User) {
-        _selectedEmployee.value = user
-        _verifyResult.value = VerifyResult.Idle
-        resetCounters()
-    }
-
     private val _autoVerifyMessage = MutableStateFlow<String?>(null)
     val autoVerifyMessage: StateFlow<String?> = _autoVerifyMessage.asStateFlow()
 
+    private val _manualVerifyMessage = MutableStateFlow<String?>(null)
+    val manualVerifyMessage: StateFlow<String?> = _manualVerifyMessage.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            @OptIn(kotlinx.coroutines.FlowPreview::class)
+            container.receiptRepository.receipts
+                .drop(1)
+                .debounce(300)
+                .collect {
+                    refreshEmployeeData()
+                }
+        }
+    }
+
+    fun setPeriod(quarter: Quarter, year: Int) {
+        _quarter.value = quarter
+        _year.value = year
+    }
+
+    fun selectEmployee(user: User) {
+        _selectedEmployee.value = user
+        _verifyResult.value = VerifyResult.Idle
+        viewModelScope.launch { refreshEmployeeData() }
+    }
+
     fun clearAutoVerifyMessage() { _autoVerifyMessage.value = null }
+
+    fun clearManualVerifyMessage() { _manualVerifyMessage.value = null }
 
     fun clearVerifyResult() { _verifyResult.value = VerifyResult.Idle }
 
     fun clearAddEmployeeError() { _addEmployeeError.value = null }
+
+    private fun periodBounds(): Pair<Long, Long> {
+        val y = _year.value
+        val q = _quarter.value
+        return ReportSettings.quarterStart(y, q) to ReportSettings.quarterEnd(y, q)
+    }
+
+    fun refreshEmployeeStats() {
+        viewModelScope.launch { refreshEmployeeData() }
+    }
+
+    private suspend fun refreshEmployeeData() {
+        _employeeStats.value = loadEmployeeStats()
+        _declaration.value = loadDeclaration()
+    }
+
+    private suspend fun loadEmployeeStats(): UserReceiptStats {
+        val employee = _selectedEmployee.value
+            ?: return UserReceiptStats(0, 0, 0L, 0L, 0L, 0L)
+        val (from, to) = periodBounds()
+        return container.receiptRepository.getUserPeriodStats(employee.id, from, to)
+    }
+
+    private suspend fun loadDeclaration(): AuditDeclaration? {
+        val employee = _selectedEmployee.value ?: return null
+        return container.auditorRepository.getDeclaration(
+            employee.id, _year.value, _quarter.value.name
+        )
+    }
+
+    /**
+     * Отмечает сотрудника как проверенного вручную (чеки на бумаге, не в приложении).
+     */
+    fun markManuallyVerified() {
+        val employee = _selectedEmployee.value ?: run {
+            _manualVerifyMessage.value = "Сначала выберите сотрудника"
+            return
+        }
+        viewModelScope.launch {
+            val existing = loadDeclaration()
+            val decl = AuditDeclaration(
+                id = existing?.id ?: 0,
+                userId = employee.id,
+                year = _year.value,
+                quarter = _quarter.value.name,
+                declaredTotalTiyin = existing?.declaredTotalTiyin ?: 0L,
+                declaredVatTiyin = existing?.declaredVatTiyin ?: 0L,
+                declaredCount = existing?.declaredCount ?: 0,
+                status = AuditStatus.APPROVED,
+                note = existing?.note?.takeIf { it.isNotBlank() } ?: "Проверено вручную",
+                checkedAt = System.currentTimeMillis()
+            )
+            container.auditorRepository.upsertDeclaration(decl)
+                .onSuccess {
+                    _declaration.value = decl
+                    _manualVerifyMessage.value =
+                        "Сотрудник ${employee.fullName} отмечен как проверенный вручную"
+                }
+                .onFailure { e ->
+                    _manualVerifyMessage.value = "Ошибка: ${e.message}"
+                }
+        }
+    }
 
     /**
      * Автоматически помечает все непроверенные чеки выбранного сотрудника
@@ -99,10 +188,11 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
             _autoVerifyMessage.value = "Сначала выберите сотрудника"
             return
         }
-        val auditorId = container.sessionManager.currentUserId.value ?: return
-        val q = _quarter.value; val y = _year.value
-        val from = ReportSettings.quarterStart(y, q)
-        val to = ReportSettings.quarterEnd(y, q)
+        val auditorId = container.sessionManager.currentUserId.value ?: run {
+            _autoVerifyMessage.value = "Не удалось определить аудитора. Войдите в профиль аудитора."
+            return
+        }
+        val (from, to) = periodBounds()
         viewModelScope.launch {
             val result = container.receiptRepository.markAllVerifiedForUser(
                 userId = employee.id,
@@ -111,11 +201,14 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                 toMs = to
             )
             result.onSuccess { count ->
-                _autoVerifyMessage.value =
-                    if (count > 0) "Отмечено проверенными: $count чеков"
-                    else "Все чеки сотрудника уже проверены"
-                if (count > 0) {
-                    _verifiedCount.value += count
+                val stats = loadEmployeeStats()
+                _employeeStats.value = stats
+                _autoVerifyMessage.value = when {
+                    count > 0 -> "Отмечено проверенными: $count чеков"
+                    stats.totalCount == 0 -> "У сотрудника нет чеков за выбранный период"
+                    stats.verifiedCount >= stats.totalCount ->
+                        "Все чеки сотрудника уже проверены (${stats.verifiedCount}/${stats.totalCount})"
+                    else -> "Нет непроверенных чеков за выбранный период"
                 }
             }.onFailure { e ->
                 _autoVerifyMessage.value = "Ошибка: ${e.message}"
@@ -172,9 +265,7 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _verifyResult.value = VerifyResult.Loading
             val auditorId = container.sessionManager.currentUserId.value
-            val q = _quarter.value; val y = _year.value
-            val from = ReportSettings.quarterStart(y, q)
-            val to = ReportSettings.quarterEnd(y, q)
+            val (from, to) = periodBounds()
 
             container.receiptParser.fetchAndParse(raw)
                 .onSuccess { parsed ->
@@ -185,7 +276,6 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
 
                     when {
                         existingOwner != null && existingOwner.userId != employee.id -> {
-                            // Чек у другого сотрудника
                             _verifyResult.value = VerifyResult.Success(
                                 parsed = parsed,
                                 owner = existingOwner,
@@ -195,7 +285,6 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                             )
                         }
                         alreadyForThisEmployee -> {
-                            // Чек уже у этого сотрудника — пометить как проверенный
                             if (auditorId != null) {
                                 container.receiptRepository.markVerified(existingOwner!!.receiptId, auditorId)
                             }
@@ -204,12 +293,11 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                                 owner = existingOwner,
                                 alreadyForThisEmployee = true,
                                 outOfPeriod = outOfPeriod,
-                                markedVerified = true
+                                markedVerified = auditorId != null
                             )
-                            accumulateCounts(parsed)
+                            refreshEmployeeData()
                         }
                         else -> {
-                            // Новый чек — сохранить с user_id сотрудника и пометить проверенным
                             if (parsed.isValid) {
                                 val receipt = Receipt(
                                     userId = employee.id,
@@ -239,9 +327,9 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                                     owner = null,
                                     alreadyForThisEmployee = false,
                                     outOfPeriod = outOfPeriod,
-                                    markedVerified = insertResult.isSuccess
+                                    markedVerified = insertResult.isSuccess && auditorId != null
                                 )
-                                if (insertResult.isSuccess) accumulateCounts(parsed)
+                                if (insertResult.isSuccess) refreshEmployeeData()
                             } else {
                                 _verifyResult.value = VerifyResult.Error("Не все поля чека распознаны")
                             }
@@ -254,17 +342,5 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
         }
-    }
-
-    private fun accumulateCounts(parsed: ParsedReceipt) {
-        _verifiedCount.value += 1
-        _verifiedTotal.value += parsed.totalAmountTiyin ?: 0L
-        _verifiedVat.value += parsed.vatAmountTiyin ?: 0L
-    }
-
-    private fun resetCounters() {
-        _verifiedCount.value = 0
-        _verifiedTotal.value = 0L
-        _verifiedVat.value = 0L
     }
 }

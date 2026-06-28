@@ -12,6 +12,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
+/** Сводка по чекам сотрудника за период (для экрана проверки аудитора). */
+data class UserReceiptStats(
+    val totalCount: Int,
+    val verifiedCount: Int,
+    val totalTiyin: Long,
+    val vatTiyin: Long,
+    val verifiedTotalTiyin: Long,
+    val verifiedVatTiyin: Long,
+)
+
 class ReceiptRepository(private val dbHelper: DbHelper) {
 
     private val _receipts = MutableStateFlow<List<ReceiptWithUser>>(emptyList())
@@ -76,6 +86,37 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
     }
 
     suspend fun list(): List<ReceiptWithUser> = withContext(Dispatchers.IO) { readAllSync() }
+
+    suspend fun getUserPeriodStats(userId: Long, fromMs: Long, toMs: Long): UserReceiptStats =
+        withContext(Dispatchers.IO) {
+            val db = dbHelper.readableDatabase
+            db.rawQuery(
+                """
+                SELECT COUNT(*),
+                       COUNT(CASE WHEN verified_at IS NOT NULL THEN 1 END),
+                       COALESCE(SUM(total_amount_tiyin), 0),
+                       COALESCE(SUM(vat_amount_tiyin), 0),
+                       COALESCE(SUM(CASE WHEN verified_at IS NOT NULL THEN total_amount_tiyin END), 0),
+                       COALESCE(SUM(CASE WHEN verified_at IS NOT NULL THEN vat_amount_tiyin END), 0)
+                FROM receipts
+                WHERE user_id = ? AND purchased_at >= ? AND purchased_at <= ?
+                """.trimIndent(),
+                arrayOf(userId.toString(), fromMs.toString(), toMs.toString())
+            ).use { c ->
+                if (c.moveToFirst()) {
+                    UserReceiptStats(
+                        totalCount = c.getInt(0),
+                        verifiedCount = c.getInt(1),
+                        totalTiyin = c.getLong(2),
+                        vatTiyin = c.getLong(3),
+                        verifiedTotalTiyin = c.getLong(4),
+                        verifiedVatTiyin = c.getLong(5),
+                    )
+                } else {
+                    UserReceiptStats(0, 0, 0L, 0L, 0L, 0L)
+                }
+            }
+        }
 
     suspend fun findByQrUrl(qrUrl: String): Receipt? = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase

@@ -25,7 +25,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.uzb_qqs_for_dip.data.model.UserRole
+import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
+import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuthScreen
@@ -56,6 +58,8 @@ private sealed class MainTab(val route: String, val title: String, val icon: Ima
 
 private const val ROUTE_AUDIT_VERIFY = "main/audit/verify"
 private const val ARG_USER_ID = "userId"
+private const val ARG_QUARTER = "quarter"
+private const val ARG_YEAR = "year"
 
 @Composable
 fun AppNavHost(appViewModel: AppViewModel = viewModel()) {
@@ -154,18 +158,30 @@ private fun MainScaffold(
                 ReportScreen(appViewModel = appViewModel)
             }
             composable(MainTab.Audit.route) {
+                val auditorVm: AuditorViewModel = viewModel()
+                val quarter by auditorVm.quarter.collectAsStateWithLifecycle()
+                val year by auditorVm.year.collectAsStateWithLifecycle()
                 AuditorScreen(
                     appViewModel = appViewModel,
                     onVerifyEmployee = { userId ->
-                        tabsNav.navigate("$ROUTE_AUDIT_VERIFY?$ARG_USER_ID=$userId")
+                        tabsNav.navigate(
+                            "$ROUTE_AUDIT_VERIFY?$ARG_USER_ID=$userId&$ARG_QUARTER=${quarter.name}&$ARG_YEAR=$year"
+                        )
                     }
                 )
             }
-            composable("$ROUTE_AUDIT_VERIFY?$ARG_USER_ID={$ARG_USER_ID}") { backStack ->
+            composable(
+                "$ROUTE_AUDIT_VERIFY?$ARG_USER_ID={$ARG_USER_ID}&$ARG_QUARTER={$ARG_QUARTER}&$ARG_YEAR={$ARG_YEAR}"
+            ) { backStack ->
                 val userId = backStack.arguments?.getString(ARG_USER_ID)?.toLongOrNull()
+                val quarterName = backStack.arguments?.getString(ARG_QUARTER)
+                val year = backStack.arguments?.getString(ARG_YEAR)?.toIntOrNull()
+                val quarter = quarterName?.let { runCatching { Quarter.valueOf(it) }.getOrNull() }
                 AuditorVerifyScreen(
                     appViewModel = appViewModel,
                     preselectedUserId = userId,
+                    initialQuarter = quarter,
+                    initialYear = year,
                     onBack = { tabsNav.popBackStack() }
                 )
             }

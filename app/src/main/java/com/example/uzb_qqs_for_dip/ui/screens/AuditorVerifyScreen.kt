@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.QrCodeScanner
@@ -56,6 +57,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,7 +74,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.uzb_qqs_for_dip.data.model.AuditStatus
 import com.example.uzb_qqs_for_dip.data.model.User
+import com.example.uzb_qqs_for_dip.data.repository.UserReceiptStats
+import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.network.ParsedReceipt
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorVerifyViewModel
@@ -89,6 +94,8 @@ private val VerifyWarning = Color(0xFFF57F17)
 fun AuditorVerifyScreen(
     appViewModel: AppViewModel,
     preselectedUserId: Long? = null,
+    initialQuarter: Quarter? = null,
+    initialYear: Int? = null,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -97,28 +104,65 @@ fun AuditorVerifyScreen(
     val employees by vm.employees.collectAsStateWithLifecycle()
     val selectedEmployee by vm.selectedEmployee.collectAsStateWithLifecycle()
     val verifyResult by vm.verifyResult.collectAsStateWithLifecycle()
-    val verifiedCount by vm.verifiedCount.collectAsStateWithLifecycle()
-    val verifiedTotal by vm.verifiedTotal.collectAsStateWithLifecycle()
-    val verifiedVat by vm.verifiedVat.collectAsStateWithLifecycle()
+    val employeeStats by vm.employeeStats.collectAsStateWithLifecycle()
+    val declaration by vm.declaration.collectAsStateWithLifecycle()
     val addEmployeeError by vm.addEmployeeError.collectAsStateWithLifecycle()
     val autoVerifyMessage by vm.autoVerifyMessage.collectAsStateWithLifecycle()
+    val manualVerifyMessage by vm.manualVerifyMessage.collectAsStateWithLifecycle()
 
-    // Pre-select employee if navigated from summary row
-    val preselected = preselectedUserId?.let { id -> employees.firstOrNull { it.id == id } }
-    if (preselected != null && selectedEmployee == null) {
-        vm.selectEmployee(preselected)
+    LaunchedEffect(preselectedUserId, initialQuarter, initialYear, employees) {
+        if (initialQuarter != null && initialYear != null) {
+            vm.setPeriod(initialQuarter, initialYear)
+        }
+        preselectedUserId?.let { id ->
+            employees.firstOrNull { it.id == id }?.let { vm.selectEmployee(it) }
+        }
     }
 
     var showAddEmployeeDialog by remember { mutableStateOf(false) }
     var showLinkDialog by remember { mutableStateOf(false) }
+    var showManualVerifyConfirm by remember { mutableStateOf(false) }
 
     autoVerifyMessage?.let { msg ->
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = vm::clearAutoVerifyMessage,
             title = { Text("Автоматическая проверка") },
             text = { Text(msg) },
             confirmButton = {
-                androidx.compose.material3.TextButton(onClick = vm::clearAutoVerifyMessage) { Text("OK") }
+                TextButton(onClick = vm::clearAutoVerifyMessage) { Text("OK") }
+            }
+        )
+    }
+
+    manualVerifyMessage?.let { msg ->
+        AlertDialog(
+            onDismissRequest = vm::clearManualVerifyMessage,
+            title = { Text("Ручная проверка") },
+            text = { Text(msg) },
+            confirmButton = {
+                TextButton(onClick = vm::clearManualVerifyMessage) { Text("OK") }
+            }
+        )
+    }
+
+    if (showManualVerifyConfirm) {
+        AlertDialog(
+            onDismissRequest = { showManualVerifyConfirm = false },
+            title = { Text("Проверено вручную") },
+            text = {
+                Text(
+                    "Подтвердить, что чеки сотрудника ${selectedEmployee?.fullName ?: ""} " +
+                        "проверены вручную по бумажным документам (без занесения в приложение)?"
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showManualVerifyConfirm = false
+                    vm.markManuallyVerified()
+                }) { Text("Подтвердить") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showManualVerifyConfirm = false }) { Text("Отмена") }
             }
         )
     }
@@ -193,11 +237,8 @@ fun AuditorVerifyScreen(
 
             // Progress counter + auto-verify (if employee selected)
             selectedEmployee?.let {
-                VerificationProgress(
-                    verifiedCount = verifiedCount,
-                    verifiedTotal = verifiedTotal,
-                    verifiedVat = verifiedVat
-                )
+                val manuallyApproved = declaration?.status == AuditStatus.APPROVED
+                VerificationProgress(stats = employeeStats, manuallyApproved = manuallyApproved)
                 Spacer(Modifier.height(4.dp))
                 OutlinedButton(
                     onClick = vm::autoVerifyAll,
@@ -212,6 +253,24 @@ fun AuditorVerifyScreen(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text("Проверить автоматически (все чеки в базе)")
+                }
+                OutlinedButton(
+                    onClick = { showManualVerifyConfirm = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    enabled = !manuallyApproved
+                ) {
+                    Icon(
+                        Icons.Outlined.Done,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (manuallyApproved) VerifySuccess else MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        if (manuallyApproved) "Отмечено: проверено вручную"
+                        else "Проверено вручную"
+                    )
                 }
             }
 
@@ -356,23 +415,60 @@ private fun EmployeeSelectorRow(
 }
 
 @Composable
-private fun VerificationProgress(verifiedCount: Int, verifiedTotal: Long, verifiedVat: Long) {
+private fun VerificationProgress(stats: UserReceiptStats, manuallyApproved: Boolean) {
+    val allVerifiedInDb = stats.totalCount > 0 && stats.verifiedCount >= stats.totalCount
+    val allVerified = allVerifiedInDb || manuallyApproved
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(
+            containerColor = if (allVerified) {
+                VerifySuccess.copy(alpha = 0.12f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+        )
     ) {
         Column(Modifier.padding(12.dp)) {
-            Text(
-                "Проверено в этой сессии: $verifiedCount чеков",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-            if (verifiedCount > 0) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (allVerified) {
+                    Icon(
+                        Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = VerifySuccess,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(
+                    when {
+                        manuallyApproved && stats.totalCount == 0 ->
+                            "Проверено вручную (чеки не в приложении)"
+                        manuallyApproved ->
+                            "Проверено вручную · в базе: ${stats.verifiedCount}/${stats.totalCount}"
+                        stats.totalCount == 0 ->
+                            "Нет чеков за выбранный период"
+                        else ->
+                            "Проверено: ${stats.verifiedCount} из ${stats.totalCount} чеков"
+                    },
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (allVerified) VerifySuccess else MaterialTheme.colorScheme.onSurface
+                )
+            }
+            if (stats.verifiedCount > 0) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Сумма: ${MoneyFormat.fromTiyin(verifiedTotal)} | НДС: ${MoneyFormat.fromTiyin(verifiedVat)}",
+                    "Сумма: ${MoneyFormat.fromTiyin(stats.verifiedTotalTiyin)} | " +
+                        "НДС: ${MoneyFormat.fromTiyin(stats.verifiedVatTiyin)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (stats.totalCount > 0 && !allVerifiedInDb && !manuallyApproved) {
+                Spacer(Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { stats.verifiedCount.toFloat() / stats.totalCount },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
