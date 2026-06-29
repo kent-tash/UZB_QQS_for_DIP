@@ -1,5 +1,6 @@
 package com.example.uzb_qqs_for_dip
 
+import com.example.uzb_qqs_for_dip.network.OfdPaymentApi
 import com.example.uzb_qqs_for_dip.network.ReceiptParser
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -239,5 +240,49 @@ class ReceiptParserDebugTest {
                 assertEquals("sn for ${c.fixture}", c.sn, parsed.sn)
             }
         }
+    }
+
+    /**
+     * Регрессия: с июня 2026 г. ofd.soliq.uz отдаёт SPA без HTML-данных чека.
+     * Данные приходят из JSON API new-ofd.soliq.uz/api/payment.
+     */
+    @Test
+    fun parses_ofd_payment_api_anglesey_receipt() {
+        val json = loadFixture("ofd_payment_api_anglesey.json")
+        val qrUrl = "https://ofd.soliq.uz/check?t=LG420230644664&r=84229&c=20260407105718&s=054387142715"
+        val parsed = OfdPaymentApi.parseResponse(qrUrl, json) ?: error("parseResponse returned null")
+
+        assertTrue(parsed.isValid)
+        assertTrue(parsed.sellerName!!.contains("ANGLESEY FOOD", ignoreCase = true))
+        assertEquals(16_701_000L, parsed.totalAmountTiyin)
+        assertEquals(1_789_392L, parsed.vatAmountTiyin)
+        assertTrue(parsed.address!!.contains("Nukus", ignoreCase = true))
+        assertEquals("LG420230644664", parsed.terminalId)
+        assertEquals("84229", parsed.receiptNumber)
+        assertEquals("AFK-20250725-000664", parsed.sn)
+    }
+
+    @Test
+    fun parses_ofd_payment_api_user_receipt_from_screenshot() {
+        val json = loadFixture("ofd_payment_api_user_receipt.json")
+        val qrUrl = "https://ofd.soliq.uz/check?t=UZ210317220155&r=192888&c=20260629122805&s=700159535136"
+        val parsed = OfdPaymentApi.parseResponse(qrUrl, json) ?: error("parseResponse returned null")
+
+        assertTrue(parsed.isValid)
+        assertTrue(parsed.sellerName!!.contains("ANGLESEY FOOD", ignoreCase = true))
+        assertEquals(33_800_000L, parsed.totalAmountTiyin)
+        assertEquals(3_621_429L, parsed.vatAmountTiyin)
+        assertTrue(parsed.address!!.contains("Qo'sh-ko'prik", ignoreCase = true))
+        assertEquals("UZ210317220155", parsed.terminalId)
+        assertEquals("192888", parsed.receiptNumber)
+
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Tashkent")).apply {
+            timeInMillis = parsed.purchasedAt!!
+        }
+        assertEquals(2026, cal.get(Calendar.YEAR))
+        assertEquals(Calendar.JUNE, cal.get(Calendar.MONTH))
+        assertEquals(29, cal.get(Calendar.DAY_OF_MONTH))
+        assertEquals(12, cal.get(Calendar.HOUR_OF_DAY))
+        assertEquals(28, cal.get(Calendar.MINUTE))
     }
 }

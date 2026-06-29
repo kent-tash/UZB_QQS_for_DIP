@@ -61,6 +61,14 @@ class ReceiptParser(
             require(url.startsWith("http://") || url.startsWith("https://")) {
                 "QR не содержит ссылку на чек: $url"
             }
+
+            // ofd.soliq.uz с июня 2026 г. отдаёт SPA без данных — чек берём из JSON API.
+            if (OfdPaymentApi.isSupportedUrl(url)) {
+                OfdPaymentApi.tryFetch(client, url)?.let { apiParsed ->
+                    if (apiParsed.isValid) return@runCatching apiParsed
+                }
+            }
+
             val req = Request.Builder()
                 .url(url)
                 .header(
@@ -77,7 +85,15 @@ class ReceiptParser(
                 if (!resp.isSuccessful) {
                     error("HTTP ${resp.code} при загрузке страницы чека")
                 }
-                parseHtml(url, body)
+                val htmlParsed = parseHtml(url, body)
+                if (htmlParsed.isValid) {
+                    htmlParsed
+                } else if (OfdPaymentApi.isSupportedUrl(url)) {
+                    OfdPaymentApi.tryFetch(client, url)
+                        ?: htmlParsed
+                } else {
+                    htmlParsed
+                }
             }
         }
     }
