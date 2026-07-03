@@ -22,6 +22,7 @@ import com.example.uzb_qqs_for_dip.data.settings.ReportSettings
 import com.example.uzb_qqs_for_dip.export.OrgReportPdfGenerator
 import com.example.uzb_qqs_for_dip.export.SummaryPdfGenerator
 import com.example.uzb_qqs_for_dip.export.SummaryTableExporter
+import com.example.uzb_qqs_for_dip.util.UriFileWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +36,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 enum class AuditorFilter { ALL, DISCREPANCY, UNVERIFIED, CONFLICT, INCOMPLETE }
+
+enum class AuditorExportKind {
+    SUMMARY_PDF,
+    ORG_PDF,
+    XLSX,
+    CSV
+}
 
 class AuditorViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -197,50 +205,110 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun exportPdf(context: Context) {
+    fun exportPdf(context: Context) = shareExport(context, AuditorExportKind.SUMMARY_PDF)
+
+    fun exportOrgReportPdf(context: Context) = shareExport(context, AuditorExportKind.ORG_PDF)
+
+    fun exportXlsx(context: Context) = shareExport(context, AuditorExportKind.XLSX)
+
+    fun exportCsv(context: Context) = shareExport(context, AuditorExportKind.CSV)
+
+    fun suggestedFilename(kind: AuditorExportKind): String {
+        val q = _quarter.value.name
+        val y = _year.value
+        return when (kind) {
+            AuditorExportKind.SUMMARY_PDF -> "audit_summary_${q}_$y.pdf"
+            AuditorExportKind.ORG_PDF -> "audit_org_report_${q}_$y.pdf"
+            AuditorExportKind.XLSX -> "audit_${q}_${y}_summary.xlsx"
+            AuditorExportKind.CSV -> "audit_${q}_${y}_summary.csv"
+        }
+    }
+
+    fun saveExportToUri(context: Context, uri: Uri, kind: AuditorExportKind) {
         viewModelScope.launch {
             val appCtx = context.applicationContext
             runCatching {
                 val file = withContext(Dispatchers.IO) {
-                    SummaryPdfGenerator.generate(
-                        appCtx, _summaries.value,
-                        _quarter.value, _year.value,
-                        container.auditorSettings.settings.value
-                    )
+                    generateExportFile(appCtx, kind)
                 }
-                sharePdf(appCtx, file, "Экспорт сводной таблицы PDF")
+                UriFileWriter.copyFileToUri(appCtx, file, uri)
+            }.onSuccess {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(appCtx, "Файл сохранён", Toast.LENGTH_SHORT).show()
+                }
             }.onFailure { e ->
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(appCtx, "Ошибка экспорта PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        appCtx,
+                        "Ошибка сохранения: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
     }
 
-    fun exportOrgReportPdf(context: Context) {
+    private fun shareExport(context: Context, kind: AuditorExportKind) {
         viewModelScope.launch {
             val appCtx = context.applicationContext
             runCatching {
                 val file = withContext(Dispatchers.IO) {
-                    OrgReportPdfGenerator.generate(
-                        appCtx, _summaries.value,
-                        _quarter.value, _year.value,
-                        container.auditorSettings.settings.value
-                    )
+                    generateExportFile(appCtx, kind)
                 }
-                sharePdf(appCtx, file, "Возврат НДС по организациям PDF")
+                when (kind) {
+                    AuditorExportKind.SUMMARY_PDF ->
+                        sharePdf(appCtx, file, "Экспорт сводной таблицы PDF")
+                    AuditorExportKind.ORG_PDF ->
+                        sharePdf(appCtx, file, "Возврат НДС по организациям PDF")
+                    AuditorExportKind.XLSX ->
+                        shareFile(
+                            appCtx,
+                            file,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            "Экспорт сводной таблицы"
+                        )
+                    AuditorExportKind.CSV ->
+                        shareFile(appCtx, file, "text/csv", "Экспорт CSV")
+                }
             }.onFailure { e ->
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(appCtx, "Ошибка экспорта PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(appCtx, "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+
+    private suspend fun generateExportFile(context: Context, kind: AuditorExportKind): java.io.File {
+        val sums = _summaries.value
+        val quarter = _quarter.value
+        val year = _year.value
+        val settings = container.auditorSettings.settings.value
+        val fileName = suggestedFilename(kind)
+        return when (kind) {
+            AuditorExportKind.SUMMARY_PDF ->
+                SummaryPdfGenerator.generate(context, sums, quarter, year, settings, fileName)
+            AuditorExportKind.ORG_PDF ->
+                OrgReportPdfGenerator.generate(context, sums, quarter, year, settings, fileName)
+            AuditorExportKind.XLSX ->
+                SummaryTableExporter.exportXlsx(context, sums, quarter.name, year, fileName)
+            AuditorExportKind.CSV ->
+                SummaryTableExporter.exportCsv(context, sums, quarter.name, year, fileName)
         }
     }
 
     private suspend fun sharePdf(appCtx: Context, file: java.io.File, chooserTitle: String) {
+        shareFile(appCtx, file, "application/pdf", chooserTitle)
+    }
+
+    private suspend fun shareFile(
+        appCtx: Context,
+        file: java.io.File,
+        mimeType: String,
+        chooserTitle: String
+    ) {
         val uri = FileProvider.getUriForFile(appCtx, "${appCtx.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "application/pdf"
+            type = mimeType
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
@@ -248,65 +316,6 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
             appCtx.startActivity(
                 Intent.createChooser(intent, chooserTitle).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
-        }
-    }
-
-    fun exportXlsx(context: Context) {
-        viewModelScope.launch {
-            val appCtx = context.applicationContext
-            runCatching {
-                val file = withContext(Dispatchers.IO) {
-                    SummaryTableExporter.exportXlsx(
-                        appCtx, _summaries.value,
-                        _quarter.value.name, _year.value
-                    )
-                }
-                val uri = FileProvider.getUriForFile(appCtx, "${appCtx.packageName}.fileprovider", file)
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                withContext(Dispatchers.Main) {
-                    appCtx.startActivity(
-                        Intent.createChooser(intent, "Экспорт сводной таблицы")
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                }
-            }.onFailure { e ->
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(appCtx, "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
-
-    fun exportCsv(context: Context) {
-        viewModelScope.launch {
-            val appCtx = context.applicationContext
-            runCatching {
-                val file = withContext(Dispatchers.IO) {
-                    SummaryTableExporter.exportCsv(
-                        appCtx, _summaries.value,
-                        _quarter.value.name, _year.value
-                    )
-                }
-                val uri = FileProvider.getUriForFile(appCtx, "${appCtx.packageName}.fileprovider", file)
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/csv"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                withContext(Dispatchers.Main) {
-                    appCtx.startActivity(
-                        Intent.createChooser(intent, "Экспорт CSV").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                }
-            }.onFailure { e ->
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(appCtx, "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
         }
     }
 

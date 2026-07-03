@@ -1,6 +1,8 @@
 package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -22,8 +24,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.DeleteForever
-import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Print
+import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -64,6 +67,7 @@ import com.example.uzb_qqs_for_dip.ui.ReportEvent
 import com.example.uzb_qqs_for_dip.ui.ReportViewModel
 import com.example.uzb_qqs_for_dip.ui.components.DateField
 import com.example.uzb_qqs_for_dip.ui.components.DatePickerSheet
+import com.example.uzb_qqs_for_dip.ui.components.SaveProgressButton
 import com.example.uzb_qqs_for_dip.ui.components.SelectField
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
@@ -83,7 +87,17 @@ fun ReportScreen(
     val settings by reportViewModel.settings.collectAsStateWithLifecycle()
     val event by reportViewModel.event.collectAsStateWithLifecycle()
     val selectedIds by reportViewModel.selectedIds.collectAsStateWithLifecycle()
+    val isSaving by reportViewModel.isSaving.collectAsStateWithLifecycle()
+    val saveProgress by reportViewModel.saveProgress.collectAsStateWithLifecycle()
     val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
+
+    var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
+
+    val savePdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        if (uri != null) reportViewModel.savePdfToUri(context, uri)
+    }
 
     LaunchedEffect(event) {
         when (val e = event) {
@@ -101,7 +115,7 @@ fun ReportScreen(
                 reportViewModel.consumeEvent()
             }
             is ReportEvent.Saved -> {
-                Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
+                saveSuccessMessage = e.message
                 reportViewModel.consumeEvent()
             }
             is ReportEvent.Deleted -> {
@@ -245,14 +259,14 @@ fun ReportScreen(
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedButton(
-                onClick = { reportViewModel.savePdf(context) },
+                onClick = { reportViewModel.previewPdf(context) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp),
                 enabled = selectedUser.id != null
             ) {
-                Icon(Icons.Outlined.Download, contentDescription = null)
+                Icon(Icons.Outlined.Visibility, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
-                Text("Открыть/сохранить")
+                Text("Открыть")
             }
             Button(
                 onClick = { reportViewModel.printPdf(context) },
@@ -266,9 +280,27 @@ fun ReportScreen(
             }
         }
 
+        Spacer(Modifier.height(10.dp))
+
+        SaveProgressButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Сохранить",
+            progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
+            icon = Icons.Outlined.SaveAlt,
+            isSaving = isSaving,
+            progress = saveProgress,
+            enabled = !isSaving && selectedUser.id != null,
+            onClick = {
+                reportViewModel.suggestedReportPdfName()?.let { name ->
+                    savePdfLauncher.launch(name)
+                }
+            }
+        )
+
         Spacer(Modifier.height(20.dp))
         Text(
-            "Системный диалог печати позволяет либо отправить отчёт на принтер, либо сохранить PDF в файлы устройства.",
+            "Кнопка «Открыть» показывает предпросмотр PDF-отчёта. «Печать / PDF» открывает " +
+                "системный диалог печати, где можно отправить отчёт на принтер или сохранить PDF.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -341,6 +373,17 @@ fun ReportScreen(
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirm = false }) { Text("Отмена") }
+            }
+        )
+    }
+
+    saveSuccessMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { saveSuccessMessage = null },
+            title = { Text("Сохранено") },
+            text = { Text(message) },
+            confirmButton = {
+                Button(onClick = { saveSuccessMessage = null }) { Text("OK") }
             }
         )
     }

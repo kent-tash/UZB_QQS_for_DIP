@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.UploadFile
 import android.net.Uri
 import androidx.compose.material3.AlertDialog
@@ -78,6 +79,7 @@ import com.example.uzb_qqs_for_dip.data.repository.EmployeeSummary
 import com.example.uzb_qqs_for_dip.data.settings.AuditorSettings
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
+import com.example.uzb_qqs_for_dip.ui.AuditorExportKind
 import com.example.uzb_qqs_for_dip.ui.AuditorFilter
 import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
@@ -119,6 +121,8 @@ fun AuditorScreen(
     }
 
     var showExportMenu by remember { mutableStateOf(false) }
+    var showSaveMenu by remember { mutableStateOf(false) }
+    var pendingSaveKind by remember { mutableStateOf<AuditorExportKind?>(null) }
     var showDeclarationDialog by remember { mutableStateOf<EmployeeSummary?>(null) }
     var showYearPicker by remember { mutableStateOf(false) }
     var showConflicts by remember { mutableStateOf(false) }
@@ -129,6 +133,46 @@ fun AuditorScreen(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris: List<Uri> ->
         if (uris.isNotEmpty()) vm.mergeBatchFromUris(context, uris)
+    }
+
+    val savePdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        pendingSaveKind?.let { kind ->
+            if (uri != null) vm.saveExportToUri(context, uri, kind)
+        }
+        pendingSaveKind = null
+    }
+
+    val saveXlsxLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    ) { uri ->
+        pendingSaveKind?.let { kind ->
+            if (uri != null) vm.saveExportToUri(context, uri, kind)
+        }
+        pendingSaveKind = null
+    }
+
+    val saveCsvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        pendingSaveKind?.let { kind ->
+            if (uri != null) vm.saveExportToUri(context, uri, kind)
+        }
+        pendingSaveKind = null
+    }
+
+    fun launchSave(kind: AuditorExportKind) {
+        pendingSaveKind = kind
+        val fileName = vm.suggestedFilename(kind)
+        when (kind) {
+            AuditorExportKind.SUMMARY_PDF, AuditorExportKind.ORG_PDF ->
+                savePdfLauncher.launch(fileName)
+            AuditorExportKind.XLSX -> saveXlsxLauncher.launch(fileName)
+            AuditorExportKind.CSV -> saveCsvLauncher.launch(fileName)
+        }
     }
 
     errorMessage?.let { msg ->
@@ -219,29 +263,29 @@ fun AuditorScreen(
                     }
                     Box {
                         IconButton(onClick = { showExportMenu = true }) {
-                            Icon(Icons.Outlined.Download, "Экспорт")
+                            Icon(Icons.Outlined.Share, "Экспорт / поделиться")
                         }
-                        DropdownMenu(
+                        AuditorExportMenu(
                             expanded = showExportMenu,
-                            onDismissRequest = { showExportMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Сводная таблица (PDF)") },
-                                onClick = { showExportMenu = false; vm.exportPdf(context) }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Возврат НДС по организациям (PDF)") },
-                                onClick = { showExportMenu = false; vm.exportOrgReportPdf(context) }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Экспорт XLSX") },
-                                onClick = { showExportMenu = false; vm.exportXlsx(context) }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Экспорт CSV") },
-                                onClick = { showExportMenu = false; vm.exportCsv(context) }
-                            )
+                            onDismiss = { showExportMenu = false },
+                            onSummaryPdf = { vm.exportPdf(context) },
+                            onOrgPdf = { vm.exportOrgReportPdf(context) },
+                            onXlsx = { vm.exportXlsx(context) },
+                            onCsv = { vm.exportCsv(context) }
+                        )
+                    }
+                    Box {
+                        IconButton(onClick = { showSaveMenu = true }) {
+                            Icon(Icons.Outlined.Download, "Сохранить")
                         }
+                        AuditorExportMenu(
+                            expanded = showSaveMenu,
+                            onDismiss = { showSaveMenu = false },
+                            onSummaryPdf = { launchSave(AuditorExportKind.SUMMARY_PDF) },
+                            onOrgPdf = { launchSave(AuditorExportKind.ORG_PDF) },
+                            onXlsx = { launchSave(AuditorExportKind.XLSX) },
+                            onCsv = { launchSave(AuditorExportKind.CSV) }
+                        )
                     }
                 }
             )
@@ -332,6 +376,35 @@ fun AuditorScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AuditorExportMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onSummaryPdf: () -> Unit,
+    onOrgPdf: () -> Unit,
+    onXlsx: () -> Unit,
+    onCsv: () -> Unit
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        DropdownMenuItem(
+            text = { Text("Сводная таблица (PDF)") },
+            onClick = { onDismiss(); onSummaryPdf() }
+        )
+        DropdownMenuItem(
+            text = { Text("Возврат НДС по организациям (PDF)") },
+            onClick = { onDismiss(); onOrgPdf() }
+        )
+        DropdownMenuItem(
+            text = { Text("Экспорт XLSX") },
+            onClick = { onDismiss(); onXlsx() }
+        )
+        DropdownMenuItem(
+            text = { Text("Экспорт CSV") },
+            onClick = { onDismiss(); onCsv() }
+        )
     }
 }
 

@@ -3,6 +3,7 @@ package com.example.uzb_qqs_for_dip.ui
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,6 +20,7 @@ import com.example.uzb_qqs_for_dip.export.PdfReportGenerator
 import com.example.uzb_qqs_for_dip.export.ReceiptImageExporter
 import com.example.uzb_qqs_for_dip.export.ReportParams
 import com.example.uzb_qqs_for_dip.util.DateFormat
+import com.example.uzb_qqs_for_dip.util.UriFileWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -76,6 +78,12 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _event = MutableStateFlow<ReportEvent?>(null)
     val event: StateFlow<ReportEvent?> = _event.asStateFlow()
+
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
+    private val _saveProgress = MutableStateFlow(0f)
+    val saveProgress: StateFlow<Float> = _saveProgress.asStateFlow()
 
     /**
      * Идентификаторы чеков, отмеченных пользователем для пакетного удаления.
@@ -175,8 +183,51 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
         _event.value = null
     }
 
-    fun savePdf(context: Context) = generate(context, openSystemPrint = false)
+    fun previewPdf(context: Context) = generate(context, openSystemPrint = false)
     fun printPdf(context: Context) = generate(context, openSystemPrint = true)
+
+    fun suggestedReportPdfName(): String? {
+        val s = settings.value
+        val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value ?: return null
+        val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+        return "report_${safeName}_${System.currentTimeMillis()}.pdf"
+    }
+
+    fun savePdfToUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            val s = settings.value
+            val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value
+            if (user == null) {
+                _event.value = ReportEvent.Error("Нет выбранного пользователя")
+                return@launch
+            }
+            _isSaving.value = true
+            _saveProgress.value = 0.05f
+            try {
+                val params = ReportParams(
+                    user = user,
+                    periodStart = s.from,
+                    periodEnd = s.to,
+                    rows = rows.value,
+                    quarterLabel = if (s.quarter == Quarter.Custom) null
+                        else "${s.quarter.label} ${s.year} г."
+                )
+                val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+                val fileName = "report_${safeName}_${System.currentTimeMillis()}.pdf"
+                _saveProgress.value = 0.15f
+                val file = PdfReportGenerator.generate(context, params, fileName)
+                _saveProgress.value = 0.75f
+                UriFileWriter.copyFileToUri(context, file, uri)
+                _saveProgress.value = 1f
+                _event.value = ReportEvent.Saved("PDF-отчёт успешно сохранён")
+            } catch (e: Throwable) {
+                _event.value = ReportEvent.Error("Ошибка сохранения PDF: ${e.message}")
+            } finally {
+                _isSaving.value = false
+                _saveProgress.value = 0f
+            }
+        }
+    }
 
     private fun generate(context: Context, openSystemPrint: Boolean) {
         viewModelScope.launch {
@@ -212,7 +263,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                         setDataAndType(uri, "application/pdf")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    val chooser = Intent.createChooser(intent, "Открыть PDF")
+                    val chooser = Intent.createChooser(intent, "Просмотр отчёта")
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     _event.value = ReportEvent.Open(chooser)
                 }

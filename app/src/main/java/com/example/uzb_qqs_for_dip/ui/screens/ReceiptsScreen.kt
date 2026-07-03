@@ -1,6 +1,8 @@
 package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,7 +26,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.GridOn
 import androidx.compose.material.icons.outlined.Print
+import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.TableView
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -57,6 +61,7 @@ import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.ExportEvent
 import com.example.uzb_qqs_for_dip.ui.ReceiptsViewModel
+import com.example.uzb_qqs_for_dip.ui.components.SaveProgressButton
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 
@@ -74,9 +79,26 @@ fun ReceiptsScreen(
     val exportEvent by receiptsViewModel.exportEvents.collectAsStateWithLifecycle()
     val isUpdating by receiptsViewModel.isUpdating.collectAsStateWithLifecycle()
     val updateProgress by receiptsViewModel.updateProgress.collectAsStateWithLifecycle()
+    val isSaving by receiptsViewModel.isSaving.collectAsStateWithLifecycle()
+    val saveProgress by receiptsViewModel.saveProgress.collectAsStateWithLifecycle()
+
+    var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
+
+    val savePdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        if (uri != null) receiptsViewModel.saveReceiptsPdfToUri(context, uri)
+    }
 
     LaunchedEffect(exportEvent) {
         when (val e = exportEvent) {
+            is ExportEvent.Open -> {
+                runCatching { context.startActivity(e.intent) }
+                    .onFailure {
+                        Toast.makeText(context, "Не нашли приложение для просмотра PDF", Toast.LENGTH_LONG).show()
+                    }
+                receiptsViewModel.consumeExportEvent()
+            }
             is ExportEvent.Share -> {
                 runCatching { context.startActivity(e.intent) }
                 receiptsViewModel.consumeExportEvent()
@@ -87,6 +109,10 @@ fun ReceiptsScreen(
             }
             is ExportEvent.Error -> {
                 Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
+                receiptsViewModel.consumeExportEvent()
+            }
+            is ExportEvent.Saved -> {
+                saveSuccessMessage = e.message
                 receiptsViewModel.consumeExportEvent()
             }
             null -> Unit
@@ -150,10 +176,25 @@ fun ReceiptsScreen(
                     modifier = Modifier.weight(1f),
                     isUpdating = isUpdating,
                     progress = updateProgress,
-                    enabled = !isUpdating && rows.isNotEmpty(),
+                    enabled = !isUpdating && !isSaving && rows.isNotEmpty(),
                     onClick = { receiptsViewModel.updateVisibleReceiptsFromSite() }
                 )
             }
+
+            Spacer(Modifier.height(8.dp))
+
+            SaveProgressButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Сохранить",
+                progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
+                icon = Icons.Outlined.SaveAlt,
+                isSaving = isSaving,
+                progress = saveProgress,
+                enabled = !isSaving && !isUpdating && rows.isNotEmpty(),
+                onClick = {
+                    savePdfLauncher.launch(receiptsViewModel.suggestedReceiptsPdfName())
+                }
+            )
 
             Spacer(Modifier.height(8.dp))
 
@@ -178,14 +219,27 @@ fun ReceiptsScreen(
                 }
             }
             Spacer(Modifier.height(8.dp))
-            Button(
-                onClick = { receiptsViewModel.printAllAsSheets(context) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Outlined.Print, contentDescription = null)
-                Spacer(Modifier.size(8.dp))
-                Text("Печать всех чеков (по 6 на лист)")
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = { receiptsViewModel.previewReceiptsPdf(context) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = rows.isNotEmpty()
+                ) {
+                    Icon(Icons.Outlined.Visibility, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Открыть")
+                }
+                Button(
+                    onClick = { receiptsViewModel.printAllAsSheets(context) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = rows.isNotEmpty()
+                ) {
+                    Icon(Icons.Outlined.Print, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("Печать")
+                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -254,6 +308,17 @@ fun ReceiptsScreen(
             onShare = {
                 receiptsViewModel.shareReceiptImage(context, item)
                 previewItem = null
+            }
+        )
+    }
+
+    saveSuccessMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { saveSuccessMessage = null },
+            title = { Text("Сохранено") },
+            text = { Text(message) },
+            confirmButton = {
+                Button(onClick = { saveSuccessMessage = null }) { Text("OK") }
             }
         )
     }

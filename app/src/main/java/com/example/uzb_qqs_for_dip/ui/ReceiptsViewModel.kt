@@ -3,6 +3,7 @@ package com.example.uzb_qqs_for_dip.ui
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,7 @@ import com.example.uzb_qqs_for_dip.export.ReceiptImageExporter
 import com.example.uzb_qqs_for_dip.export.ReceiptsSheetPdfGenerator
 import com.example.uzb_qqs_for_dip.export.XlsxExporter
 import com.example.uzb_qqs_for_dip.util.DateFormat
+import com.example.uzb_qqs_for_dip.util.UriFileWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,9 +35,11 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 sealed interface ExportEvent {
+    data class Open(val intent: Intent) : ExportEvent
     data class Share(val intent: Intent) : ExportEvent
     data class Print(val file: File, val jobName: String) : ExportEvent
     data class Error(val message: String) : ExportEvent
+    data class Saved(val message: String) : ExportEvent
 }
 
 /**
@@ -80,6 +84,12 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _exportEvents = MutableStateFlow<ExportEvent?>(null)
     val exportEvents: StateFlow<ExportEvent?> = _exportEvents.asStateFlow()
+
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
+    private val _saveProgress = MutableStateFlow(0f)
+    val saveProgress: StateFlow<Float> = _saveProgress.asStateFlow()
 
     init {
         // Любое изменение видимого порядка — перегенерируем PNG чеков на диске,
@@ -159,35 +169,87 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     fun printAllAsSheets(context: Context) {
         viewModelScope.launch {
             try {
-                val rows = receipts.value
-                if (rows.isEmpty()) {
-                    _exportEvents.value = ExportEvent.Error("Нет чеков для печати")
-                    return@launch
-                }
-                val s = settings.value
-                val periodLabel = if (s.quarter == Quarter.Custom) {
-                    "${DateFormat.formatDate(s.from)} — ${DateFormat.formatDate(s.to)}"
-                } else {
-                    "${s.quarter.label} ${s.year} г."
-                }
-                val first = rows.first()
-                val headerRight = "${first.userPosition} ${first.userFullName}".trim()
-                val file = ReceiptsSheetPdfGenerator.generate(
-                    context = context,
-                    rowsInOrder = rows,
-                    headerRightText = headerRight,
-                    periodLabel = periodLabel
-                )
-                _exportEvents.value = ExportEvent.Print(file, "QQS чеки (${rows.size} шт.)")
+                val file = generateReceiptsSheetPdf(context)
+                _exportEvents.value = ExportEvent.Print(file, "QQS чеки (${receipts.value.size} шт.)")
             } catch (e: Throwable) {
                 _exportEvents.value = ExportEvent.Error("Не удалось сформировать PDF: ${e.message}")
             }
         }
     }
 
+    /** Предпросмотр PDF с чеками для печати (6 на лист). */
+    fun previewReceiptsPdf(context: Context) {
+        viewModelScope.launch {
+            try {
+                val file = generateReceiptsSheetPdf(context)
+                val uri = FileProvider.getUriForFile(
+                    context, "${context.packageName}.fileprovider", file
+                )
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/pdf")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                _exportEvents.value = ExportEvent.Open(
+                    Intent.createChooser(intent, "Просмотр чеков")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (e: Throwable) {
+                _exportEvents.value = ExportEvent.Error("Не удалось открыть предпросмотр: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun generateReceiptsSheetPdf(context: Context): File {
+        val rows = receipts.value
+        if (rows.isEmpty()) error("Нет чеков для печати")
+        val s = settings.value
+        val periodLabel = if (s.quarter == Quarter.Custom) {
+            "${DateFormat.formatDate(s.from)} — ${DateFormat.formatDate(s.to)}"
+        } else {
+            "${s.quarter.label} ${s.year} г."
+        }
+        val first = rows.first()
+        val headerRight = "${first.userPosition} ${first.userFullName}".trim()
+        return ReceiptsSheetPdfGenerator.generate(
+            context = context,
+            rowsInOrder = rows,
+            headerRightText = headerRight,
+            periodLabel = periodLabel
+        )
+    }
+
     /** Запускает системный диалог печати по уже сформированному PDF. */
     fun launchPrint(context: Context, file: File, jobName: String) {
         PdfPrint.print(context, file, jobName)
+    }
+
+    fun suggestedReceiptsPdfName(): String {
+        return "receipts_${System.currentTimeMillis()}.pdf"
+    }
+
+    fun saveReceiptsPdfToUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            val rows = receipts.value
+            if (rows.isEmpty()) {
+                _exportEvents.value = ExportEvent.Error("Нет чеков для сохранения")
+                return@launch
+            }
+            _isSaving.value = true
+            _saveProgress.value = 0.05f
+            try {
+                _saveProgress.value = 0.15f
+                val file = generateReceiptsSheetPdf(context)
+                _saveProgress.value = 0.75f
+                UriFileWriter.copyFileToUri(context, file, uri)
+                _saveProgress.value = 1f
+                _exportEvents.value = ExportEvent.Saved("PDF с чеками успешно сохранён")
+            } catch (e: Throwable) {
+                _exportEvents.value = ExportEvent.Error("Ошибка сохранения PDF: ${e.message}")
+            } finally {
+                _isSaving.value = false
+                _saveProgress.value = 0f
+            }
+        }
     }
 
     private val _isUpdating = MutableStateFlow(false)
