@@ -2,14 +2,13 @@ package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
 import com.example.uzb_qqs_for_dip.ui.components.MultiQrCameraScannerDialog
+import com.example.uzb_qqs_for_dip.ui.components.SheetPreviewDialog
 import com.example.uzb_qqs_for_dip.util.startQrScanner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,7 +41,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,8 +86,6 @@ import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.network.ParsedReceipt
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorVerifyViewModel
-import com.example.uzb_qqs_for_dip.ui.SheetItemStatus
-import com.example.uzb_qqs_for_dip.ui.SheetReceiptItem
 import com.example.uzb_qqs_for_dip.ui.VerifyResult
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
@@ -262,7 +258,9 @@ fun AuditorVerifyScreen(
             loading = sheetLoading,
             onToggle = vm::toggleSheetItem,
             onConfirm = vm::confirmSheetSelection,
-            onCancel = vm::clearSheetPreview
+            onCancel = vm::clearSheetPreview,
+            alreadyThisLabel = "Уже у сотрудника",
+            titlePrefix = "Чеки с листа"
         )
     }
 
@@ -847,146 +845,4 @@ private fun AddLinkDialogVerify(onDismiss: () -> Unit, onSubmit: (String) -> Uni
         },
         dismissButton = { OutlinedButton(onClick = onDismiss) { Text("Отмена") } }
     )
-}
-
-@Composable
-private fun SheetPreviewDialog(
-    items: List<SheetReceiptItem>,
-    loading: Boolean,
-    onToggle: (Int) -> Unit,
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit
-) {
-    val selectedCount = items.count {
-        it.selected && (
-            it.status == SheetItemStatus.NEW ||
-                it.status == SheetItemStatus.ALREADY_THIS ||
-                it.status == SheetItemStatus.OUT_OF_PERIOD
-            )
-    }
-
-    Dialog(
-        onDismissRequest = { if (!loading) onCancel() },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(0.96f)
-                .heightIn(max = 640.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text(
-                    "Чеки с листа (${items.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    "Выбрано к сохранению/подтверждению: $selectedCount",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(8.dp))
-                HorizontalDivider()
-                Column(
-                    Modifier
-                        .weight(1f, fill = false)
-                        .heightIn(max = 480.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items.forEachIndexed { index, item ->
-                        SheetPreviewRow(
-                            item = item,
-                            enabled = !loading && item.status != SheetItemStatus.OTHER_OWNER &&
-                                item.status != SheetItemStatus.ERROR,
-                            onToggle = { onToggle(index) }
-                        )
-                        if (index < items.lastIndex) HorizontalDivider()
-                    }
-                }
-                Spacer(Modifier.height(12.dp))
-                if (loading) {
-                    Box(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                    Spacer(Modifier.height(8.dp))
-                }
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onCancel,
-                        enabled = !loading,
-                        modifier = Modifier.weight(1f)
-                    ) { Text("Отмена") }
-                    Button(
-                        onClick = onConfirm,
-                        enabled = !loading && selectedCount > 0,
-                        modifier = Modifier.weight(1f)
-                    ) { Text("Подтвердить") }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SheetPreviewRow(
-    item: SheetReceiptItem,
-    enabled: Boolean,
-    onToggle: () -> Unit
-) {
-    val (label, color) = when (item.status) {
-        SheetItemStatus.NEW -> "Новый" to VerifySuccess
-        SheetItemStatus.ALREADY_THIS -> "Уже у сотрудника" to VerifySuccess
-        SheetItemStatus.OTHER_OWNER ->
-            "Чужой: ${item.ownerName ?: "?"}" to VerifyDanger
-        SheetItemStatus.ERROR ->
-            (item.errorMessage ?: "Ошибка") to VerifyDanger
-        SheetItemStatus.OUT_OF_PERIOD -> "Вне периода" to VerifyWarning
-    }
-    val parsed = item.parsed
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled, onClick = onToggle)
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = item.selected,
-            onCheckedChange = { if (enabled) onToggle() },
-            enabled = enabled
-        )
-        Column(Modifier.weight(1f)) {
-            Text(label, color = color, fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.bodySmall)
-            if (parsed != null) {
-                Text(
-                    parsed.sellerName ?: "—",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    listOfNotNull(
-                        parsed.purchasedAt?.let { DateFormat.formatDateTime(it) },
-                        parsed.totalAmountTiyin?.let { MoneyFormat.fromTiyin(it) }
-                    ).joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                Text(
-                    item.qrUrl.take(60) + if (item.qrUrl.length > 60) "…" else "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
 }

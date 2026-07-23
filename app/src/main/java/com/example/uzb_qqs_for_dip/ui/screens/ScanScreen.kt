@@ -1,6 +1,5 @@
 package com.example.uzb_qqs_for_dip.ui.screens
 
-import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -26,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.QrCodeScanner
@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +65,9 @@ import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.ExistingOwner
 import com.example.uzb_qqs_for_dip.ui.ScanState
 import com.example.uzb_qqs_for_dip.ui.ScanViewModel
+import com.example.uzb_qqs_for_dip.ui.SheetItemStatus
+import com.example.uzb_qqs_for_dip.ui.components.MultiQrCameraScannerDialog
+import com.example.uzb_qqs_for_dip.ui.components.SheetPreviewDialog
 import com.example.uzb_qqs_for_dip.ui.theme.Danger
 import com.example.uzb_qqs_for_dip.ui.theme.Success
 import com.example.uzb_qqs_for_dip.ui.theme.Warning
@@ -79,6 +83,9 @@ fun ScanScreen(
     val context = LocalContext.current
     val state by scanViewModel.state.collectAsStateWithLifecycle()
     val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
+    val sheetPreviewItems by scanViewModel.sheetPreviewItems.collectAsStateWithLifecycle()
+    val sheetLoading by scanViewModel.sheetLoading.collectAsStateWithLifecycle()
+    val sheetSummary by scanViewModel.sheetSummary.collectAsStateWithLifecycle()
 
     // Системный PhotoPicker — не требует никаких runtime-разрешений.
     val pickImageLauncher = rememberLauncherForActivityResult(
@@ -89,8 +96,19 @@ fun ScanScreen(
         }
     }
 
+    val sheetGalleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri -> uri?.let { scanViewModel.prepareSheetFromUri(context, it) } }
+
     // Диалог ввода ссылки на электронный чек (например, скопированной из SMS/Telegram).
     var showLinkDialog by remember { mutableStateOf(false) }
+    var showSheetSourceDialog by remember { mutableStateOf(false) }
+    var showSheetCamera by remember { mutableStateOf(false) }
+
+    val isBusy = state is ScanState.Loading ||
+        state is ScanState.Parsed ||
+        sheetLoading ||
+        sheetPreviewItems.isNotEmpty()
 
     Column(
         modifier = Modifier
@@ -141,7 +159,6 @@ fun ScanScreen(
                 )
                 Spacer(Modifier.height(20.dp))
 
-                val isBusy = state is ScanState.Loading || state is ScanState.Parsed
                 Button(
                     onClick = {
                         if (!isBusy) {
@@ -160,7 +177,7 @@ fun ScanScreen(
                 ) {
                     Icon(Icons.Outlined.QrCodeScanner, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text(if (isBusy) "Загрузка чека..." else "Сканировать QR-код")
+                    Text(if (state is ScanState.Loading) "Загрузка чека..." else "Сканировать QR-код")
                 }
                 Spacer(Modifier.height(10.dp))
                 OutlinedButton(
@@ -192,11 +209,23 @@ fun ScanScreen(
                     Spacer(Modifier.size(8.dp))
                     Text("Добавить по ссылке")
                 }
+                Spacer(Modifier.height(10.dp))
+                OutlinedButton(
+                    onClick = { if (!isBusy) showSheetSourceDialog = true },
+                    enabled = !isBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Outlined.GridView, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("Скан всех чеков")
+                }
                 Spacer(Modifier.height(2.dp))
                 Text(
                     "Можно выбрать готовый снимок чека из памяти устройства или вставить " +
                         "ссылку с порталов soliq.uz / multicard.uz — приложение само " +
-                        "загрузит и распознает данные чека.",
+                        "загрузит и распознает данные чека. «Скан всех чеков» читает " +
+                        "сразу несколько QR камерой или с одного фото.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -245,6 +274,86 @@ fun ScanScreen(
                 showLinkDialog = false
                 scanViewModel.handleScan(url)
             }
+        )
+    }
+
+    if (showSheetSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showSheetSourceDialog = false },
+            title = { Text("Скан всех чеков") },
+            text = {
+                Text(
+                    "Отсканируйте все QR камерой или выберите фото с несколькими QR из галереи."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSheetSourceDialog = false
+                        showSheetCamera = true
+                    }
+                ) { Text("Камера") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showSheetSourceDialog = false
+                        sheetGalleryLauncher.launch("image/*")
+                    }
+                ) { Text("Галерея") }
+            }
+        )
+    }
+
+    if (showSheetCamera) {
+        MultiQrCameraScannerDialog(
+            onDismiss = { showSheetCamera = false },
+            onFinished = { urls ->
+                showSheetCamera = false
+                scanViewModel.prepareSheetFromUrls(urls)
+            }
+        )
+    }
+
+    sheetSummary?.let { summary ->
+        AlertDialog(
+            onDismissRequest = scanViewModel::clearSheetSummary,
+            title = { Text("Скан всех чеков") },
+            text = { Text(summary.message) },
+            confirmButton = {
+                TextButton(onClick = scanViewModel::clearSheetSummary) { Text("OK") }
+            }
+        )
+    }
+
+    if (sheetLoading && sheetPreviewItems.isEmpty()) {
+        Dialog(
+            onDismissRequest = {},
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Card(shape = RoundedCornerShape(16.dp)) {
+                Column(
+                    Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(Modifier.height(12.dp))
+                    Text("Распознаём QR...")
+                }
+            }
+        }
+    }
+
+    if (sheetPreviewItems.isNotEmpty()) {
+        SheetPreviewDialog(
+            items = sheetPreviewItems,
+            loading = sheetLoading,
+            onToggle = scanViewModel::toggleSheetItem,
+            onConfirm = scanViewModel::confirmSheetSelection,
+            onCancel = scanViewModel::clearSheetPreview,
+            alreadyThisLabel = "Уже сохранён",
+            titlePrefix = "Чеки",
+            confirmableStatuses = setOf(SheetItemStatus.NEW)
         )
     }
 }
@@ -516,4 +625,3 @@ private fun ReceiptField(label: String, value: String?, bold: Boolean = false) {
         )
     }
 }
-
