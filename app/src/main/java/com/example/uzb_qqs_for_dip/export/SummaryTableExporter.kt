@@ -2,6 +2,8 @@ package com.example.uzb_qqs_for_dip.export
 
 import android.content.Context
 import com.example.uzb_qqs_for_dip.data.repository.EmployeeSummary
+import com.example.uzb_qqs_for_dip.data.settings.AuditorSettings
+import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,83 +16,235 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * Экспортирует сводную таблицу квартального аудита (ФИО | Общая сумма | Сумма НДС)
- * в форматах XLSX и CSV — по образцу [XlsxExporter] / [CsvExporter].
+ * Экспорт сводных отчётов аудитора в XLSX/CSV.
+ * XLSX повторяет форму PDF ([SummaryPdfGenerator] / [OrgReportPdfGenerator]):
+ * шапка, колонки № | Фамилия И.О. | НДС, ИТОГО, блок подписей.
  */
 object SummaryTableExporter {
 
-    private data class Cell(val text: String? = null, val number: Double? = null)
+    private data class Cell(
+        val text: String? = null,
+        val number: Double? = null,
+        /** 0 default, 1 header, 2 totals text, 3 totals num, 4 data num, 5 title, 6 signature */
+        val style: Int = 0
+    )
 
+    /** Сводная таблица — как [SummaryPdfGenerator]. */
     suspend fun exportXlsx(
         context: Context,
         rows: List<EmployeeSummary>,
-        quarter: String,
+        quarter: Quarter,
         year: Int,
-        fileName: String = "audit_${quarter}_${year}_summary.xlsx"
+        auditorSettings: AuditorSettings,
+        fileName: String = "audit_${quarter.name}_${year}_summary.xlsx"
     ): File = withContext(Dispatchers.IO) {
-        val header = listOf("ФИО", "Должность", "Итого чеков", "Общая сумма", "Сумма НДС", "Статус")
-            .map { Cell(text = it) }
+        val qLabel = "${SummaryPdfGenerator.quarterLabel(quarter)} $year г."
+        val orgName = auditorSettings.organizationName.ifBlank { "_______________" }
+        val sorted = rows.sortedBy {
+            SummaryPdfGenerator.toSurnameInitials(
+                it.initialsSurname.ifBlank { it.fullName }
+            ).lowercase()
+        }
 
-        val data = rows.map { s ->
-            listOf(
-                Cell(text = s.fullName),
-                Cell(text = s.position),
-                Cell(number = s.receiptCount.toDouble()),
-                Cell(number = s.totalTiyin / 100.0),
-                Cell(number = s.vatTiyin / 100.0),
-                Cell(text = s.declaration?.status?.name ?: "—")
+        val sheet = buildList {
+            add(
+                listOf(
+                    Cell(
+                        text = "Список сотрудников $orgName в Узбекистане, предъявляющих к возмещению уплаченный НДС",
+                        style = 5
+                    )
+                )
             )
+            add(listOf(Cell(text = qLabel, style = 5)))
+            add(listOf(Cell(text = "")))
+
+            add(
+                listOf(
+                    Cell(text = "№", style = 1),
+                    Cell(text = "Фамилия И.О.", style = 1),
+                    Cell(text = qLabel, style = 1)
+                )
+            )
+
+            sorted.forEachIndexed { idx, s ->
+                add(
+                    listOf(
+                        Cell(number = (idx + 1).toDouble()),
+                        Cell(
+                            text = SummaryPdfGenerator.toSurnameInitials(
+                                s.initialsSurname.ifBlank { s.fullName }
+                            )
+                        ),
+                        Cell(number = s.vatTiyin / 100.0, style = 4)
+                    )
+                )
+            }
+
+            add(
+                listOf(
+                    Cell(text = "ИТОГО:", style = 2),
+                    Cell(text = "", style = 2),
+                    Cell(number = rows.sumOf { it.vatTiyin } / 100.0, style = 3)
+                )
+            )
+
+            addAll(signatureRows(auditorSettings))
         }
 
-        val totalSum = rows.sumOf { it.totalTiyin } / 100.0
-        val totalVat = rows.sumOf { it.vatTiyin } / 100.0
-        val totals = listOf(
-            Cell(text = "Итого по организации:"),
-            Cell(text = ""),
-            Cell(number = rows.sumOf { it.receiptCount }.toDouble()),
-            Cell(number = totalSum),
-            Cell(number = totalVat),
-            Cell(text = "")
+        writeWorkbook(
+            context = context,
+            fileName = fileName,
+            sheetName = "Аудит ${quarter.name} $year",
+            sheet = sheet,
+            colWidths = listOf(8, 36, 22),
+            mergeTitleRows = 2
         )
+    }
 
-        val sheet: List<List<Cell>> = buildList {
-            add(header)
-            addAll(data)
-            add(totals)
+    /**
+     * Отчёт «Возврат НДС по личным расходам» — как [OrgReportPdfGenerator].
+     */
+    suspend fun exportOrgXlsx(
+        context: Context,
+        rows: List<EmployeeSummary>,
+        quarter: Quarter,
+        year: Int,
+        auditorSettings: AuditorSettings,
+        fileName: String = "audit_org_${quarter.name}_$year.xlsx"
+    ): File = withContext(Dispatchers.IO) {
+        val qLabel = "${SummaryPdfGenerator.quarterLabel(quarter)} $year г."
+        val blankKey = "\uFFFE"
+        val grouped = rows
+            .groupBy { it.organization.ifBlank { blankKey } }
+            .entries
+            .sortedWith(
+                compareByDescending<Map.Entry<String, List<EmployeeSummary>>> {
+                    if (it.key == blankKey) Int.MIN_VALUE else it.value.size
+                }
+            )
+            .associate { (key, list) ->
+                key to list.sortedBy {
+                    SummaryPdfGenerator.toSurnameInitials(
+                        it.initialsSurname.ifBlank { it.fullName }
+                    ).lowercase()
+                }
+            }
+
+        val sheet = buildList {
+            add(listOf(Cell(text = "Возврат НДС по личным расходам за $qLabel", style = 5)))
+            add(listOf(Cell(text = "")))
+
+            add(
+                listOf(
+                    Cell(text = "№", style = 1),
+                    Cell(text = "Фамилия И.О.", style = 1),
+                    Cell(text = qLabel, style = 1)
+                )
+            )
+
+            var num = 1
+            grouped.forEach { (orgKey, list) ->
+                list.forEach { s ->
+                    add(
+                        listOf(
+                            Cell(number = num.toDouble()),
+                            Cell(
+                                text = SummaryPdfGenerator.toSurnameInitials(
+                                    s.initialsSurname.ifBlank { s.fullName }
+                                )
+                            ),
+                            Cell(number = s.vatTiyin / 100.0, style = 4)
+                        )
+                    )
+                    num++
+                }
+                val orgLabel = if (orgKey == blankKey) "ИТОГО:" else "ИТОГО $orgKey:"
+                add(
+                    listOf(
+                        Cell(text = orgLabel, style = 2),
+                        Cell(text = "", style = 2),
+                        Cell(number = list.sumOf { it.vatTiyin } / 100.0, style = 3)
+                    )
+                )
+            }
+
+            add(
+                listOf(
+                    Cell(text = "ИТОГО:", style = 2),
+                    Cell(text = "", style = 2),
+                    Cell(number = rows.sumOf { it.vatTiyin } / 100.0, style = 3)
+                )
+            )
+
+            addAll(signatureRows(auditorSettings))
         }
 
+        writeWorkbook(
+            context = context,
+            fileName = fileName,
+            sheetName = "Отчёт",
+            sheet = sheet,
+            colWidths = listOf(8, 40, 22),
+            mergeTitleRows = 1
+        )
+    }
+
+    private fun signatureRows(s: AuditorSettings): List<List<Cell>> {
+        val dirTitle = s.directorTitle.ifBlank { "Руководитель организации" }
+        val dirName = s.directorName.ifBlank { "_______________" }
+        val accTitle = s.accountantTitle.ifBlank { "Главный бухгалтер организации" }
+        val accName = s.accountantName.ifBlank { "_______________" }
+        return listOf(
+            listOf(Cell(text = "")),
+            listOf(
+                Cell(text = dirTitle, style = 6),
+                Cell(text = "____________________", style = 6),
+                Cell(text = dirName, style = 6)
+            ),
+            listOf(
+                Cell(text = accTitle, style = 6),
+                Cell(text = "____________________", style = 6),
+                Cell(text = accName, style = 6)
+            )
+        )
+    }
+
+    private fun writeWorkbook(
+        context: Context,
+        fileName: String,
+        sheetName: String,
+        sheet: List<List<Cell>>,
+        colWidths: List<Int>,
+        mergeTitleRows: Int
+    ): File {
         val sharedStrings = mutableListOf<String>()
         val sharedIndex = mutableMapOf<String, Int>()
         fun stringIndex(s: String): Int = sharedIndex.getOrPut(s) {
             sharedStrings.add(s); sharedStrings.size - 1
         }
 
+        val colCount = colWidths.size
         val sheetXml = buildString {
             append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-            append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">")
+            append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" ")
+            append("xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">")
             append("<cols>")
-            append("<col min=\"1\" max=\"1\" width=\"28\" customWidth=\"1\"/>")
-            append("<col min=\"2\" max=\"2\" width=\"22\" customWidth=\"1\"/>")
-            append("<col min=\"3\" max=\"3\" width=\"14\" customWidth=\"1\"/>")
-            append("<col min=\"4\" max=\"4\" width=\"18\" customWidth=\"1\"/>")
-            append("<col min=\"5\" max=\"5\" width=\"18\" customWidth=\"1\"/>")
-            append("<col min=\"6\" max=\"6\" width=\"16\" customWidth=\"1\"/>")
-            append("</cols>")
-            append("<sheetData>")
+            colWidths.forEachIndexed { i, w ->
+                append("<col min=\"${i + 1}\" max=\"${i + 1}\" width=\"$w\" customWidth=\"1\"/>")
+            }
+            append("</cols><sheetData>")
             sheet.forEachIndexed { rowIdx, cells ->
                 val rowNumber = rowIdx + 1
-                val isHeader = rowIdx == 0
-                val isTotalsRow = rowIdx == sheet.lastIndex && rows.isNotEmpty()
                 append("<row r=\"$rowNumber\">")
-                cells.forEachIndexed { colIdx, cell ->
+                val padded = if (cells.size < colCount && cells.firstOrNull()?.style == 5) {
+                    cells + List(colCount - cells.size) { Cell(text = "", style = 5) }
+                } else {
+                    cells
+                }
+                padded.forEachIndexed { colIdx, cell ->
+                    if (colIdx >= colCount) return@forEachIndexed
                     val ref = colName(colIdx) + rowNumber
-                    val style = when {
-                        isHeader -> 1
-                        isTotalsRow && cell.number != null -> 3
-                        isTotalsRow -> 2
-                        cell.number != null -> 4
-                        else -> 0
-                    }
+                    val style = cell.style
                     if (cell.number != null) {
                         append("<c r=\"$ref\" t=\"n\" s=\"$style\"><v>${formatNumber(cell.number)}</v></c>")
                     } else {
@@ -98,14 +252,21 @@ object SummaryTableExporter {
                         if (txt.isEmpty()) {
                             append("<c r=\"$ref\" s=\"$style\"/>")
                         } else {
-                            val idx = stringIndex(txt)
-                            append("<c r=\"$ref\" t=\"s\" s=\"$style\"><v>$idx</v></c>")
+                            append("<c r=\"$ref\" t=\"s\" s=\"$style\"><v>${stringIndex(txt)}</v></c>")
                         }
                     }
                 }
                 append("</row>")
             }
             append("</sheetData>")
+            if (mergeTitleRows > 0) {
+                append("<mergeCells count=\"$mergeTitleRows\">")
+                repeat(mergeTitleRows) { i ->
+                    val r = i + 1
+                    append("<mergeCell ref=\"A$r:${colName(colCount - 1)}$r\"/>")
+                }
+                append("</mergeCells>")
+            }
             append("</worksheet>")
         }
 
@@ -123,172 +284,7 @@ object SummaryTableExporter {
             "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                 "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" " +
                 "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
-                "<sheets><sheet name=\"Аудит $quarter $year\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>"
-
-        val workbookRels =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
-                "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/>" +
-                "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>" +
-                "<Relationship Id=\"rId3\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>" +
-                "</Relationships>"
-
-        val rootRels =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
-                "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>" +
-                "</Relationships>"
-
-        val contentTypes =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
-                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
-                "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
-                "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
-                "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>" +
-                "<Override PartName=\"/xl/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/>" +
-                "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>" +
-                "</Types>"
-
-        val file = File(ExportPaths.exportsDir(context), fileName)
-        FileOutputStream(file).use { fos ->
-            ZipOutputStream(fos).use { zip ->
-                zip.setLevel(Deflater.DEFAULT_COMPRESSION)
-                writeEntry(zip, "[Content_Types].xml", contentTypes)
-                writeEntry(zip, "_rels/.rels", rootRels)
-                writeEntry(zip, "xl/workbook.xml", workbookXml)
-                writeEntry(zip, "xl/_rels/workbook.xml.rels", workbookRels)
-                writeEntry(zip, "xl/sharedStrings.xml", sharedStringsXml)
-                writeEntry(zip, "xl/styles.xml", buildStylesXml())
-                writeEntry(zip, "xl/worksheets/sheet1.xml", sheetXml)
-            }
-        }
-        file
-    }
-
-    /**
-     * Отчёт «Возврат НДС по организациям»: группы по organization, подитоги и общий итог.
-     */
-    suspend fun exportOrgXlsx(
-        context: Context,
-        rows: List<EmployeeSummary>,
-        quarter: String,
-        year: Int,
-        fileName: String = "audit_org_${quarter}_${year}.xlsx"
-    ): File = withContext(Dispatchers.IO) {
-        val blankKey = "\uFFFE"
-        val grouped = rows
-            .groupBy { it.organization.ifBlank { blankKey } }
-            .entries
-            .sortedWith(
-                compareByDescending<Map.Entry<String, List<EmployeeSummary>>> {
-                    if (it.key == blankKey) Int.MIN_VALUE else it.value.size
-                }
-            )
-            .associate { (key, list) ->
-                key to list.sortedBy {
-                    it.initialsSurname.ifBlank { it.fullName }.lowercase()
-                }
-            }
-
-        val header = listOf("№", "Организация", "Фамилия И.О.", "Сумма НДС")
-            .map { Cell(text = it) }
-
-        val sheetRows = mutableListOf<List<Cell>>()
-        sheetRows.add(header)
-        var num = 1
-        grouped.forEach { (orgKey, list) ->
-            val orgLabel = if (orgKey == blankKey) "Без организации" else orgKey
-            list.forEach { s ->
-                sheetRows.add(
-                    listOf(
-                        Cell(number = num.toDouble()),
-                        Cell(text = orgLabel),
-                        Cell(text = s.initialsSurname.ifBlank { s.fullName }),
-                        Cell(number = s.vatTiyin / 100.0)
-                    )
-                )
-                num++
-            }
-            sheetRows.add(
-                listOf(
-                    Cell(text = ""),
-                    Cell(text = "ИТОГО $orgLabel"),
-                    Cell(text = ""),
-                    Cell(number = list.sumOf { it.vatTiyin } / 100.0)
-                )
-            )
-        }
-        sheetRows.add(
-            listOf(
-                Cell(text = ""),
-                Cell(text = "ИТОГО"),
-                Cell(text = ""),
-                Cell(number = rows.sumOf { it.vatTiyin } / 100.0)
-            )
-        )
-
-        writeSimpleXlsx(context, fileName, sheetRows, colWidths = listOf(8, 28, 24, 16))
-    }
-
-    private fun writeSimpleXlsx(
-        context: Context,
-        fileName: String,
-        sheet: List<List<Cell>>,
-        colWidths: List<Int>
-    ): File {
-        val sharedStrings = mutableListOf<String>()
-        val sharedIndex = mutableMapOf<String, Int>()
-        fun stringIndex(s: String): Int = sharedIndex.getOrPut(s) {
-            sharedStrings.add(s); sharedStrings.size - 1
-        }
-
-        val sheetXml = buildString {
-            append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-            append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">")
-            append("<cols>")
-            colWidths.forEachIndexed { i, w ->
-                append("<col min=\"${i + 1}\" max=\"${i + 1}\" width=\"$w\" customWidth=\"1\"/>")
-            }
-            append("</cols><sheetData>")
-            sheet.forEachIndexed { rowIdx, cells ->
-                val r = rowIdx + 1
-                append("<row r=\"$r\">")
-                cells.forEachIndexed { colIdx, cell ->
-                    val ref = "${colName(colIdx)}$r"
-                    val num = cell.number
-                    val text = cell.text
-                    when {
-                        num != null -> {
-                            val style = if (rowIdx == 0) 1 else 4
-                            append("<c r=\"$ref\" s=\"$style\" t=\"n\"><v>${formatNumber(num)}</v></c>")
-                        }
-                        text != null -> {
-                            val style = if (rowIdx == 0) 1 else 0
-                            append("<c r=\"$ref\" s=\"$style\" t=\"s\"><v>${stringIndex(text)}</v></c>")
-                        }
-                    }
-                }
-                append("</row>")
-            }
-            append("</sheetData></worksheet>")
-        }
-
-        val sharedStringsXml = buildString {
-            append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-            append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" ")
-            append("count=\"${sharedStrings.size}\" uniqueCount=\"${sharedStrings.size}\">")
-            sharedStrings.forEach {
-                append("<si><t>${escapeXml(it)}</t></si>")
-            }
-            append("</sst>")
-        }
-
-        val workbookXml =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" " +
-                "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
-                "<sheets><sheet name=\"Отчёт\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>"
+                "<sheets><sheet name=\"${escapeXml(sheetName)}\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>"
         val workbookRels =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
@@ -308,8 +304,8 @@ object SummaryTableExporter {
                 "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
                 "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
                 "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>" +
-                "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>" +
                 "<Override PartName=\"/xl/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/>" +
+                "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>" +
                 "</Types>"
 
         val file = File(ExportPaths.exportsDir(context), fileName)
@@ -362,10 +358,11 @@ object SummaryTableExporter {
         append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
         append("<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">")
         append("<numFmts count=\"1\"><numFmt numFmtId=\"164\" formatCode=\"#,##0.00\"/></numFmts>")
-        append("<fonts count=\"3\">")
+        append("<fonts count=\"4\">")
         append("<font><sz val=\"11\"/><name val=\"Calibri\"/></font>")
         append("<font><sz val=\"11\"/><name val=\"Calibri\"/><b/><color rgb=\"FFFFFFFF\"/></font>")
         append("<font><sz val=\"11\"/><name val=\"Calibri\"/><b/></font>")
+        append("<font><sz val=\"12\"/><name val=\"Calibri\"/><b/></font>")
         append("</fonts>")
         append("<fills count=\"4\">")
         append("<fill><patternFill patternType=\"none\"/></fill>")
@@ -378,14 +375,17 @@ object SummaryTableExporter {
         append("<right style=\"thin\"><color rgb=\"FFAAAAAA\"/></right>")
         append("<top style=\"thin\"><color rgb=\"FFAAAAAA\"/></top>")
         append("<bottom style=\"thin\"><color rgb=\"FFAAAAAA\"/></bottom></border></borders>")
-        append("<cellXfs count=\"5\">")
+        append("<cellXfs count=\"7\">")
         append("<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"1\" applyBorder=\"1\"/>")
         append("<xf numFmtId=\"0\" fontId=\"1\" fillId=\"2\" borderId=\"1\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\">")
         append("<alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>")
-        append("<xf numFmtId=\"0\" fontId=\"2\" fillId=\"3\" borderId=\"1\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\">")
-        append("<alignment horizontal=\"right\"/></xf>")
+        append("<xf numFmtId=\"0\" fontId=\"2\" fillId=\"3\" borderId=\"1\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\"/>")
         append("<xf numFmtId=\"164\" fontId=\"2\" fillId=\"3\" borderId=\"1\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyNumberFormat=\"1\"/>")
         append("<xf numFmtId=\"164\" fontId=\"0\" fillId=\"0\" borderId=\"1\" applyBorder=\"1\" applyNumberFormat=\"1\"/>")
+        append("<xf numFmtId=\"0\" fontId=\"3\" fillId=\"0\" borderId=\"0\" applyFont=\"1\" applyAlignment=\"1\">")
+        append("<alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>")
+        append("<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" applyAlignment=\"1\">")
+        append("<alignment horizontal=\"left\" vertical=\"center\"/></xf>")
         append("</cellXfs></styleSheet>")
     }
 

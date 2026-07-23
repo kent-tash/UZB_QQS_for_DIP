@@ -300,9 +300,9 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
             AuditorExportKind.ORG_PDF ->
                 OrgReportPdfGenerator.generate(context, sums, quarter, year, settings, fileName)
             AuditorExportKind.SUMMARY_XLSX ->
-                SummaryTableExporter.exportXlsx(context, sums, quarter.name, year, fileName)
+                SummaryTableExporter.exportXlsx(context, sums, quarter, year, settings, fileName)
             AuditorExportKind.ORG_XLSX ->
-                SummaryTableExporter.exportOrgXlsx(context, sums, quarter.name, year, fileName)
+                SummaryTableExporter.exportOrgXlsx(context, sums, quarter, year, settings, fileName)
         }
     }
 

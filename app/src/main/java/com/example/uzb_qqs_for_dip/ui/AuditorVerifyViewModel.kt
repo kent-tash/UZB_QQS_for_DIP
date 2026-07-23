@@ -368,6 +368,29 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
      * без вставки в БД — результат попадает в [sheetPreviewItems].
      */
     fun prepareSheetFromUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            _sheetLoading.value = true
+            _sheetSummary.value = null
+            _sheetPreviewItems.value = emptyList()
+            val urls = runCatching { QrFromImageDecoder.decodeAll(context, uri) }
+                .getOrElse { e ->
+                    _sheetLoading.value = false
+                    _sheetSummary.value = SheetSummary(
+                        scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
+                        errors = 1, skipped = 0,
+                        message = e.message ?: "Не удалось распознать QR на листе"
+                    )
+                    return@launch
+                }
+            _sheetLoading.value = false
+            prepareSheetFromUrls(urls)
+        }
+    }
+
+    /**
+     * Готовит превью листа по уже собранным URL (камера или галерея).
+     */
+    fun prepareSheetFromUrls(urls: List<String>) {
         val employee = _selectedEmployee.value ?: run {
             _sheetSummary.value = SheetSummary(
                 scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0, errors = 1, skipped = 0,
@@ -380,17 +403,17 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
             _sheetSummary.value = null
             _sheetPreviewItems.value = emptyList()
             try {
-                val urls = runCatching { QrFromImageDecoder.decodeAll(context, uri) }
-                    .getOrElse { e ->
-                        _sheetSummary.value = SheetSummary(
-                            scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
-                            errors = 1, skipped = 0,
-                            message = e.message ?: "Не удалось распознать QR на листе"
-                        )
-                        return@launch
-                    }
+                val distinct = urls.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+                if (distinct.isEmpty()) {
+                    _sheetSummary.value = SheetSummary(
+                        scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
+                        errors = 1, skipped = 0,
+                        message = "QR-коды не найдены"
+                    )
+                    return@launch
+                }
                 val (from, to) = periodBounds()
-                val items = urls.map { raw ->
+                val items = distinct.map { raw ->
                     buildSheetItem(raw, employee, from, to)
                 }
                 _sheetPreviewItems.value = items

@@ -39,6 +39,7 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_V
                 nkm_name TEXT,
                 sn TEXT,
                 raw_text TEXT,
+                source TEXT NOT NULL DEFAULT 'APP',
                 verified_at INTEGER,
                 verified_by INTEGER,
                 created_at INTEGER NOT NULL,
@@ -96,6 +97,7 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_V
             "nkm_name" to "TEXT",
             "sn" to "TEXT",
             "raw_text" to "TEXT",
+            "source" to "TEXT NOT NULL DEFAULT 'APP'",
             "verified_at" to "INTEGER",
             "verified_by" to "INTEGER"
         )
@@ -106,6 +108,9 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_V
         }
         db.execSQL(
             "UPDATE receipts SET payment_type = 'CARD' WHERE payment_type IS NULL OR payment_type = ''"
+        )
+        db.execSQL(
+            "UPDATE receipts SET source = 'APP' WHERE source IS NULL OR source = ''"
         )
     }
 
@@ -151,6 +156,6 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_V
 
     companion object {
         const val DB_NAME = "uzb_qqs.db"
-        const val DB_VERSION = 8
+        const val DB_VERSION = 9
     }
 }

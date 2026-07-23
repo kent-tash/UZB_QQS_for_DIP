@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.uzb_qqs_for_dip.data.model.ReceiptSource
 import com.example.uzb_qqs_for_dip.data.model.ReceiptWithUser
 import com.example.uzb_qqs_for_dip.ui.AuditorSearchViewModel
 import com.example.uzb_qqs_for_dip.util.DateFormat
@@ -111,6 +112,13 @@ fun ReceiptSearchCard(item: ReceiptWithUser, onClick: () -> Unit) {
         Column(Modifier.padding(12.dp)) {
             Text(item.userFullName, fontWeight = FontWeight.SemiBold)
             Text(item.receipt.sellerName, style = MaterialTheme.typography.bodyMedium)
+            if (item.receipt.source == ReceiptSource.PAPER) {
+                Text(
+                    "С распечатки",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
             Spacer(Modifier.height(4.dp))
             Row(
                 Modifier.fillMaxWidth(),

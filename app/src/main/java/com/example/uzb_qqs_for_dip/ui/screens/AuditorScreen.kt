@@ -100,6 +100,7 @@ private val Warning = Color(0xFFF57F17)
 fun AuditorScreen(
     appViewModel: AppViewModel,
     onVerifyEmployee: (Long) -> Unit = {},
+    onPaperScan: (userId: Long, manual: Boolean) -> Unit = { _, _ -> },
     onSearchReceipts: () -> Unit = {},
     vm: AuditorViewModel = viewModel()
 ) {
@@ -404,6 +405,8 @@ fun AuditorScreen(
                             it.user1Id == summary.userId || it.user2Id == summary.userId
                         },
                         onVerify = { onVerifyEmployee(summary.userId) },
+                        onPaperScan = { onPaperScan(summary.userId, false) },
+                        onPaperManual = { onPaperScan(summary.userId, true) },
                         onEditDeclaration = { showDeclarationDialog = summary },
                         onShowDiscrepancy = {
                             showDiscrepancyDetail = vm.getDiscrepancyDetail(summary.userId)
@@ -580,6 +583,8 @@ private fun EmployeeCard(
     summary: EmployeeSummary,
     hasConflict: Boolean,
     onVerify: () -> Unit,
+    onPaperScan: () -> Unit,
+    onPaperManual: () -> Unit,
     onEditDeclaration: () -> Unit,
     onShowDiscrepancy: () -> Unit
 ) {
@@ -724,6 +729,25 @@ private fun EmployeeCard(
                         if (decl == null) "Внести итоги" else "Итоги PDF",
                         style = MaterialTheme.typography.labelMedium
                     )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = onPaperScan,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(6.dp)
+                ) {
+                    Text("Скан распечатки", style = MaterialTheme.typography.labelMedium)
+                }
+                OutlinedButton(
+                    onClick = onPaperManual,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(6.dp)
+                ) {
+                    Text("Ввести вручную", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

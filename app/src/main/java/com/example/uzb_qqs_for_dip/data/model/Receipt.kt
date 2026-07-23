@@ -1,6 +1,19 @@
 package com.example.uzb_qqs_for_dip.data.model
 
 /**
+ * Откуда попал чек в базу: из приложения (QR) или с распечатанного отчёта.
+ */
+enum class ReceiptSource {
+    APP,
+    PAPER;
+
+    companion object {
+        fun fromDb(raw: String?): ReceiptSource =
+            if (raw.equals(PAPER.name, ignoreCase = true)) PAPER else APP
+    }
+}
+
+/**
  * Запись о фискальном чеке Узбекистана, привязанная к пользователю.
  *
  * Все денежные суммы хранятся в тийинах (минимальная единица), чтобы избежать ошибок
@@ -24,6 +37,7 @@ data class Receipt(
     val nkmName: String? = null,
     val sn: String? = null,
     val rawText: String? = null,
+    val source: ReceiptSource = ReceiptSource.APP,
     val createdAt: Long = System.currentTimeMillis()
 )
 

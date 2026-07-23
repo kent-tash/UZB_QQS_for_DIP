@@ -2,17 +2,17 @@
 
 Android-приложение для сканирования QR-кодов фискальных чеков Узбекистана (Soliq), сохранения чеков локально, построения отчётов и экспорта данных.
 
-**Версия:** 1.5.0 (versionCode 10)  
+**Версия:** 1.5.1 (versionCode 11)  
 **Пакет:** `com.example.uzb_qqs_for_dip`
 
 ## Скачать готовую сборку
 
 | Файл | Описание |
 |------|----------|
-| [**UZB_QQS_for_DIP-v1.5.0-release.apk**](release/UZB_QQS_for_DIP-v1.5.0-release.apk) | Актуальная подписанная release-сборка |
+| [**UZB_QQS_for_DIP-v1.5.1-release.apk**](release/UZB_QQS_for_DIP-v1.5.1-release.apk) | Актуальная подписанная release-сборка |
 
 Прямая ссылка (удобно с телефона):  
-`https://github.com/kent-tash/UZB_QQS_for_DIP/raw/main/release/UZB_QQS_for_DIP-v1.5.0-release.apk`
+`https://github.com/kent-tash/UZB_QQS_for_DIP/raw/main/release/UZB_QQS_for_DIP-v1.5.1-release.apk`
 
 Также доступно в [Releases](https://github.com/kent-tash/UZB_QQS_for_DIP/releases) на GitHub.
 

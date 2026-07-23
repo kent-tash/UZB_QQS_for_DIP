@@ -5,6 +5,7 @@ import com.example.uzb_qqs_for_dip.data.db.DbHelper
 import com.example.uzb_qqs_for_dip.data.model.PaymentType
 import com.example.uzb_qqs_for_dip.data.model.Receipt
 import com.example.uzb_qqs_for_dip.data.model.ReceiptOwner
+import com.example.uzb_qqs_for_dip.data.model.ReceiptSource
 import com.example.uzb_qqs_for_dip.data.model.ReceiptWithUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +46,7 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
             SELECT r.id, r.user_id, r.purchased_at, r.seller_name, r.total_amount_tiyin,
                    r.vat_amount_tiyin, r.qr_url, r.payment_type, r.fiscal_sign,
                    r.address, r.tin, r.terminal_id, r.receipt_number, r.nkm_name, r.sn,
-                   r.raw_text, r.created_at,
+                   r.raw_text, r.source, r.created_at,
                    u.full_name, u.position, u.initials_surname
             FROM receipts r
             INNER JOIN users u ON u.id = r.user_id
@@ -70,14 +71,15 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
                     nkmName = if (c.isNull(13)) null else c.getString(13),
                     sn = if (c.isNull(14)) null else c.getString(14),
                     rawText = if (c.isNull(15)) null else c.getString(15),
-                    createdAt = c.getLong(16)
+                    source = ReceiptSource.fromDb(if (c.isNull(16)) null else c.getString(16)),
+                    createdAt = c.getLong(17)
                 )
                 list.add(
                     ReceiptWithUser(
                         receipt = receipt,
-                        userFullName = c.getString(17),
-                        userPosition = c.getString(18),
-                        userInitialsSurname = c.getString(19)
+                        userFullName = c.getString(18),
+                        userPosition = c.getString(19),
+                        userInitialsSurname = c.getString(20)
                     )
                 )
             }
@@ -177,7 +179,7 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
             """SELECT id, user_id, purchased_at, seller_name, total_amount_tiyin,
                       vat_amount_tiyin, qr_url, payment_type, fiscal_sign,
                       address, tin, terminal_id, receipt_number, nkm_name, sn,
-                      raw_text, created_at
+                      raw_text, source, created_at
                FROM receipts WHERE qr_url = ?""",
             arrayOf(qrUrl)
         ).use { c ->
@@ -199,7 +201,8 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
                     nkmName = if (c.isNull(13)) null else c.getString(13),
                     sn = if (c.isNull(14)) null else c.getString(14),
                     rawText = if (c.isNull(15)) null else c.getString(15),
-                    createdAt = c.getLong(16)
+                    source = ReceiptSource.fromDb(if (c.isNull(16)) null else c.getString(16)),
+                    createdAt = c.getLong(17)
                 )
             } else null
         }
@@ -342,6 +345,7 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
         put("nkm_name", receipt.nkmName)
         put("sn", receipt.sn)
         put("raw_text", receipt.rawText)
+        put("source", receipt.source.name)
         put("created_at", receipt.createdAt)
     }
 

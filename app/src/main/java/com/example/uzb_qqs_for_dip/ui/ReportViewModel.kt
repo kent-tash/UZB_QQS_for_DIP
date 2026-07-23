@@ -244,8 +244,16 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                         context, params, "report_${safeName}_${System.currentTimeMillis()}.pdf"
                     )
                 } else {
-                    XlsxExporter.export(
-                        context, rows.value, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
+                    val params = ReportParams(
+                        user = user,
+                        periodStart = s.from,
+                        periodEnd = s.to,
+                        rows = rows.value,
+                        quarterLabel = if (s.quarter == Quarter.Custom) null
+                        else "${s.quarter.label} ${s.year} г."
+                    )
+                    XlsxExporter.exportReport(
+                        context, params, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
                     )
                 }
                 val mime = if (asPdf) "application/pdf"
@@ -291,8 +299,16 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                     context, params, "report_${safeName}_${System.currentTimeMillis()}.pdf"
                 )
             } else {
-                XlsxExporter.export(
-                    context, rows.value, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
+                val params = ReportParams(
+                    user = user,
+                    periodStart = s.from,
+                    periodEnd = s.to,
+                    rows = rows.value,
+                    quarterLabel = if (s.quarter == Quarter.Custom) null
+                    else "${s.quarter.label} ${s.year} г."
+                )
+                XlsxExporter.exportReport(
+                    context, params, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
                 )
             }
             _saveProgress.value = 0.75f

@@ -1,6 +1,7 @@
 package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
+import com.example.uzb_qqs_for_dip.ui.components.MultiQrCameraScannerDialog
 import com.example.uzb_qqs_for_dip.util.startQrScanner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -80,6 +81,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.uzb_qqs_for_dip.data.model.AuditStatus
+import com.example.uzb_qqs_for_dip.data.model.ReceiptSource
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.data.repository.UserReceiptStats
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
@@ -134,6 +136,8 @@ fun AuditorVerifyScreen(
     var showAddEmployeeDialog by remember { mutableStateOf(false) }
     var showLinkDialog by remember { mutableStateOf(false) }
     var showManualVerifyConfirm by remember { mutableStateOf(false) }
+    var showSheetSourceDialog by remember { mutableStateOf(false) }
+    var showSheetCamera by remember { mutableStateOf(false) }
 
     autoVerifyMessage?.let { msg ->
         AlertDialog(
@@ -186,6 +190,42 @@ fun AuditorVerifyScreen(
     val sheetGalleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { vm.prepareSheetFromUri(context, it) } }
+
+    if (showSheetSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showSheetSourceDialog = false },
+            title = { Text("Скан листа") },
+            text = {
+                Text("Отсканируйте все QR на листе камерой или выберите фото листа из галереи.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSheetSourceDialog = false
+                        showSheetCamera = true
+                    }
+                ) { Text("Камера") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showSheetSourceDialog = false
+                        sheetGalleryLauncher.launch("image/*")
+                    }
+                ) { Text("Галерея") }
+            }
+        )
+    }
+
+    if (showSheetCamera) {
+        MultiQrCameraScannerDialog(
+            onDismiss = { showSheetCamera = false },
+            onFinished = { urls ->
+                showSheetCamera = false
+                vm.prepareSheetFromUrls(urls)
+            }
+        )
+    }
 
     sheetSummary?.let { summary ->
         AlertDialog(
@@ -352,6 +392,13 @@ fun AuditorVerifyScreen(
                         ) {
                             Column(Modifier.padding(10.dp)) {
                                 Text(item.receipt.sellerName, fontWeight = FontWeight.Medium)
+                                if (item.receipt.source == ReceiptSource.PAPER) {
+                                    Text(
+                                        "С распечатки",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
                                 Text(
                                     DateFormat.formatDateTime(item.receipt.purchasedAt),
                                     style = MaterialTheme.typography.bodySmall
@@ -432,7 +479,7 @@ fun AuditorVerifyScreen(
                             sheetPreviewItems.isEmpty() &&
                             !sheetLoading,
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { sheetGalleryLauncher.launch("image/*") }
+                        onClick = { showSheetSourceDialog = true }
                     )
                 }
 
