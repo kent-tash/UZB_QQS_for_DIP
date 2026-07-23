@@ -17,6 +17,8 @@ import com.google.zxing.common.GlobalHistogramBinarizer
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.ChecksumException
 import com.google.zxing.FormatException
+import com.google.zxing.multi.GenericMultipleBarcodeReader
+import com.google.zxing.multi.qrcode.QRCodeMultiReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -29,38 +31,68 @@ import kotlinx.coroutines.withContext
  *   2) GlobalHistogramBinarizer (лучше для фото с засветами);
  *   3) HybridBinarizer на повороте 180° (на случай чека «вверх ногами»).
  *
- * Возвращает текст QR-кода или бросает исключение с понятным сообщением.
+ * [decode] возвращает первый найденный QR; [decodeAll] — все уникальные URL на листе.
  */
 object QrFromImageDecoder {
 
     /** Максимальная сторона рабочего изображения (большего не нужно для QR). */
     private const val MAX_SIDE = 1600
 
+    private val decodeHints: Map<DecodeHintType, Any> = mapOf(
+        DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+        DecodeHintType.TRY_HARDER to true,
+        DecodeHintType.CHARACTER_SET to "UTF-8"
+    )
+
     suspend fun decode(context: Context, uri: Uri): String = withContext(Dispatchers.IO) {
+        val all = decodeAll(context, uri)
+        all.firstOrNull()
+            ?: throw IllegalStateException("На фото не удалось распознать QR-код")
+    }
+
+    /**
+     * Находит все QR на изображении (лист с несколькими чеками).
+     * URL дедуплицируются с сохранением порядка первого появления.
+     */
+    suspend fun decodeAll(context: Context, uri: Uri): List<String> = withContext(Dispatchers.IO) {
         val bitmap = loadBitmap(context, uri)
             ?: throw IllegalArgumentException("Не удалось открыть изображение")
         try {
-            decodeBitmap(bitmap)
+            decodeAllBitmap(bitmap).also { urls ->
+                if (urls.isEmpty()) {
+                    throw IllegalStateException("На фото не удалось распознать QR-код")
+                }
+            }
         } finally {
             bitmap.recycle()
         }
     }
 
-    /** Открыто для тестов: декодирование готового битмапа. */
+    /** Открыто для тестов: декодирование готового битмапа (первый QR). */
     fun decodeBitmap(bitmap: Bitmap): String {
-        val attempts = listOf(
-            { tryDecode(bitmap, hybrid = true, rotate180 = false) },
-            { tryDecode(bitmap, hybrid = false, rotate180 = false) },
-            { tryDecode(bitmap, hybrid = true, rotate180 = true) }
-        )
-        for (attempt in attempts) {
-            val result = attempt()
-            if (!result.isNullOrBlank()) return result
-        }
-        throw IllegalStateException("На фото не удалось распознать QR-код")
+        val all = decodeAllBitmap(bitmap)
+        return all.firstOrNull()
+            ?: throw IllegalStateException("На фото не удалось распознать QR-код")
     }
 
-    private fun tryDecode(bitmap: Bitmap, hybrid: Boolean, rotate180: Boolean): String? {
+    /** Открыто для тестов: все QR с готового битмапа. */
+    fun decodeAllBitmap(bitmap: Bitmap): List<String> {
+        val found = LinkedHashSet<String>()
+        val attempts = listOf(
+            { tryDecodeAll(bitmap, hybrid = true, rotate180 = false) },
+            { tryDecodeAll(bitmap, hybrid = false, rotate180 = false) },
+            { tryDecodeAll(bitmap, hybrid = true, rotate180 = true) }
+        )
+        for (attempt in attempts) {
+            for (text in attempt()) {
+                val trimmed = text.trim()
+                if (trimmed.isNotEmpty()) found.add(trimmed)
+            }
+        }
+        return found.toList()
+    }
+
+    private fun tryDecodeAll(bitmap: Bitmap, hybrid: Boolean, rotate180: Boolean): List<String> {
         val src = if (rotate180) rotate(bitmap, 180) else bitmap
         try {
             val w = src.width
@@ -71,28 +103,49 @@ object QrFromImageDecoder {
             val binary = BinaryBitmap(
                 if (hybrid) HybridBinarizer(luminance) else GlobalHistogramBinarizer(luminance)
             )
-            val reader = MultiFormatReader().apply {
-                setHints(
-                    mapOf(
-                        DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
-                        DecodeHintType.TRY_HARDER to true,
-                        DecodeHintType.CHARACTER_SET to "UTF-8"
-                    )
-                )
-            }
-            val result: Result = try {
-                reader.decodeWithState(binary)
-            } catch (_: NotFoundException) {
-                return null
-            } catch (_: ChecksumException) {
-                return null
-            } catch (_: FormatException) {
-                return null
-            }
-            return result.text
+
+            val fromMulti = decodeMultipleWith(GenericMultipleBarcodeReader(QRCodeMultiReader()), binary)
+            if (fromMulti.isNotEmpty()) return fromMulti
+
+            val fromQrMulti = decodeMultipleWith(QRCodeMultiReader(), binary)
+            if (fromQrMulti.isNotEmpty()) return fromQrMulti
+
+            // Fallback: одиночный QR (как раньше)
+            val single = tryDecodeSingle(binary) ?: return emptyList()
+            return listOf(single)
         } finally {
             if (rotate180 && src !== bitmap) src.recycle()
         }
+    }
+
+    private fun decodeMultipleWith(
+        reader: com.google.zxing.multi.MultipleBarcodeReader,
+        binary: BinaryBitmap
+    ): List<String> {
+        return try {
+            reader.decodeMultiple(binary, decodeHints)
+                .mapNotNull { it.text?.trim()?.takeIf { t -> t.isNotEmpty() } }
+        } catch (_: NotFoundException) {
+            emptyList()
+        } catch (_: ChecksumException) {
+            emptyList()
+        } catch (_: FormatException) {
+            emptyList()
+        }
+    }
+
+    private fun tryDecodeSingle(binary: BinaryBitmap): String? {
+        val reader = MultiFormatReader().apply { setHints(decodeHints) }
+        val result: Result = try {
+            reader.decodeWithState(binary)
+        } catch (_: NotFoundException) {
+            return null
+        } catch (_: ChecksumException) {
+            return null
+        } catch (_: FormatException) {
+            return null
+        }
+        return result.text
     }
 
     private fun loadBitmap(context: Context, uri: Uri): Bitmap? {

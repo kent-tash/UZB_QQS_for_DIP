@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Print
 import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -68,6 +69,8 @@ import com.example.uzb_qqs_for_dip.ui.ReportEvent
 import com.example.uzb_qqs_for_dip.ui.ReportViewModel
 import com.example.uzb_qqs_for_dip.ui.components.DateField
 import com.example.uzb_qqs_for_dip.ui.components.DatePickerSheet
+import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
+import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
 import com.example.uzb_qqs_for_dip.ui.components.SaveProgressButton
 import com.example.uzb_qqs_for_dip.ui.components.SelectField
 import com.example.uzb_qqs_for_dip.util.DateFormat
@@ -93,11 +96,20 @@ fun ReportScreen(
     val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
 
     var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
+    var showSaveFormatDialog by remember { mutableStateOf(false) }
+    var showShareFormatDialog by remember { mutableStateOf(false) }
 
     val savePdfLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
         if (uri != null) reportViewModel.savePdfToUri(context, uri)
+    }
+    val saveXlsxLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    ) { uri ->
+        if (uri != null) reportViewModel.saveXlsxToUri(context, uri)
     }
 
     LaunchedEffect(event) {
@@ -105,6 +117,11 @@ fun ReportScreen(
             is ReportEvent.Open -> {
                 runCatching { context.startActivity(e.intent) }
                     .onFailure { Toast.makeText(context, "Не нашли приложение для PDF", Toast.LENGTH_LONG).show() }
+                reportViewModel.consumeEvent()
+            }
+            is ReportEvent.Share -> {
+                runCatching { context.startActivity(e.intent) }
+                    .onFailure { Toast.makeText(context, "Не удалось поделиться", Toast.LENGTH_LONG).show() }
                 reportViewModel.consumeEvent()
             }
             is ReportEvent.Print -> {
@@ -303,25 +320,33 @@ fun ReportScreen(
 
         Spacer(Modifier.height(10.dp))
 
-        SaveProgressButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Сохранить",
-            progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
-            icon = Icons.Outlined.SaveAlt,
-            isSaving = isSaving,
-            progress = saveProgress,
-            enabled = !isSaving && selectedUser.id != null,
-            onClick = {
-                reportViewModel.suggestedReportPdfName()?.let { name ->
-                    savePdfLauncher.launch(name)
-                }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SaveProgressButton(
+                modifier = Modifier.weight(1f),
+                text = "Сохранить",
+                progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
+                icon = Icons.Outlined.SaveAlt,
+                isSaving = isSaving,
+                progress = saveProgress,
+                enabled = !isSaving && selectedUser.id != null && rows.isNotEmpty(),
+                onClick = { showSaveFormatDialog = true }
+            )
+            OutlinedButton(
+                onClick = { showShareFormatDialog = true },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isSaving && selectedUser.id != null && rows.isNotEmpty()
+            ) {
+                Icon(Icons.Outlined.Share, contentDescription = null)
+                Spacer(Modifier.size(6.dp))
+                Text("Поделиться")
             }
-        )
+        }
 
         Spacer(Modifier.height(20.dp))
         Text(
-            "Кнопка «Открыть» показывает предпросмотр PDF-отчёта. «Печать / PDF» открывает " +
-                "системный диалог печати, где можно отправить отчёт на принтер или сохранить PDF.",
+            "«Сохранить» и «Поделиться» — выбор формата PDF или Excel (xlsx). " +
+                "«Открыть» показывает предпросмотр PDF. «Печать / PDF» — системный диалог печати.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -394,6 +419,35 @@ fun ReportScreen(
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirm = false }) { Text("Отмена") }
+            }
+        )
+    }
+
+    if (showSaveFormatDialog) {
+        FormatChoiceDialog(
+            title = "Сохранить отчёт как",
+            onDismiss = { showSaveFormatDialog = false },
+            onChoose = { format ->
+                showSaveFormatDialog = false
+                when (format) {
+                    ExportFileFormat.PDF ->
+                        reportViewModel.suggestedReportPdfName()?.let { savePdfLauncher.launch(it) }
+                    ExportFileFormat.XLSX ->
+                        reportViewModel.suggestedReportXlsxName()?.let { saveXlsxLauncher.launch(it) }
+                }
+            }
+        )
+    }
+    if (showShareFormatDialog) {
+        FormatChoiceDialog(
+            title = "Поделиться отчётом",
+            onDismiss = { showShareFormatDialog = false },
+            onChoose = { format ->
+                showShareFormatDialog = false
+                when (format) {
+                    ExportFileFormat.PDF -> reportViewModel.sharePdf(context)
+                    ExportFileFormat.XLSX -> reportViewModel.shareXlsx(context)
+                }
             }
         )
     }

@@ -14,6 +14,7 @@ import com.example.uzb_qqs_for_dip.data.model.AuditDeclaration
 import com.example.uzb_qqs_for_dip.data.model.AuditStatus
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.data.model.UserRole
+import com.example.uzb_qqs_for_dip.data.repository.DiscrepancyDetail
 import com.example.uzb_qqs_for_dip.data.repository.EmployeeSummary
 import com.example.uzb_qqs_for_dip.data.repository.ReceiptConflict
 import com.example.uzb_qqs_for_dip.data.settings.AuditorSettings
@@ -39,9 +40,9 @@ enum class AuditorFilter { ALL, DISCREPANCY, UNVERIFIED, CONFLICT, INCOMPLETE }
 
 enum class AuditorExportKind {
     SUMMARY_PDF,
+    SUMMARY_XLSX,
     ORG_PDF,
-    XLSX,
-    CSV
+    ORG_XLSX,
 }
 
 class AuditorViewModel(app: Application) : AndroidViewModel(app) {
@@ -93,7 +94,8 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                     val decl = s.declaration
                     decl != null && (
                         decl.declaredTotalTiyin != 0L && decl.declaredTotalTiyin != s.totalTiyin ||
-                            decl.declaredVatTiyin != 0L && decl.declaredVatTiyin != s.vatTiyin
+                            decl.declaredVatTiyin != 0L && decl.declaredVatTiyin != s.vatTiyin ||
+                            decl.declaredCount != 0 && decl.declaredCount != s.receiptCount
                         )
                 }
                 AuditorFilter.UNVERIFIED -> s.declaration == null || s.declaration.status == AuditStatus.PENDING
@@ -130,6 +132,14 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
     fun setSearch(s: String) { _search.value = s }
 
     fun setFilter(f: AuditorFilter) { _filter.value = f }
+
+    fun getDiscrepancyDetail(userId: Long): DiscrepancyDetail? {
+        val summary = _summaries.value.find { it.userId == userId } ?: return null
+        val conflictsForUser = _conflicts.value.filter {
+            it.user1Id == userId || it.user2Id == userId
+        }
+        return container.auditorRepository.buildDiscrepancyDetail(summary, conflictsForUser)
+    }
 
     fun clearError() { _errorMessage.value = null }
 
@@ -209,18 +219,20 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
 
     fun exportOrgReportPdf(context: Context) = shareExport(context, AuditorExportKind.ORG_PDF)
 
-    fun exportXlsx(context: Context) = shareExport(context, AuditorExportKind.XLSX)
+    fun exportXlsx(context: Context) = shareExport(context, AuditorExportKind.SUMMARY_XLSX)
 
-    fun exportCsv(context: Context) = shareExport(context, AuditorExportKind.CSV)
+    fun exportOrgXlsx(context: Context) = shareExport(context, AuditorExportKind.ORG_XLSX)
+
+    fun shareExportKind(context: Context, kind: AuditorExportKind) = shareExport(context, kind)
 
     fun suggestedFilename(kind: AuditorExportKind): String {
         val q = _quarter.value.name
         val y = _year.value
         return when (kind) {
             AuditorExportKind.SUMMARY_PDF -> "audit_summary_${q}_$y.pdf"
+            AuditorExportKind.SUMMARY_XLSX -> "audit_summary_${q}_$y.xlsx"
             AuditorExportKind.ORG_PDF -> "audit_org_report_${q}_$y.pdf"
-            AuditorExportKind.XLSX -> "audit_${q}_${y}_summary.xlsx"
-            AuditorExportKind.CSV -> "audit_${q}_${y}_summary.csv"
+            AuditorExportKind.ORG_XLSX -> "audit_org_report_${q}_$y.xlsx"
         }
     }
 
@@ -255,21 +267,19 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                 val file = withContext(Dispatchers.IO) {
                     generateExportFile(appCtx, kind)
                 }
-                when (kind) {
+                val (mime, title) = when (kind) {
                     AuditorExportKind.SUMMARY_PDF ->
-                        sharePdf(appCtx, file, "Экспорт сводной таблицы PDF")
+                        "application/pdf" to "Экспорт сводной таблицы PDF"
                     AuditorExportKind.ORG_PDF ->
-                        sharePdf(appCtx, file, "Возврат НДС по организациям PDF")
-                    AuditorExportKind.XLSX ->
-                        shareFile(
-                            appCtx,
-                            file,
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            "Экспорт сводной таблицы"
-                        )
-                    AuditorExportKind.CSV ->
-                        shareFile(appCtx, file, "text/csv", "Экспорт CSV")
+                        "application/pdf" to "Возврат НДС по организациям PDF"
+                    AuditorExportKind.SUMMARY_XLSX ->
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" to
+                            "Экспорт сводной таблицы Excel"
+                    AuditorExportKind.ORG_XLSX ->
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" to
+                            "Экспорт отчёта по организациям Excel"
                 }
+                shareFile(appCtx, file, mime, title)
             }.onFailure { e ->
                 withContext(Dispatchers.Main) {
                     Toast.makeText(appCtx, "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
@@ -289,15 +299,11 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                 SummaryPdfGenerator.generate(context, sums, quarter, year, settings, fileName)
             AuditorExportKind.ORG_PDF ->
                 OrgReportPdfGenerator.generate(context, sums, quarter, year, settings, fileName)
-            AuditorExportKind.XLSX ->
+            AuditorExportKind.SUMMARY_XLSX ->
                 SummaryTableExporter.exportXlsx(context, sums, quarter.name, year, fileName)
-            AuditorExportKind.CSV ->
-                SummaryTableExporter.exportCsv(context, sums, quarter.name, year, fileName)
+            AuditorExportKind.ORG_XLSX ->
+                SummaryTableExporter.exportOrgXlsx(context, sums, quarter.name, year, fileName)
         }
-    }
-
-    private suspend fun sharePdf(appCtx: Context, file: java.io.File, chooserTitle: String) {
-        shareFile(appCtx, file, "application/pdf", chooserTitle)
     }
 
     private suspend fun shareFile(

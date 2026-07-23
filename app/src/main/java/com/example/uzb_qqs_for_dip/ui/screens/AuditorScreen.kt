@@ -75,13 +75,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.uzb_qqs_for_dip.data.model.AuditDeclaration
 import com.example.uzb_qqs_for_dip.data.model.AuditStatus
+import com.example.uzb_qqs_for_dip.data.repository.ConflictMatchKind
+import com.example.uzb_qqs_for_dip.data.repository.DiscrepancyDetail
+import com.example.uzb_qqs_for_dip.data.repository.DiscrepancyReason
 import com.example.uzb_qqs_for_dip.data.repository.EmployeeSummary
+import com.example.uzb_qqs_for_dip.data.repository.ReceiptConflict
 import com.example.uzb_qqs_for_dip.data.settings.AuditorSettings
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorExportKind
 import com.example.uzb_qqs_for_dip.ui.AuditorFilter
 import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
+import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
+import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 
@@ -93,10 +99,11 @@ private val Warning = Color(0xFFF57F17)
 @Composable
 fun AuditorScreen(
     appViewModel: AppViewModel,
-    onVerifyEmployee: (Long) -> Unit = {}
+    onVerifyEmployee: (Long) -> Unit = {},
+    onSearchReceipts: () -> Unit = {},
+    vm: AuditorViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val vm: AuditorViewModel = viewModel()
 
     // Обновляем сводку при возврате с экрана проверки чеков.
     LaunchedEffect(Unit) { vm.refresh() }
@@ -124,9 +131,12 @@ fun AuditorScreen(
     var showExportMenu by remember { mutableStateOf(false) }
     var showSaveMenu by remember { mutableStateOf(false) }
     var pendingSaveKind by remember { mutableStateOf<AuditorExportKind?>(null) }
+    /** После выбора типа отчёта — диалог PDF/xlsx. null = закрыт. */
+    var pendingFormatAction by remember { mutableStateOf<AuditorFormatAction?>(null) }
     var showDeclarationDialog by remember { mutableStateOf<EmployeeSummary?>(null) }
     var showYearPicker by remember { mutableStateOf(false) }
     var showConflicts by remember { mutableStateOf(false) }
+    var showDiscrepancyDetail by remember { mutableStateOf<DiscrepancyDetail?>(null) }
     var showAddEmployeeDialog by remember { mutableStateOf(false) }
     var showAuditorSettingsDialog by remember { mutableStateOf(false) }
 
@@ -156,25 +166,25 @@ fun AuditorScreen(
         pendingSaveKind = null
     }
 
-    val saveCsvLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv")
-    ) { uri ->
-        pendingSaveKind?.let { kind ->
-            if (uri != null) vm.saveExportToUri(context, uri, kind)
-        }
-        pendingSaveKind = null
-    }
-
     fun launchSave(kind: AuditorExportKind) {
         pendingSaveKind = kind
         val fileName = vm.suggestedFilename(kind)
         when (kind) {
             AuditorExportKind.SUMMARY_PDF, AuditorExportKind.ORG_PDF ->
                 savePdfLauncher.launch(fileName)
-            AuditorExportKind.XLSX -> saveXlsxLauncher.launch(fileName)
-            AuditorExportKind.CSV -> saveCsvLauncher.launch(fileName)
+            AuditorExportKind.SUMMARY_XLSX, AuditorExportKind.ORG_XLSX ->
+                saveXlsxLauncher.launch(fileName)
         }
     }
+
+    fun resolveKind(report: AuditorReportType, format: ExportFileFormat): AuditorExportKind =
+        when (report to format) {
+            AuditorReportType.SUMMARY to ExportFileFormat.PDF -> AuditorExportKind.SUMMARY_PDF
+            AuditorReportType.SUMMARY to ExportFileFormat.XLSX -> AuditorExportKind.SUMMARY_XLSX
+            AuditorReportType.ORG to ExportFileFormat.PDF -> AuditorExportKind.ORG_PDF
+            AuditorReportType.ORG to ExportFileFormat.XLSX -> AuditorExportKind.ORG_XLSX
+            else -> AuditorExportKind.SUMMARY_PDF
+        }
 
     errorMessage?.let { msg ->
         AlertDialog(
@@ -232,17 +242,7 @@ fun AuditorScreen(
             text = {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(conflicts) { c ->
-                        Column(Modifier.padding(vertical = 4.dp)) {
-                            Text("${c.user1FullName} ↔ ${c.user2FullName}",
-                                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                            Text(c.sellerName, style = MaterialTheme.typography.bodySmall)
-                            Text(
-                                DateFormat.formatDateTime(c.purchasedAt) + " · " +
-                                    MoneyFormat.fromTiyin(c.totalAmountTiyin) + " сум",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        ConflictItem(c)
                         HorizontalDivider()
                     }
                 }
@@ -251,11 +251,33 @@ fun AuditorScreen(
         )
     }
 
+    showDiscrepancyDetail?.let { detail ->
+        DiscrepancyDetailDialog(
+            detail = detail,
+            onDismiss = { showDiscrepancyDetail = null }
+        )
+    }
+
+    pendingFormatAction?.let { action ->
+        FormatChoiceDialog(
+            title = if (action.share) "Поделиться отчётом" else "Сохранить отчёт как",
+            onDismiss = { pendingFormatAction = null },
+            onChoose = { format ->
+                val kind = resolveKind(action.report, format)
+                pendingFormatAction = null
+                if (action.share) vm.shareExportKind(context, kind) else launchSave(kind)
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Аудит") },
                 actions = {
+                    IconButton(onClick = onSearchReceipts) {
+                        Icon(Icons.Outlined.Search, "Найти чек")
+                    }
                     IconButton(onClick = { showAuditorSettingsDialog = true }) {
                         Icon(Icons.Outlined.Settings, "Настройки аудитора")
                     }
@@ -269,26 +291,38 @@ fun AuditorScreen(
                         IconButton(onClick = { showExportMenu = true }) {
                             Icon(Icons.Outlined.Share, "Экспорт / поделиться")
                         }
-                        AuditorExportMenu(
+                        AuditorReportTypeMenu(
                             expanded = showExportMenu,
                             onDismiss = { showExportMenu = false },
-                            onSummaryPdf = { vm.exportPdf(context) },
-                            onOrgPdf = { vm.exportOrgReportPdf(context) },
-                            onXlsx = { vm.exportXlsx(context) },
-                            onCsv = { vm.exportCsv(context) }
+                            onSummary = {
+                                pendingFormatAction = AuditorFormatAction(
+                                    AuditorReportType.SUMMARY, share = true
+                                )
+                            },
+                            onOrg = {
+                                pendingFormatAction = AuditorFormatAction(
+                                    AuditorReportType.ORG, share = true
+                                )
+                            }
                         )
                     }
                     Box {
                         IconButton(onClick = { showSaveMenu = true }) {
                             Icon(Icons.Outlined.Download, "Сохранить")
                         }
-                        AuditorExportMenu(
+                        AuditorReportTypeMenu(
                             expanded = showSaveMenu,
                             onDismiss = { showSaveMenu = false },
-                            onSummaryPdf = { launchSave(AuditorExportKind.SUMMARY_PDF) },
-                            onOrgPdf = { launchSave(AuditorExportKind.ORG_PDF) },
-                            onXlsx = { launchSave(AuditorExportKind.XLSX) },
-                            onCsv = { launchSave(AuditorExportKind.CSV) }
+                            onSummary = {
+                                pendingFormatAction = AuditorFormatAction(
+                                    AuditorReportType.SUMMARY, share = false
+                                )
+                            },
+                            onOrg = {
+                                pendingFormatAction = AuditorFormatAction(
+                                    AuditorReportType.ORG, share = false
+                                )
+                            }
                         )
                     }
                 }
@@ -366,9 +400,14 @@ fun AuditorScreen(
                 items(filtered, key = { it.userId }) { summary ->
                     EmployeeCard(
                         summary = summary,
-                        hasConflict = conflicts.any { c -> c.user1Id == summary.userId || c.user2Id == summary.userId },
+                        hasConflict = conflicts.any {
+                            it.user1Id == summary.userId || it.user2Id == summary.userId
+                        },
                         onVerify = { onVerifyEmployee(summary.userId) },
-                        onEditDeclaration = { showDeclarationDialog = summary }
+                        onEditDeclaration = { showDeclarationDialog = summary },
+                        onShowDiscrepancy = {
+                            showDiscrepancyDetail = vm.getDiscrepancyDetail(summary.userId)
+                        }
                     )
                 }
                 item {
@@ -384,33 +423,30 @@ fun AuditorScreen(
 }
 
 @Composable
-private fun AuditorExportMenu(
+private fun AuditorReportTypeMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
-    onSummaryPdf: () -> Unit,
-    onOrgPdf: () -> Unit,
-    onXlsx: () -> Unit,
-    onCsv: () -> Unit
+    onSummary: () -> Unit,
+    onOrg: () -> Unit
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         DropdownMenuItem(
-            text = { Text("Сводная таблица (PDF)") },
-            onClick = { onDismiss(); onSummaryPdf() }
+            text = { Text("Сводная таблица") },
+            onClick = { onDismiss(); onSummary() }
         )
         DropdownMenuItem(
-            text = { Text("Возврат НДС по организациям (PDF)") },
-            onClick = { onDismiss(); onOrgPdf() }
-        )
-        DropdownMenuItem(
-            text = { Text("Экспорт XLSX") },
-            onClick = { onDismiss(); onXlsx() }
-        )
-        DropdownMenuItem(
-            text = { Text("Экспорт CSV") },
-            onClick = { onDismiss(); onCsv() }
+            text = { Text("Возврат НДС по организациям") },
+            onClick = { onDismiss(); onOrg() }
         )
     }
 }
+
+private enum class AuditorReportType { SUMMARY, ORG }
+
+private data class AuditorFormatAction(
+    val report: AuditorReportType,
+    val share: Boolean
+)
 
 @Composable
 private fun QuarterYearRow(
@@ -544,19 +580,16 @@ private fun EmployeeCard(
     summary: EmployeeSummary,
     hasConflict: Boolean,
     onVerify: () -> Unit,
-    onEditDeclaration: () -> Unit
+    onEditDeclaration: () -> Unit,
+    onShowDiscrepancy: () -> Unit
 ) {
     val decl = summary.declaration
     val hasDeltaTotal = decl != null && decl.declaredTotalTiyin != 0L && decl.declaredTotalTiyin != summary.totalTiyin
     val hasDeltaVat = decl != null && decl.declaredVatTiyin != 0L && decl.declaredVatTiyin != summary.vatTiyin
+    val hasDeltaCount = decl != null && decl.declaredCount != 0 && decl.declaredCount != summary.receiptCount
+    val isIncomplete = summary.verifiedCount < summary.receiptCount
+    val hasDiscrepancy = hasDeltaTotal || hasDeltaVat || hasDeltaCount || hasConflict || isIncomplete
     val allReceiptsVerified = summary.receiptCount > 0 && summary.verifiedCount >= summary.receiptCount
-    val statusColor = when {
-        hasConflict -> Danger
-        decl?.status == AuditStatus.APPROVED || allReceiptsVerified -> Success
-        decl?.status == AuditStatus.REVISION -> Warning
-        hasDeltaTotal || hasDeltaVat -> Warning
-        else -> MaterialTheme.colorScheme.onSurface
-    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -591,7 +624,7 @@ private fun EmployeeCard(
                     Icon(Icons.Filled.CheckCircle, null, tint = Success, modifier = Modifier.size(18.dp))
                 } else if (hasConflict) {
                     Icon(Icons.Filled.Error, null, tint = Danger, modifier = Modifier.size(18.dp))
-                } else if (hasDeltaTotal || hasDeltaVat) {
+                } else if (hasDeltaTotal || hasDeltaVat || hasDeltaCount) {
                     Icon(Icons.Filled.Warning, null, tint = Warning, modifier = Modifier.size(18.dp))
                 }
             }
@@ -617,21 +650,32 @@ private fun EmployeeCard(
             }
 
             // Declaration delta
-            if (decl != null && (hasDeltaTotal || hasDeltaVat)) {
+            if (decl != null && (hasDeltaTotal || hasDeltaVat || hasDeltaCount)) {
                 Spacer(Modifier.height(6.dp))
                 val deltaTotal = summary.totalTiyin - decl.declaredTotalTiyin
                 val deltaVat = summary.vatTiyin - decl.declaredVatTiyin
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "Δ Итого: ${if (deltaTotal >= 0) "+" else ""}${MoneyFormat.fromTiyin(deltaTotal)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Warning
-                    )
-                    Text(
-                        "Δ НДС: ${if (deltaVat >= 0) "+" else ""}${MoneyFormat.fromTiyin(deltaVat)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Warning
-                    )
+                    if (hasDeltaTotal) {
+                        Text(
+                            "Δ Итого: ${if (deltaTotal >= 0) "+" else ""}${MoneyFormat.fromTiyin(deltaTotal)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Warning
+                        )
+                    }
+                    if (hasDeltaVat) {
+                        Text(
+                            "Δ НДС: ${if (deltaVat >= 0) "+" else ""}${MoneyFormat.fromTiyin(deltaVat)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Warning
+                        )
+                    }
+                    if (hasDeltaCount) {
+                        Text(
+                            "Δ Чеков: ${decl.declaredCount}→${summary.receiptCount}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Warning
+                        )
+                    }
                 }
             }
             if (decl?.note?.isNotBlank() == true) {
@@ -641,6 +685,21 @@ private fun EmployeeCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            if (hasDiscrepancy) {
+                Spacer(Modifier.height(6.dp))
+                TextButton(
+                    onClick = onShowDiscrepancy,
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                ) {
+                    Text(
+                        "Несостыковки",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Warning,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
             Spacer(Modifier.height(10.dp))
@@ -669,6 +728,161 @@ private fun EmployeeCard(
             }
         }
     }
+}
+
+@Composable
+private fun DiscrepancyDetailDialog(
+    detail: DiscrepancyDetail,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Несостыковки: ${detail.summary.fullName}") },
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (detail.reasons.isEmpty()) {
+                    item {
+                        Text(
+                            "Явных несостыковок не найдено.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    items(detail.reasons.size) { index ->
+                        DiscrepancyReasonRow(detail.reasons[index])
+                        if (index < detail.reasons.lastIndex) {
+                            HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Закрыть") } }
+    )
+}
+
+@Composable
+private fun DiscrepancyReasonRow(reason: DiscrepancyReason) {
+    when (reason) {
+        is DiscrepancyReason.TotalMismatch -> {
+            val sign = if (reason.delta >= 0) "+" else ""
+            Column {
+                Text("Расхождение итого", fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium, color = Warning)
+                Text(
+                    "PDF: ${MoneyFormat.fromTiyin(reason.declared)} сум · " +
+                        "в базе: ${MoneyFormat.fromTiyin(reason.actual)} сум · " +
+                        "Δ $sign${MoneyFormat.fromTiyin(reason.delta)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        is DiscrepancyReason.VatMismatch -> {
+            val sign = if (reason.delta >= 0) "+" else ""
+            Column {
+                Text("Расхождение НДС", fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium, color = Warning)
+                Text(
+                    "PDF: ${MoneyFormat.fromTiyin(reason.declared)} сум · " +
+                        "в базе: ${MoneyFormat.fromTiyin(reason.actual)} сум · " +
+                        "Δ $sign${MoneyFormat.fromTiyin(reason.delta)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        is DiscrepancyReason.CountMismatch -> {
+            Column {
+                Text("Расхождение числа чеков", fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium, color = Warning)
+                Text(
+                    "PDF: ${reason.declared} · в базе: ${reason.actual}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        is DiscrepancyReason.IncompleteVerification -> {
+            Column {
+                Text("Неполная проверка", fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium, color = Warning)
+                Text(
+                    "Подтверждено QR: ${reason.verified} из ${reason.total}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        is DiscrepancyReason.DuplicateReceipt -> {
+            Column {
+                Text("Дубликат чека", fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium, color = Danger)
+                ConflictItem(reason.conflict)
+            }
+        }
+        is DiscrepancyReason.ManualNote -> {
+            Column {
+                Text("Заметка аудитора", fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    reason.note,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        is DiscrepancyReason.StatusInfo -> {
+            Column {
+                Text("Статус проверки", fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    reason.status.label(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConflictItem(c: ReceiptConflict) {
+    Column(Modifier.padding(vertical = 4.dp)) {
+        Text(
+            "${c.user1FullName} ↔ ${c.user2FullName}",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(c.sellerName, style = MaterialTheme.typography.bodySmall)
+        Text(
+            DateFormat.formatDateTime(c.purchasedAt) + " · " +
+                MoneyFormat.fromTiyin(c.totalAmountTiyin) + " сум",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            matchKindLabel(c),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        c.fiscalSign?.takeIf { it.isNotBlank() }?.let { sign ->
+            Text(
+                "ФП: $sign",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private fun matchKindLabel(c: ReceiptConflict): String = when (c.matchKind) {
+    ConflictMatchKind.FISCAL -> "Совпадение по фискальному признаку"
+    ConflictMatchKind.SELLER_TIME_AMOUNT -> "Совпадение: продавец + время + сумма"
 }
 
 @Composable

@@ -15,10 +15,12 @@ import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.data.settings.ReportSettings
 import com.example.uzb_qqs_for_dip.data.settings.SortField
 import com.example.uzb_qqs_for_dip.data.settings.SortOrder
+import com.example.uzb_qqs_for_dip.export.ExportPaths
 import com.example.uzb_qqs_for_dip.export.PdfPrint
 import com.example.uzb_qqs_for_dip.export.PdfReportGenerator
 import com.example.uzb_qqs_for_dip.export.ReceiptImageExporter
 import com.example.uzb_qqs_for_dip.export.ReportParams
+import com.example.uzb_qqs_for_dip.export.XlsxExporter
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.UriFileWriter
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +36,7 @@ import java.io.File
 
 sealed interface ReportEvent {
     data class Open(val intent: Intent) : ReportEvent
+    data class Share(val intent: Intent) : ReportEvent
     data class Print(val file: File, val jobName: String) : ReportEvent
     data class Error(val message: String) : ReportEvent
     data class Saved(val message: String) : ReportEvent
@@ -187,14 +190,34 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     fun previewPdf(context: Context) = generate(context, openSystemPrint = false)
     fun printPdf(context: Context) = generate(context, openSystemPrint = true)
 
-    fun suggestedReportPdfName(): String? {
+    fun suggestedReportPdfName(): String? = suggestedReportBaseName()?.let { "$it.pdf" }
+
+    fun suggestedReportXlsxName(): String? = suggestedReportBaseName()?.let { "$it.xlsx" }
+
+    private fun suggestedReportBaseName(): String? {
         val s = settings.value
         val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value ?: return null
         val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
-        return "report_${safeName}_${System.currentTimeMillis()}.pdf"
+        return "report_${safeName}_${System.currentTimeMillis()}"
     }
 
     fun savePdfToUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            saveReportFile(context, uri, asPdf = true)
+        }
+    }
+
+    fun saveXlsxToUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            saveReportFile(context, uri, asPdf = false)
+        }
+    }
+
+    fun sharePdf(context: Context) = shareReport(context, asPdf = true)
+
+    fun shareXlsx(context: Context) = shareReport(context, asPdf = false)
+
+    private fun shareReport(context: Context, asPdf: Boolean) {
         viewModelScope.launch {
             val s = settings.value
             val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value
@@ -202,31 +225,89 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                 _event.value = ReportEvent.Error("Нет выбранного пользователя")
                 return@launch
             }
-            _isSaving.value = true
-            _saveProgress.value = 0.05f
+            if (rows.value.isEmpty()) {
+                _event.value = ReportEvent.Error("Нет данных для экспорта")
+                return@launch
+            }
             try {
+                val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+                val file = if (asPdf) {
+                    val params = ReportParams(
+                        user = user,
+                        periodStart = s.from,
+                        periodEnd = s.to,
+                        rows = rows.value,
+                        quarterLabel = if (s.quarter == Quarter.Custom) null
+                        else "${s.quarter.label} ${s.year} г."
+                    )
+                    PdfReportGenerator.generate(
+                        context, params, "report_${safeName}_${System.currentTimeMillis()}.pdf"
+                    )
+                } else {
+                    XlsxExporter.export(
+                        context, rows.value, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
+                    )
+                }
+                val mime = if (asPdf) "application/pdf"
+                else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                val uri = ExportPaths.shareUriFor(context, file)
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = mime
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                _event.value = ReportEvent.Share(
+                    Intent.createChooser(intent, if (asPdf) "Поделиться PDF" else "Поделиться Excel")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (e: Throwable) {
+                _event.value = ReportEvent.Error("Ошибка экспорта: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun saveReportFile(context: Context, uri: Uri, asPdf: Boolean) {
+        val s = settings.value
+        val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value
+        if (user == null) {
+            _event.value = ReportEvent.Error("Нет выбранного пользователя")
+            return
+        }
+        _isSaving.value = true
+        _saveProgress.value = 0.05f
+        try {
+            val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+            _saveProgress.value = 0.15f
+            val file = if (asPdf) {
                 val params = ReportParams(
                     user = user,
                     periodStart = s.from,
                     periodEnd = s.to,
                     rows = rows.value,
                     quarterLabel = if (s.quarter == Quarter.Custom) null
-                        else "${s.quarter.label} ${s.year} г."
+                    else "${s.quarter.label} ${s.year} г."
                 )
-                val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
-                val fileName = "report_${safeName}_${System.currentTimeMillis()}.pdf"
-                _saveProgress.value = 0.15f
-                val file = PdfReportGenerator.generate(context, params, fileName)
-                _saveProgress.value = 0.75f
-                UriFileWriter.copyFileToUri(context, file, uri)
-                _saveProgress.value = 1f
-                _event.value = ReportEvent.Saved("PDF-отчёт успешно сохранён")
-            } catch (e: Throwable) {
-                _event.value = ReportEvent.Error("Ошибка сохранения PDF: ${e.message}")
-            } finally {
-                _isSaving.value = false
-                _saveProgress.value = 0f
+                PdfReportGenerator.generate(
+                    context, params, "report_${safeName}_${System.currentTimeMillis()}.pdf"
+                )
+            } else {
+                XlsxExporter.export(
+                    context, rows.value, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
+                )
             }
+            _saveProgress.value = 0.75f
+            UriFileWriter.copyFileToUri(context, file, uri)
+            _saveProgress.value = 1f
+            _event.value = ReportEvent.Saved(
+                if (asPdf) "PDF-отчёт успешно сохранён" else "Excel-отчёт успешно сохранён"
+            )
+        } catch (e: Throwable) {
+            _event.value = ReportEvent.Error(
+                "Ошибка сохранения ${if (asPdf) "PDF" else "Excel"}: ${e.message}"
+            )
+        } finally {
+            _isSaving.value = false
+            _saveProgress.value = 0f
         }
     }
 

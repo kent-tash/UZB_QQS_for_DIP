@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.GridOn
 import androidx.compose.material.icons.outlined.Print
 import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Share
@@ -61,6 +60,8 @@ import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.ExportEvent
 import com.example.uzb_qqs_for_dip.ui.ReceiptsViewModel
+import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
+import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
 import com.example.uzb_qqs_for_dip.ui.components.SaveProgressButton
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
@@ -83,11 +84,20 @@ fun ReceiptsScreen(
     val saveProgress by receiptsViewModel.saveProgress.collectAsStateWithLifecycle()
 
     var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
+    var showSaveFormatDialog by remember { mutableStateOf(false) }
+    var showShareFormatDialog by remember { mutableStateOf(false) }
 
     val savePdfLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
         if (uri != null) receiptsViewModel.saveReceiptsPdfToUri(context, uri)
+    }
+    val saveXlsxLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    ) { uri ->
+        if (uri != null) receiptsViewModel.saveReceiptsXlsxToUri(context, uri)
     }
 
     LaunchedEffect(exportEvent) {
@@ -183,40 +193,40 @@ fun ReceiptsScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            SaveProgressButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Сохранить",
-                progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
-                icon = Icons.Outlined.SaveAlt,
-                isSaving = isSaving,
-                progress = saveProgress,
-                enabled = !isSaving && !isUpdating && rows.isNotEmpty(),
-                onClick = {
-                    savePdfLauncher.launch(receiptsViewModel.suggestedReceiptsPdfName())
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SaveProgressButton(
+                    modifier = Modifier.weight(1f),
+                    text = "Сохранить",
+                    progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
+                    icon = Icons.Outlined.SaveAlt,
+                    isSaving = isSaving,
+                    progress = saveProgress,
+                    enabled = !isSaving && !isUpdating && rows.isNotEmpty(),
+                    onClick = { showSaveFormatDialog = true }
+                )
+                OutlinedButton(
+                    onClick = { showShareFormatDialog = true },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isSaving && !isUpdating && rows.isNotEmpty()
+                ) {
+                    Icon(Icons.Outlined.Share, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Поделиться")
                 }
-            )
+            }
 
             Spacer(Modifier.height(8.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(
-                    onClick = { receiptsViewModel.exportCsv(context) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Outlined.TableView, contentDescription = null)
-                    Spacer(Modifier.size(6.dp))
-                    Text("CSV")
-                }
-                OutlinedButton(
-                    onClick = { receiptsViewModel.exportXlsx(context) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Outlined.GridOn, contentDescription = null)
-                    Spacer(Modifier.size(6.dp))
-                    Text("XLSX")
-                }
+            OutlinedButton(
+                onClick = { receiptsViewModel.exportCsv(context) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                enabled = rows.isNotEmpty()
+            ) {
+                Icon(Icons.Outlined.TableView, contentDescription = null)
+                Spacer(Modifier.size(6.dp))
+                Text("Поделиться CSV")
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -308,6 +318,35 @@ fun ReceiptsScreen(
             onShare = {
                 receiptsViewModel.shareReceiptImage(context, item)
                 previewItem = null
+            }
+        )
+    }
+
+    if (showSaveFormatDialog) {
+        FormatChoiceDialog(
+            title = "Сохранить чеки как",
+            onDismiss = { showSaveFormatDialog = false },
+            onChoose = { format ->
+                showSaveFormatDialog = false
+                when (format) {
+                    ExportFileFormat.PDF ->
+                        savePdfLauncher.launch(receiptsViewModel.suggestedReceiptsPdfName())
+                    ExportFileFormat.XLSX ->
+                        saveXlsxLauncher.launch(receiptsViewModel.suggestedReceiptsXlsxName())
+                }
+            }
+        )
+    }
+    if (showShareFormatDialog) {
+        FormatChoiceDialog(
+            title = "Поделиться чеками",
+            onDismiss = { showShareFormatDialog = false },
+            onChoose = { format ->
+                showShareFormatDialog = false
+                when (format) {
+                    ExportFileFormat.PDF -> receiptsViewModel.shareReceiptsPdf(context)
+                    ExportFileFormat.XLSX -> receiptsViewModel.exportXlsx(context)
+                }
             }
         )
     }

@@ -228,28 +228,72 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         return "receipts_${System.currentTimeMillis()}.pdf"
     }
 
+    fun suggestedReceiptsXlsxName(): String {
+        return "receipts_${System.currentTimeMillis()}.xlsx"
+    }
+
     fun saveReceiptsPdfToUri(context: Context, uri: Uri) {
         viewModelScope.launch {
-            val rows = receipts.value
-            if (rows.isEmpty()) {
-                _exportEvents.value = ExportEvent.Error("Нет чеков для сохранения")
-                return@launch
-            }
-            _isSaving.value = true
-            _saveProgress.value = 0.05f
+            saveReceiptsFile(context, uri, asPdf = true)
+        }
+    }
+
+    fun saveReceiptsXlsxToUri(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            saveReceiptsFile(context, uri, asPdf = false)
+        }
+    }
+
+    fun shareReceiptsPdf(context: Context) {
+        viewModelScope.launch {
             try {
-                _saveProgress.value = 0.15f
                 val file = generateReceiptsSheetPdf(context)
-                _saveProgress.value = 0.75f
-                UriFileWriter.copyFileToUri(context, file, uri)
-                _saveProgress.value = 1f
-                _exportEvents.value = ExportEvent.Saved("PDF с чеками успешно сохранён")
+                val uri = FileProvider.getUriForFile(
+                    context, "${context.packageName}.fileprovider", file
+                )
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                _exportEvents.value = ExportEvent.Share(
+                    Intent.createChooser(intent, "Поделиться PDF с чеками")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
             } catch (e: Throwable) {
-                _exportEvents.value = ExportEvent.Error("Ошибка сохранения PDF: ${e.message}")
-            } finally {
-                _isSaving.value = false
-                _saveProgress.value = 0f
+                _exportEvents.value = ExportEvent.Error("Ошибка экспорта PDF: ${e.message}")
             }
+        }
+    }
+
+    private suspend fun saveReceiptsFile(context: Context, uri: Uri, asPdf: Boolean) {
+        val rows = receipts.value
+        if (rows.isEmpty()) {
+            _exportEvents.value = ExportEvent.Error("Нет чеков для сохранения")
+            return
+        }
+        _isSaving.value = true
+        _saveProgress.value = 0.05f
+        try {
+            _saveProgress.value = 0.15f
+            val file = if (asPdf) {
+                generateReceiptsSheetPdf(context)
+            } else {
+                XlsxExporter.export(context, rows, suggestedReceiptsXlsxName())
+            }
+            _saveProgress.value = 0.75f
+            UriFileWriter.copyFileToUri(context, file, uri)
+            _saveProgress.value = 1f
+            _exportEvents.value = ExportEvent.Saved(
+                if (asPdf) "PDF с чеками успешно сохранён" else "Excel с чеками успешно сохранён"
+            )
+        } catch (e: Throwable) {
+            _exportEvents.value = ExportEvent.Error(
+                "Ошибка сохранения ${if (asPdf) "PDF" else "Excel"}: ${e.message}"
+            )
+        } finally {
+            _isSaving.value = false
+            _saveProgress.value = 0f
         }
     }
 

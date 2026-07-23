@@ -87,6 +87,59 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
 
     suspend fun list(): List<ReceiptWithUser> = withContext(Dispatchers.IO) { readAllSync() }
 
+    /**
+     * Поиск чеков по тексту (ФИО, продавец, фискальный признак, QR) и/или сумме.
+     * [userId]/[fromMs]/[toMs] ограничивают область (для экрана проверки сотрудника).
+     */
+    suspend fun search(
+        query: String,
+        userId: Long? = null,
+        fromMs: Long? = null,
+        toMs: Long? = null,
+    ): List<ReceiptWithUser> = withContext(Dispatchers.IO) {
+        val q = query.trim()
+        if (q.isEmpty() && userId == null) return@withContext emptyList()
+
+        val all = readAllSync().asSequence()
+            .filter { userId == null || it.receipt.userId == userId }
+            .filter {
+                fromMs == null || toMs == null ||
+                    it.receipt.purchasedAt in fromMs..toMs
+            }
+
+        if (q.isEmpty()) {
+            return@withContext all.toList()
+        }
+
+        val qLower = q.lowercase()
+        val amountTiyin = parseAmountToTiyin(q)
+
+        all.filter { item ->
+            val r = item.receipt
+            item.userFullName.lowercase().contains(qLower) ||
+                r.sellerName.lowercase().contains(qLower) ||
+                (r.fiscalSign?.contains(q, ignoreCase = true) == true) ||
+                r.qrUrl.contains(q, ignoreCase = true) ||
+                (r.receiptNumber?.contains(q, ignoreCase = true) == true) ||
+                (r.terminalId?.contains(q, ignoreCase = true) == true) ||
+                (amountTiyin != null && (
+                    r.totalAmountTiyin == amountTiyin ||
+                        r.vatAmountTiyin == amountTiyin
+                    ))
+        }.toList()
+    }
+
+    private fun parseAmountToTiyin(raw: String): Long? {
+        val normalized = raw.trim()
+            .replace('\u00A0', ' ')
+            .replace(" ", "")
+            .replace(',', '.')
+            .filter { it.isDigit() || it == '.' }
+        if (normalized.isEmpty() || normalized == ".") return null
+        val soum = normalized.toDoubleOrNull() ?: return null
+        return (soum * 100.0).toLong()
+    }
+
     suspend fun getUserPeriodStats(userId: Long, fromMs: Long, toMs: Long): UserReceiptStats =
         withContext(Dispatchers.IO) {
             val db = dbHelper.readableDatabase

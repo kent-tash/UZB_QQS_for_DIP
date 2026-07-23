@@ -33,6 +33,14 @@ data class EmployeeSummary(
     val declaration: AuditDeclaration?
 )
 
+/** Как именно совпали два чека при поиске пересечений. */
+enum class ConflictMatchKind {
+    /** Одинаковый фискальный признак (+ терминал / номер при наличии). */
+    FISCAL,
+    /** Продавец + точное время покупки + сумма + НДС. */
+    SELLER_TIME_AMOUNT
+}
+
 /** Пара сотрудников, у которых обнаружен один и тот же чек. */
 data class ReceiptConflict(
     val qrUrl: String,
@@ -42,7 +50,25 @@ data class ReceiptConflict(
     val user1Id: Long,
     val user1FullName: String,
     val user2Id: Long,
-    val user2FullName: String
+    val user2FullName: String,
+    val matchKind: ConflictMatchKind,
+    val fiscalSign: String? = null
+)
+
+sealed class DiscrepancyReason {
+    data class TotalMismatch(val declared: Long, val actual: Long, val delta: Long) : DiscrepancyReason()
+    data class VatMismatch(val declared: Long, val actual: Long, val delta: Long) : DiscrepancyReason()
+    data class CountMismatch(val declared: Int, val actual: Int) : DiscrepancyReason()
+    data class IncompleteVerification(val verified: Int, val total: Int) : DiscrepancyReason()
+    data class DuplicateReceipt(val conflict: ReceiptConflict) : DiscrepancyReason()
+    data class ManualNote(val note: String) : DiscrepancyReason()
+    data class StatusInfo(val status: AuditStatus) : DiscrepancyReason()
+}
+
+data class DiscrepancyDetail(
+    val summary: EmployeeSummary,
+    val reasons: List<DiscrepancyReason>,
+    val conflicts: List<ReceiptConflict>
 )
 
 class AuditorRepository(private val dbHelper: DbHelper) {
@@ -165,51 +191,144 @@ class AuditorRepository(private val dbHelper: DbHelper) {
     suspend fun findConflicts(fromMs: Long, toMs: Long): List<ReceiptConflict> =
         withContext(Dispatchers.IO) {
             val db = dbHelper.readableDatabase
-            val sql = """
+            val args = arrayOf(fromMs.toString(), toMs.toString())
+            // Ключ пары чеков: при совпадении обеих веток предпочитаем FISCAL.
+            val byPair = linkedMapOf<String, ReceiptConflict>()
+
+            fun pairKey(c: ReceiptConflict): String =
+                "${c.user1Id}|${c.user2Id}|${c.purchasedAt}|${c.totalAmountTiyin}|${c.sellerName}"
+
+            fun readRow(
+                c: android.database.Cursor,
+                matchKind: ConflictMatchKind,
+                fiscalSign: String?
+            ): ReceiptConflict = ReceiptConflict(
+                qrUrl = c.getString(0),
+                sellerName = c.getString(1),
+                purchasedAt = c.getLong(2),
+                totalAmountTiyin = c.getLong(3),
+                user1Id = c.getLong(4),
+                user1FullName = c.getString(5),
+                user2Id = c.getLong(6),
+                user2FullName = c.getString(7),
+                matchKind = matchKind,
+                fiscalSign = fiscalSign
+            )
+
+            val fiscalSql = """
                 SELECT r1.qr_url, r1.seller_name, r1.purchased_at, r1.total_amount_tiyin,
                        r1.user_id, u1.full_name,
-                       r2.user_id, u2.full_name
+                       r2.user_id, u2.full_name,
+                       r1.fiscal_sign
                 FROM receipts r1
                 INNER JOIN receipts r2
                     ON r1.user_id < r2.user_id
-                    AND (
-                        (
-                            r1.fiscal_sign IS NOT NULL AND r1.fiscal_sign != ''
-                            AND r1.fiscal_sign = r2.fiscal_sign
-                            AND IFNULL(r1.terminal_id, '') = IFNULL(r2.terminal_id, '')
-                            AND IFNULL(r1.receipt_number, '') = IFNULL(r2.receipt_number, '')
-                        )
-                        OR (
-                            r1.seller_name = r2.seller_name
-                            AND r1.purchased_at = r2.purchased_at
-                            AND r1.total_amount_tiyin = r2.total_amount_tiyin
-                            AND r1.vat_amount_tiyin = r2.vat_amount_tiyin
-                        )
-                    )
+                    AND r1.fiscal_sign IS NOT NULL AND r1.fiscal_sign != ''
+                    AND r1.fiscal_sign = r2.fiscal_sign
+                    AND IFNULL(r1.terminal_id, '') = IFNULL(r2.terminal_id, '')
+                    AND IFNULL(r1.receipt_number, '') = IFNULL(r2.receipt_number, '')
                 INNER JOIN users u1 ON u1.id = r1.user_id
                 INNER JOIN users u2 ON u2.id = r2.user_id
                 WHERE r1.purchased_at >= ? AND r1.purchased_at <= ?
                 ORDER BY r1.purchased_at DESC
             """.trimIndent()
-            val result = mutableListOf<ReceiptConflict>()
-            db.rawQuery(sql, arrayOf(fromMs.toString(), toMs.toString())).use { c ->
+
+            db.rawQuery(fiscalSql, args).use { c ->
                 while (c.moveToNext()) {
-                    result.add(
-                        ReceiptConflict(
-                            qrUrl = c.getString(0),
-                            sellerName = c.getString(1),
-                            purchasedAt = c.getLong(2),
-                            totalAmountTiyin = c.getLong(3),
-                            user1Id = c.getLong(4),
-                            user1FullName = c.getString(5),
-                            user2Id = c.getLong(6),
-                            user2FullName = c.getString(7)
-                        )
-                    )
+                    val fiscal = c.getString(8)?.takeIf { it.isNotBlank() }
+                    val row = readRow(c, ConflictMatchKind.FISCAL, fiscal)
+                    byPair[pairKey(row)] = row
                 }
             }
-            result
+
+            val sellerSql = """
+                SELECT r1.qr_url, r1.seller_name, r1.purchased_at, r1.total_amount_tiyin,
+                       r1.user_id, u1.full_name,
+                       r2.user_id, u2.full_name,
+                       r1.fiscal_sign
+                FROM receipts r1
+                INNER JOIN receipts r2
+                    ON r1.user_id < r2.user_id
+                    AND r1.seller_name = r2.seller_name
+                    AND r1.purchased_at = r2.purchased_at
+                    AND r1.total_amount_tiyin = r2.total_amount_tiyin
+                    AND r1.vat_amount_tiyin = r2.vat_amount_tiyin
+                INNER JOIN users u1 ON u1.id = r1.user_id
+                INNER JOIN users u2 ON u2.id = r2.user_id
+                WHERE r1.purchased_at >= ? AND r1.purchased_at <= ?
+                ORDER BY r1.purchased_at DESC
+            """.trimIndent()
+
+            db.rawQuery(sellerSql, args).use { c ->
+                while (c.moveToNext()) {
+                    val fiscal = c.getString(8)?.takeIf { it.isNotBlank() }
+                    val row = readRow(c, ConflictMatchKind.SELLER_TIME_AMOUNT, fiscal)
+                    val key = pairKey(row)
+                    // Не перезаписываем уже найденное фискальное совпадение.
+                    if (key !in byPair) byPair[key] = row
+                }
+            }
+
+            byPair.values.sortedByDescending { it.purchasedAt }
         }
+
+    /**
+     * Собирает человекочитаемые причины несостыковок по сводке сотрудника
+     * и списку его конфликтов чеков.
+     */
+    fun buildDiscrepancyDetail(
+        summary: EmployeeSummary,
+        conflictsForUser: List<ReceiptConflict>
+    ): DiscrepancyDetail {
+        val reasons = mutableListOf<DiscrepancyReason>()
+        val decl = summary.declaration
+
+        if (decl != null) {
+            if (decl.declaredTotalTiyin != 0L && decl.declaredTotalTiyin != summary.totalTiyin) {
+                reasons += DiscrepancyReason.TotalMismatch(
+                    declared = decl.declaredTotalTiyin,
+                    actual = summary.totalTiyin,
+                    delta = summary.totalTiyin - decl.declaredTotalTiyin
+                )
+            }
+            if (decl.declaredVatTiyin != 0L && decl.declaredVatTiyin != summary.vatTiyin) {
+                reasons += DiscrepancyReason.VatMismatch(
+                    declared = decl.declaredVatTiyin,
+                    actual = summary.vatTiyin,
+                    delta = summary.vatTiyin - decl.declaredVatTiyin
+                )
+            }
+            if (decl.declaredCount != 0 && decl.declaredCount != summary.receiptCount) {
+                reasons += DiscrepancyReason.CountMismatch(
+                    declared = decl.declaredCount,
+                    actual = summary.receiptCount
+                )
+            }
+            if (!decl.note.isNullOrBlank()) {
+                reasons += DiscrepancyReason.ManualNote(decl.note.trim())
+            }
+            if (decl.status != AuditStatus.PENDING) {
+                reasons += DiscrepancyReason.StatusInfo(decl.status)
+            }
+        }
+
+        if (summary.verifiedCount < summary.receiptCount) {
+            reasons += DiscrepancyReason.IncompleteVerification(
+                verified = summary.verifiedCount,
+                total = summary.receiptCount
+            )
+        }
+
+        for (conflict in conflictsForUser) {
+            reasons += DiscrepancyReason.DuplicateReceipt(conflict)
+        }
+
+        return DiscrepancyDetail(
+            summary = summary,
+            reasons = reasons,
+            conflicts = conflictsForUser
+        )
+    }
 
     // ── Batch import analysis ────────────────────────────────────────────────
 

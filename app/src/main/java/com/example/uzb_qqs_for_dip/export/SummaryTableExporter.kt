@@ -166,6 +166,168 @@ object SummaryTableExporter {
         file
     }
 
+    /**
+     * Отчёт «Возврат НДС по организациям»: группы по organization, подитоги и общий итог.
+     */
+    suspend fun exportOrgXlsx(
+        context: Context,
+        rows: List<EmployeeSummary>,
+        quarter: String,
+        year: Int,
+        fileName: String = "audit_org_${quarter}_${year}.xlsx"
+    ): File = withContext(Dispatchers.IO) {
+        val blankKey = "\uFFFE"
+        val grouped = rows
+            .groupBy { it.organization.ifBlank { blankKey } }
+            .entries
+            .sortedWith(
+                compareByDescending<Map.Entry<String, List<EmployeeSummary>>> {
+                    if (it.key == blankKey) Int.MIN_VALUE else it.value.size
+                }
+            )
+            .associate { (key, list) ->
+                key to list.sortedBy {
+                    it.initialsSurname.ifBlank { it.fullName }.lowercase()
+                }
+            }
+
+        val header = listOf("№", "Организация", "Фамилия И.О.", "Сумма НДС")
+            .map { Cell(text = it) }
+
+        val sheetRows = mutableListOf<List<Cell>>()
+        sheetRows.add(header)
+        var num = 1
+        grouped.forEach { (orgKey, list) ->
+            val orgLabel = if (orgKey == blankKey) "Без организации" else orgKey
+            list.forEach { s ->
+                sheetRows.add(
+                    listOf(
+                        Cell(number = num.toDouble()),
+                        Cell(text = orgLabel),
+                        Cell(text = s.initialsSurname.ifBlank { s.fullName }),
+                        Cell(number = s.vatTiyin / 100.0)
+                    )
+                )
+                num++
+            }
+            sheetRows.add(
+                listOf(
+                    Cell(text = ""),
+                    Cell(text = "ИТОГО $orgLabel"),
+                    Cell(text = ""),
+                    Cell(number = list.sumOf { it.vatTiyin } / 100.0)
+                )
+            )
+        }
+        sheetRows.add(
+            listOf(
+                Cell(text = ""),
+                Cell(text = "ИТОГО"),
+                Cell(text = ""),
+                Cell(number = rows.sumOf { it.vatTiyin } / 100.0)
+            )
+        )
+
+        writeSimpleXlsx(context, fileName, sheetRows, colWidths = listOf(8, 28, 24, 16))
+    }
+
+    private fun writeSimpleXlsx(
+        context: Context,
+        fileName: String,
+        sheet: List<List<Cell>>,
+        colWidths: List<Int>
+    ): File {
+        val sharedStrings = mutableListOf<String>()
+        val sharedIndex = mutableMapOf<String, Int>()
+        fun stringIndex(s: String): Int = sharedIndex.getOrPut(s) {
+            sharedStrings.add(s); sharedStrings.size - 1
+        }
+
+        val sheetXml = buildString {
+            append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+            append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">")
+            append("<cols>")
+            colWidths.forEachIndexed { i, w ->
+                append("<col min=\"${i + 1}\" max=\"${i + 1}\" width=\"$w\" customWidth=\"1\"/>")
+            }
+            append("</cols><sheetData>")
+            sheet.forEachIndexed { rowIdx, cells ->
+                val r = rowIdx + 1
+                append("<row r=\"$r\">")
+                cells.forEachIndexed { colIdx, cell ->
+                    val ref = "${colName(colIdx)}$r"
+                    val num = cell.number
+                    val text = cell.text
+                    when {
+                        num != null -> {
+                            val style = if (rowIdx == 0) 1 else 4
+                            append("<c r=\"$ref\" s=\"$style\" t=\"n\"><v>${formatNumber(num)}</v></c>")
+                        }
+                        text != null -> {
+                            val style = if (rowIdx == 0) 1 else 0
+                            append("<c r=\"$ref\" s=\"$style\" t=\"s\"><v>${stringIndex(text)}</v></c>")
+                        }
+                    }
+                }
+                append("</row>")
+            }
+            append("</sheetData></worksheet>")
+        }
+
+        val sharedStringsXml = buildString {
+            append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+            append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" ")
+            append("count=\"${sharedStrings.size}\" uniqueCount=\"${sharedStrings.size}\">")
+            sharedStrings.forEach {
+                append("<si><t>${escapeXml(it)}</t></si>")
+            }
+            append("</sst>")
+        }
+
+        val workbookXml =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+                "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" " +
+                "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
+                "<sheets><sheet name=\"Отчёт\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>"
+        val workbookRels =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+                "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+                "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/>" +
+                "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>" +
+                "<Relationship Id=\"rId3\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>" +
+                "</Relationships>"
+        val rootRels =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+                "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+                "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>" +
+                "</Relationships>"
+        val contentTypes =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+                "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
+                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
+                "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
+                "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
+                "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>" +
+                "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>" +
+                "<Override PartName=\"/xl/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/>" +
+                "</Types>"
+
+        val file = File(ExportPaths.exportsDir(context), fileName)
+        FileOutputStream(file).use { fos ->
+            ZipOutputStream(fos).use { zip ->
+                zip.setLevel(Deflater.DEFAULT_COMPRESSION)
+                writeEntry(zip, "[Content_Types].xml", contentTypes)
+                writeEntry(zip, "_rels/.rels", rootRels)
+                writeEntry(zip, "xl/workbook.xml", workbookXml)
+                writeEntry(zip, "xl/_rels/workbook.xml.rels", workbookRels)
+                writeEntry(zip, "xl/sharedStrings.xml", sharedStringsXml)
+                writeEntry(zip, "xl/styles.xml", buildStylesXml())
+                writeEntry(zip, "xl/worksheets/sheet1.xml", sheetXml)
+            }
+        }
+        return file
+    }
+
     suspend fun exportCsv(
         context: Context,
         rows: List<EmployeeSummary>,
