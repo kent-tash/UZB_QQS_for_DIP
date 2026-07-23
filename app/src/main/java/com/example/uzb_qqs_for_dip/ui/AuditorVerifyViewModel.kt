@@ -269,7 +269,12 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
 
             container.receiptParser.fetchAndParse(raw)
                 .onSuccess { parsed ->
-                    val existingOwner = container.receiptRepository.findOwnerByQrUrl(raw)
+                    val existingOwner = container.receiptRepository.findOwner(
+                        qrUrl = parsed.qrUrl,
+                        fiscalSign = parsed.fiscalSign,
+                        terminalId = parsed.terminalId,
+                        receiptNumber = parsed.receiptNumber,
+                    )
                     val alreadyForThisEmployee = existingOwner?.userId == employee.id
 
                     val outOfPeriod = parsed.purchasedAt?.let { it < from || it > to } ?: false
@@ -317,7 +322,33 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                                     rawText = parsed.rawSnippet
                                 )
                                 val insertResult = container.receiptRepository.insert(receipt)
-                                if (insertResult.isSuccess && auditorId != null) {
+                                if (insertResult.isFailure) {
+                                    val err = insertResult.exceptionOrNull()
+                                    val ownerAfterFail = container.receiptRepository.findOwner(
+                                        qrUrl = parsed.qrUrl,
+                                        fiscalSign = parsed.fiscalSign,
+                                        terminalId = parsed.terminalId,
+                                        receiptNumber = parsed.receiptNumber,
+                                    )
+                                    _verifyResult.value = when {
+                                        ownerAfterFail != null && ownerAfterFail.userId != employee.id ->
+                                            VerifyResult.Success(
+                                                parsed = parsed,
+                                                owner = ownerAfterFail,
+                                                alreadyForThisEmployee = false,
+                                                outOfPeriod = outOfPeriod,
+                                                markedVerified = false
+                                            )
+                                        err?.message?.contains("UNIQUE", true) == true ->
+                                            VerifyResult.Error("Этот чек уже есть в базе")
+                                        else ->
+                                            VerifyResult.Error(
+                                                "Не удалось сохранить чек: ${err?.message ?: "ошибка"}"
+                                            )
+                                    }
+                                    return@onSuccess
+                                }
+                                if (auditorId != null) {
                                     insertResult.getOrNull()?.let { id ->
                                         container.receiptRepository.markVerified(id, auditorId)
                                     }
@@ -327,9 +358,9 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                                     owner = null,
                                     alreadyForThisEmployee = false,
                                     outOfPeriod = outOfPeriod,
-                                    markedVerified = insertResult.isSuccess && auditorId != null
+                                    markedVerified = auditorId != null
                                 )
-                                if (insertResult.isSuccess) refreshEmployeeData()
+                                refreshEmployeeData()
                             } else {
                                 _verifyResult.value = VerifyResult.Error("Не все поля чека распознаны")
                             }

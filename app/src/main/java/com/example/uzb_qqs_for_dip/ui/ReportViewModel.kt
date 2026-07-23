@@ -165,6 +165,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             SortField.SELLER -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.receipt.sellerName }
             SortField.TOTAL -> compareBy { it.receipt.totalAmountTiyin }
             SortField.VAT -> compareBy { it.receipt.vatAmountTiyin }
+            SortField.CREATED -> compareBy { it.receipt.createdAt }
         }
         // Стабильный вторичный ключ — id, чтобы порядок не «прыгал» при равных значениях.
         val tie: Comparator<ReceiptWithUser> = compareBy { it.receipt.id }

@@ -153,10 +153,23 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
     }
 
     /**
-     * Возвращает владельца чека (userId + fullName) по QR-URL через JOIN с таблицей users.
-     * Используется для показа человекочитаемой ошибки при попытке добавить дубликат.
+     * Возвращает владельца чека по QR-URL или по фискальной идентичности.
+     * Совпадение только по магазину/сумме/дате без времени здесь не используется —
+     * иначе разные чеки одного дня ложно блокировались бы.
      */
-    suspend fun findOwnerByQrUrl(qrUrl: String): ReceiptOwner? = withContext(Dispatchers.IO) {
+    suspend fun findOwnerByQrUrl(qrUrl: String): ReceiptOwner? =
+        findOwner(qrUrl = qrUrl, fiscalSign = null, terminalId = null, receiptNumber = null)
+
+    /**
+     * Поиск владельца: сначала точный QR-URL, затем фискальный признак
+     * (один и тот же чек может отличаться только схемой/порядком параметров URL).
+     */
+    suspend fun findOwner(
+        qrUrl: String,
+        fiscalSign: String?,
+        terminalId: String? = null,
+        receiptNumber: String? = null,
+    ): ReceiptOwner? = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase
         db.rawQuery(
             """SELECT r.id, r.user_id, u.full_name
@@ -165,6 +178,33 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
                WHERE r.qr_url = ?""",
             arrayOf(qrUrl)
         ).use { c ->
+            if (c.moveToFirst()) {
+                return@withContext ReceiptOwner(
+                    receiptId = c.getLong(0),
+                    userId = c.getLong(1),
+                    fullName = c.getString(2)
+                )
+            }
+        }
+        val sign = fiscalSign?.trim().orEmpty()
+        if (sign.isEmpty()) return@withContext null
+        val sql = buildString {
+            append(
+                """SELECT r.id, r.user_id, u.full_name
+                   FROM receipts r
+                   INNER JOIN users u ON u.id = r.user_id
+                   WHERE r.fiscal_sign = ?"""
+            )
+            if (!terminalId.isNullOrBlank()) append(" AND IFNULL(r.terminal_id, '') = ?")
+            if (!receiptNumber.isNullOrBlank()) append(" AND IFNULL(r.receipt_number, '') = ?")
+            append(" LIMIT 1")
+        }
+        val args = buildList {
+            add(sign)
+            if (!terminalId.isNullOrBlank()) add(terminalId.trim())
+            if (!receiptNumber.isNullOrBlank()) add(receiptNumber.trim())
+        }
+        db.rawQuery(sql, args.toTypedArray()).use { c ->
             if (c.moveToFirst()) {
                 ReceiptOwner(
                     receiptId = c.getLong(0),

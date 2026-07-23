@@ -153,12 +153,14 @@ class AuditorRepository(private val dbHelper: DbHelper) {
     // ── Duplicate / conflict detection ──────────────────────────────────────
 
     /**
-     * Находит чеки, у которых одинаковый qr_url принадлежат разным пользователям.
-     * (В штатной БД UNIQUE это невозможно, но конфликты могут быть зафиксированы
-     * в отдельной таблице или обнаружены через эвристику.)
+     * Находит вероятные дубликаты одного и того же чека у разных пользователей.
      *
-     * Эвристика: одинаковые seller_name + purchased_at (с точностью до суток) +
-     * total_amount_tiyin + vat_amount_tiyin у двух разных user_id.
+     * Совпадение только по магазину + сумме + дате (без времени) давало ложные
+     * срабатывания: два разных чека в один день из одного магазина на одну сумму.
+     *
+     * Считаем конфликтом, если у разных user_id:
+     * - одинаковый фискальный признак (и при наличии — терминал / номер чека), или
+     * - полное совпадение момента покупки (дата+время) + продавец + сумма + НДС.
      */
     suspend fun findConflicts(fromMs: Long, toMs: Long): List<ReceiptConflict> =
         withContext(Dispatchers.IO) {
@@ -169,11 +171,21 @@ class AuditorRepository(private val dbHelper: DbHelper) {
                        r2.user_id, u2.full_name
                 FROM receipts r1
                 INNER JOIN receipts r2
-                    ON r1.seller_name = r2.seller_name
-                    AND (r1.purchased_at / 86400000) = (r2.purchased_at / 86400000)
-                    AND r1.total_amount_tiyin = r2.total_amount_tiyin
-                    AND r1.vat_amount_tiyin = r2.vat_amount_tiyin
-                    AND r1.user_id < r2.user_id
+                    ON r1.user_id < r2.user_id
+                    AND (
+                        (
+                            r1.fiscal_sign IS NOT NULL AND r1.fiscal_sign != ''
+                            AND r1.fiscal_sign = r2.fiscal_sign
+                            AND IFNULL(r1.terminal_id, '') = IFNULL(r2.terminal_id, '')
+                            AND IFNULL(r1.receipt_number, '') = IFNULL(r2.receipt_number, '')
+                        )
+                        OR (
+                            r1.seller_name = r2.seller_name
+                            AND r1.purchased_at = r2.purchased_at
+                            AND r1.total_amount_tiyin = r2.total_amount_tiyin
+                            AND r1.vat_amount_tiyin = r2.vat_amount_tiyin
+                        )
+                    )
                 INNER JOIN users u1 ON u1.id = r1.user_id
                 INNER JOIN users u2 ON u2.id = r2.user_id
                 WHERE r1.purchased_at >= ? AND r1.purchased_at <= ?

@@ -15,7 +15,8 @@ enum class SortField(val label: String) {
     DATE("Дата"),
     SELLER("Наименование организации"),
     TOTAL("Общая сумма"),
-    VAT("НДС");
+    VAT("НДС"),
+    CREATED("Дата добавления");
 }
 
 enum class SortOrder(val label: String) {

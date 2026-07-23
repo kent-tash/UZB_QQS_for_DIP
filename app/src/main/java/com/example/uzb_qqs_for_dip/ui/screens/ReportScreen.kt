@@ -34,6 +34,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -238,6 +239,26 @@ fun ReportScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                Spacer(Modifier.height(10.dp))
+                val createdSortActive = settings.sortField == SortField.CREATED
+                FilterChip(
+                    selected = createdSortActive,
+                    onClick = { reportViewModel.toggleSort(SortField.CREATED) },
+                    label = { Text("По дате добавления") },
+                    trailingIcon = if (createdSortActive) {
+                        {
+                            Icon(
+                                imageVector = if (settings.sortOrder == SortOrder.ASC)
+                                    Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                                contentDescription = settings.sortOrder.label,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else {
+                        null
+                    }
+                )
             }
         }
 

@@ -82,6 +82,7 @@ import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorExportKind
 import com.example.uzb_qqs_for_dip.ui.AuditorFilter
 import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
+import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 
 private val Success = Color(0xFF2E7D32)
@@ -235,9 +236,12 @@ fun AuditorScreen(
                             Text("${c.user1FullName} ↔ ${c.user2FullName}",
                                 style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                             Text(c.sellerName, style = MaterialTheme.typography.bodySmall)
-                            Text(MoneyFormat.fromTiyin(c.totalAmountTiyin) + " сум",
+                            Text(
+                                DateFormat.formatDateTime(c.purchasedAt) + " · " +
+                                    MoneyFormat.fromTiyin(c.totalAmountTiyin) + " сум",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                         HorizontalDivider()
                     }

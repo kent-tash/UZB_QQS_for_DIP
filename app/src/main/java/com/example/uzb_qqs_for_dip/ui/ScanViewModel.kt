@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.uzb_qqs_for_dip.QqsApp
 import com.example.uzb_qqs_for_dip.data.AppContainer
 import com.example.uzb_qqs_for_dip.data.model.Receipt
-import com.example.uzb_qqs_for_dip.data.model.ReceiptOwner
 import com.example.uzb_qqs_for_dip.network.ParsedReceipt
 import com.example.uzb_qqs_for_dip.render.QrFromImageDecoder
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,14 +69,19 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.value = ScanState.Loading
             val currentUserId = container.sessionManager.currentUserId.value
-            val owner: ReceiptOwner? = container.receiptRepository.findOwnerByQrUrl(raw)
-            val existingOwner: ExistingOwner? = when {
-                owner == null -> null
-                owner.userId == currentUserId -> ExistingOwner.SameUser
-                else -> ExistingOwner.OtherUser(owner.fullName)
-            }
             container.receiptParser.fetchAndParse(raw)
                 .onSuccess { parsed ->
+                    val owner = container.receiptRepository.findOwner(
+                        qrUrl = parsed.qrUrl,
+                        fiscalSign = parsed.fiscalSign,
+                        terminalId = parsed.terminalId,
+                        receiptNumber = parsed.receiptNumber,
+                    )
+                    val existingOwner: ExistingOwner? = when {
+                        owner == null -> null
+                        owner.userId == currentUserId -> ExistingOwner.SameUser
+                        else -> ExistingOwner.OtherUser(owner.fullName)
+                    }
                     _state.value = ScanState.Parsed(parsed, existingOwner)
                 }
                 .onFailure { e ->
@@ -103,11 +107,20 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             // Повторная проверка перед записью (race condition guard).
-            val owner = container.receiptRepository.findOwnerByQrUrl(parsed.qrUrl)
+            val owner = container.receiptRepository.findOwner(
+                qrUrl = parsed.qrUrl,
+                fiscalSign = parsed.fiscalSign,
+                terminalId = parsed.terminalId,
+                receiptNumber = parsed.receiptNumber,
+            )
             if (owner != null && owner.userId != userId) {
                 _state.value = ScanState.Error(
                     "Данный чек уже есть у пользователя ${owner.fullName}"
                 )
+                return@launch
+            }
+            if (owner != null && owner.userId == userId) {
+                _state.value = ScanState.Error("Этот чек уже сохранён ранее")
                 return@launch
             }
             val receipt = Receipt(
@@ -133,9 +146,13 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                     onSaved()
                 }
                 .onFailure { e ->
-                    // Fallback: если UNIQUE сработал — подтянуть владельца для точного сообщения.
                     val msg = if (e.message?.contains("UNIQUE", true) == true) {
-                        val existingOwner = container.receiptRepository.findOwnerByQrUrl(parsed.qrUrl)
+                        val existingOwner = container.receiptRepository.findOwner(
+                            qrUrl = parsed.qrUrl,
+                            fiscalSign = parsed.fiscalSign,
+                            terminalId = parsed.terminalId,
+                            receiptNumber = parsed.receiptNumber,
+                        )
                         if (existingOwner != null && existingOwner.userId != userId) {
                             "Данный чек уже есть у пользователя ${existingOwner.fullName}"
                         } else {
@@ -157,11 +174,19 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         auditorUserId: Long? = null
     ): Result<Long> {
         if (!parsed.isValid) return Result.failure(IllegalStateException("Неполные данные чека"))
-        val owner = container.receiptRepository.findOwnerByQrUrl(parsed.qrUrl)
+        val owner = container.receiptRepository.findOwner(
+            qrUrl = parsed.qrUrl,
+            fiscalSign = parsed.fiscalSign,
+            terminalId = parsed.terminalId,
+            receiptNumber = parsed.receiptNumber,
+        )
         if (owner != null && owner.userId != userId) {
             return Result.failure(
                 IllegalStateException("Данный чек уже есть у пользователя ${owner.fullName}")
             )
+        }
+        if (owner != null && owner.userId == userId) {
+            return Result.success(owner.receiptId)
         }
         val receipt = Receipt(
             userId = userId,
