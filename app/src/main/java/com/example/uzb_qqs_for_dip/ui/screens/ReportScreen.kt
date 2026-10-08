@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.DeleteForever
-import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -98,7 +97,7 @@ fun ReportScreen(
     var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
     var showSaveFormatDialog by remember { mutableStateOf(false) }
     var showShareFormatDialog by remember { mutableStateOf(false) }
-    var showHelp by remember { mutableStateOf(false) }
+
 
     val savePdfLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
@@ -117,12 +116,12 @@ fun ReportScreen(
         when (val e = event) {
             is ReportEvent.Open -> {
                 runCatching { context.startActivity(e.intent) }
-                    .onFailure { Toast.makeText(context, "Не нашли приложение для PDF", Toast.LENGTH_LONG).show() }
+                    .onFailure { Toast.makeText(context, "РќРµ РЅР°С€Р»Рё РїСЂРёР»РѕР¶РµРЅРёРµ РґР»СЏ PDF", Toast.LENGTH_LONG).show() }
                 reportViewModel.consumeEvent()
             }
             is ReportEvent.Share -> {
                 runCatching { context.startActivity(e.intent) }
-                    .onFailure { Toast.makeText(context, "Не удалось поделиться", Toast.LENGTH_LONG).show() }
+                    .onFailure { Toast.makeText(context, "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґРµР»РёС‚СЊСЃСЏ", Toast.LENGTH_LONG).show() }
                 reportViewModel.consumeEvent()
             }
             is ReportEvent.Print -> {
@@ -140,7 +139,7 @@ fun ReportScreen(
             is ReportEvent.Deleted -> {
                 Toast.makeText(
                     context,
-                    "Удалено чеков: ${e.count}",
+                    "РЈРґР°Р»РµРЅРѕ С‡РµРєРѕРІ: ${e.count}",
                     Toast.LENGTH_SHORT
                 ).show()
                 reportViewModel.consumeEvent()
@@ -158,14 +157,11 @@ fun ReportScreen(
         userOptions.firstOrNull { it.id == settings.userId }
             ?: userOptions.firstOrNull { it.id == currentUser?.id }
             ?: userOptions.firstOrNull()
-            ?: UserChoice(null, "—")
+            ?: UserChoice(null, "вЂ”")
 
     val totalSum = rows.sumOf { it.receipt.totalAmountTiyin }
     val totalVat = rows.sumOf { it.receipt.vatAmountTiyin }
 
-    if (showHelp) {
-        com.example.uzb_qqs_for_dip.ui.components.HelpDialog(onDismissRequest = { showHelp = false })
-    }
 
     val scrollState = rememberScrollState()
     androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
@@ -182,20 +178,6 @@ fun ReportScreen(
             .verticalScroll(scrollState)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(
-            "PDF-отчёт для печати",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Сформирует PDF: шапка → таблица «№, Юр. лицо, Дата, Сумма, НДС» → итоги → " +
-                "блок подписи. Сортировка ниже определяет № в таблице и порядок чеков на " +
-                "вкладке «Чеки».",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(16.dp))
 
         Card(
             shape = RoundedCornerShape(20.dp),
@@ -205,7 +187,7 @@ fun ReportScreen(
             Column(Modifier.padding(14.dp)) {
                 if (userOptions.isNotEmpty()) {
                     SelectField(
-                        label = "Пользователь",
+                        label = "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ",
                         value = selectedUser,
                         options = userOptions,
                         optionLabel = { it.label },
@@ -214,7 +196,7 @@ fun ReportScreen(
                     Spacer(Modifier.height(10.dp))
                 }
 
-                // Квартал/год — основной способ задать период.
+                // РљРІР°СЂС‚Р°Р»/РіРѕРґ вЂ” РѕСЃРЅРѕРІРЅРѕР№ СЃРїРѕСЃРѕР± Р·Р°РґР°С‚СЊ РїРµСЂРёРѕРґ.
                 val years = remember(settings.year) {
                     val current = ReportSettings.currentYear()
                     val pivot = settings.year.coerceAtMost(current)
@@ -230,7 +212,7 @@ fun ReportScreen(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     SelectField(
-                        label = "Год",
+                        label = "Р“РѕРґ",
                         value = selectedYear,
                         options = years,
                         optionLabel = { it.year.toString() },
@@ -238,7 +220,7 @@ fun ReportScreen(
                         modifier = Modifier.weight(1f)
                     )
                     SelectField(
-                        label = "Квартал",
+                        label = "РљРІР°СЂС‚Р°Р»",
                         value = selectedQuarter,
                         options = quarters,
                         optionLabel = { it.quarter.label },
@@ -249,13 +231,13 @@ fun ReportScreen(
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     DateField(
-                        label = "Период с",
+                        label = "РџРµСЂРёРѕРґ СЃ",
                         valueText = DateFormat.formatDate(settings.from),
                         onClick = { showFromPicker = true },
                         modifier = Modifier.weight(1f)
                     )
                     DateField(
-                        label = "Период по",
+                        label = "РџРµСЂРёРѕРґ РїРѕ",
                         valueText = DateFormat.formatDate(settings.to),
                         onClick = { showToPicker = true },
                         modifier = Modifier.weight(1f)
@@ -264,8 +246,8 @@ fun ReportScreen(
                 if (settings.quarter == Quarter.Custom) {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Выбран произвольный период. Чтобы вернуться к кварталу — " +
-                            "просто выберите его в списке выше.",
+                        "Р’С‹Р±СЂР°РЅ РїСЂРѕРёР·РІРѕР»СЊРЅС‹Р№ РїРµСЂРёРѕРґ. Р§С‚РѕР±С‹ РІРµСЂРЅСѓС‚СЊСЃСЏ Рє РєРІР°СЂС‚Р°Р»Сѓ вЂ” " +
+                            "РїСЂРѕСЃС‚Рѕ РІС‹Р±РµСЂРёС‚Рµ РµРіРѕ РІ СЃРїРёСЃРєРµ РІС‹С€Рµ.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -276,7 +258,7 @@ fun ReportScreen(
                 FilterChip(
                     selected = createdSortActive,
                     onClick = { reportViewModel.toggleSort(SortField.CREATED) },
-                    label = { Text("Сортировка по дате добавления") },
+                    label = { Text("РЎРѕСЂС‚РёСЂРѕРІРєР° РїРѕ РґР°С‚Рµ РґРѕР±Р°РІР»РµРЅРёСЏ") },
                     trailingIcon = if (createdSortActive) {
                         {
                             Icon(
@@ -295,7 +277,7 @@ fun ReportScreen(
 
         Spacer(Modifier.height(14.dp))
 
-        // Краткая шапка: имя/должность/период/количество.
+        // РљСЂР°С‚РєР°СЏ С€Р°РїРєР°: РёРјСЏ/РґРѕР»Р¶РЅРѕСЃС‚СЊ/РїРµСЂРёРѕРґ/РєРѕР»РёС‡РµСЃС‚РІРѕ.
         ReportPreviewCard(
             userFullName = selectedUser.label,
             position = users.firstOrNull { it.id == selectedUser.id }?.position ?: "",
@@ -320,20 +302,20 @@ fun ReportScreen(
             saveProgress = saveProgress,
             isSaveEnabled = !isSaving && selectedUser.id != null && rows.isNotEmpty(),
             isOpenPrintEnabled = selectedUser.id != null,
-            saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "Сохранение… ${(saveProgress * 100).toInt()}%"
+            saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "РЎРѕС…СЂР°РЅРµРЅРёРµвЂ¦ ${(saveProgress * 100).toInt()}%"
         )
 
         Spacer(Modifier.height(20.dp))
         Text(
-            "«Сохранить» и «Поделиться» — выбор формата PDF или Excel (xlsx). " +
-                "«Открыть» показывает предпросмотр PDF. «Печать / PDF» — системный диалог печати.",
+            "В«РЎРѕС…СЂР°РЅРёС‚СЊВ» Рё В«РџРѕРґРµР»РёС‚СЊСЃСЏВ» вЂ” РІС‹Р±РѕСЂ С„РѕСЂРјР°С‚Р° PDF РёР»Рё Excel (xlsx). " +
+                "В«РћС‚РєСЂС‹С‚СЊВ» РїРѕРєР°Р·С‹РІР°РµС‚ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ PDF. В«РџРµС‡Р°С‚СЊ / PDFВ» вЂ” СЃРёСЃС‚РµРјРЅС‹Р№ РґРёР°Р»РѕРі РїРµС‡Р°С‚Рё.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(Modifier.height(20.dp))
 
-        // Панель пакетного удаления — появляется, когда выбран хотя бы один чек.
+        // РџР°РЅРµР»СЊ РїР°РєРµС‚РЅРѕРіРѕ СѓРґР°Р»РµРЅРёСЏ вЂ” РїРѕСЏРІР»СЏРµС‚СЃСЏ, РєРѕРіРґР° РІС‹Р±СЂР°РЅ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ С‡РµРє.
         androidx.compose.foundation.layout.Column(modifier = Modifier.animateContentSize()) {
             if (selectedIds.isNotEmpty()) {
                 SelectionActionBar(
@@ -345,9 +327,9 @@ fun ReportScreen(
             }
         }
 
-        // Превью таблицы — то же содержимое, что попадёт в PDF/печать.
-        // Расположено в самом низу, чтобы кнопки экспорта оставались на виду
-        // независимо от того, насколько длинной стала таблица.
+        // РџСЂРµРІСЊСЋ С‚Р°Р±Р»РёС†С‹ вЂ” С‚Рѕ Р¶Рµ СЃРѕРґРµСЂР¶РёРјРѕРµ, С‡С‚Рѕ РїРѕРїР°РґС‘С‚ РІ PDF/РїРµС‡Р°С‚СЊ.
+        // Р Р°СЃРїРѕР»РѕР¶РµРЅРѕ РІ СЃР°РјРѕРј РЅРёР·Сѓ, С‡С‚РѕР±С‹ РєРЅРѕРїРєРё СЌРєСЃРїРѕСЂС‚Р° РѕСЃС‚Р°РІР°Р»РёСЃСЊ РЅР° РІРёРґСѓ
+        // РЅРµР·Р°РІРёСЃРёРјРѕ РѕС‚ С‚РѕРіРѕ, РЅР°СЃРєРѕР»СЊРєРѕ РґР»РёРЅРЅРѕР№ СЃС‚Р°Р»Р° С‚Р°Р±Р»РёС†Р°.
         ReportTablePreview(
             rows = rows,
             sortField = settings.sortField,
@@ -380,12 +362,12 @@ fun ReportScreen(
     if (showDeleteConfirm && selectedIds.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Удалить выбранные чеки?") },
+            title = { Text("РЈРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ С‡РµРєРё?") },
             text = {
                 Text(
-                    "Будет удалено ${selectedIds.size} чек(а/ов). " +
-                        "Записи и связанные с ними данные исчезнут из отчёта и со вкладки «Чеки» " +
-                        "безвозвратно."
+                    "Р‘СѓРґРµС‚ СѓРґР°Р»РµРЅРѕ ${selectedIds.size} С‡РµРє(Р°/РѕРІ). " +
+                        "Р—Р°РїРёСЃРё Рё СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ РЅРёРјРё РґР°РЅРЅС‹Рµ РёСЃС‡РµР·РЅСѓС‚ РёР· РѕС‚С‡С‘С‚Р° Рё СЃРѕ РІРєР»Р°РґРєРё В«Р§РµРєРёВ» " +
+                        "Р±РµР·РІРѕР·РІСЂР°С‚РЅРѕ."
                 )
             },
             confirmButton = {
@@ -397,17 +379,17 @@ fun ReportScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
-                ) { Text("Удалить") }
+                ) { Text("РЈРґР°Р»РёС‚СЊ") }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showDeleteConfirm = false }) { Text("Отмена") }
+                OutlinedButton(onClick = { showDeleteConfirm = false }) { Text("РћС‚РјРµРЅР°") }
             }
         )
     }
 
     if (showSaveFormatDialog) {
         FormatChoiceDialog(
-            title = "Сохранить отчёт как",
+            title = "РЎРѕС…СЂР°РЅРёС‚СЊ РѕС‚С‡С‘С‚ РєР°Рє",
             onDismiss = { showSaveFormatDialog = false },
             onChoose = { format ->
                 showSaveFormatDialog = false
@@ -422,7 +404,7 @@ fun ReportScreen(
     }
     if (showShareFormatDialog) {
         FormatChoiceDialog(
-            title = "Поделиться отчётом",
+            title = "РџРѕРґРµР»РёС‚СЊСЃСЏ РѕС‚С‡С‘С‚РѕРј",
             onDismiss = { showShareFormatDialog = false },
             onChoose = { format ->
                 showShareFormatDialog = false
@@ -437,7 +419,7 @@ fun ReportScreen(
     saveSuccessMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { saveSuccessMessage = null },
-            title = { Text("Сохранено") },
+            title = { Text("РЎРѕС…СЂР°РЅРµРЅРѕ") },
             text = { Text(message) },
             confirmButton = {
                 Button(onClick = { saveSuccessMessage = null }) { Text("OK") }
@@ -465,7 +447,7 @@ private fun SelectionActionBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Выбрано: $selectedCount",
+                "Р’С‹Р±СЂР°РЅРѕ: $selectedCount",
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier.weight(1f)
@@ -473,7 +455,7 @@ private fun SelectionActionBar(
             OutlinedButton(
                 onClick = onClear,
                 shape = RoundedCornerShape(10.dp)
-            ) { Text("Снять") }
+            ) { Text("РЎРЅСЏС‚СЊ") }
             Spacer(Modifier.width(8.dp))
             Button(
                 onClick = onDelete,
@@ -484,7 +466,7 @@ private fun SelectionActionBar(
             ) {
                 Icon(Icons.Outlined.DeleteForever, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
-                Text("Удалить")
+                Text("РЈРґР°Р»РёС‚СЊ")
             }
         }
     }
@@ -520,7 +502,7 @@ private fun ReportTablePreview(
     ) {
         Column(Modifier.padding(8.dp)) {
             Text(
-                "Превью таблицы. Клик по заголовку сортирует, чек-боксы слева — для пакетного удаления.",
+                "РџСЂРµРІСЊСЋ С‚Р°Р±Р»РёС†С‹. РљР»РёРє РїРѕ Р·Р°РіРѕР»РѕРІРєСѓ СЃРѕСЂС‚РёСЂСѓРµС‚, С‡РµРє-Р±РѕРєСЃС‹ СЃР»РµРІР° вЂ” РґР»СЏ РїР°РєРµС‚РЅРѕРіРѕ СѓРґР°Р»РµРЅРёСЏ.",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 6.dp, top = 4.dp, bottom = 6.dp)
@@ -560,7 +542,7 @@ private fun ReportTablePreview(
                         )
                     }
                     SortableHeader(
-                        text = "№",
+                        text = "в„–",
                         width = PT_NUM,
                         end = true,
                         field = SortField.DATE,
@@ -570,7 +552,7 @@ private fun ReportTablePreview(
                         showIndicator = false
                     )
                     SortableHeader(
-                        text = "Юр. лицо",
+                        text = "Р®СЂ. Р»РёС†Рѕ",
                         width = PT_SELLER,
                         field = SortField.SELLER,
                         currentField = sortField,
@@ -578,7 +560,7 @@ private fun ReportTablePreview(
                         onClick = onToggleSort
                     )
                     SortableHeader(
-                        text = "Сумма",
+                        text = "РЎСѓРјРјР°",
                         width = PT_TOTAL,
                         end = true,
                         field = SortField.TOTAL,
@@ -587,7 +569,7 @@ private fun ReportTablePreview(
                         onClick = onToggleSort
                     )
                     SortableHeader(
-                        text = "НДС",
+                        text = "РќР”РЎ",
                         width = PT_VAT,
                         end = true,
                         field = SortField.VAT,
@@ -596,7 +578,7 @@ private fun ReportTablePreview(
                         onClick = onToggleSort
                     )
                     SortableHeader(
-                        text = "Дата",
+                        text = "Р”Р°С‚Р°",
                         width = PT_DATE,
                         field = SortField.DATE,
                         currentField = sortField,
@@ -613,7 +595,7 @@ private fun ReportTablePreview(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "Нет чеков за выбранный период",
+                            "РќРµС‚ С‡РµРєРѕРІ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -649,7 +631,7 @@ private fun ReportTablePreview(
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .padding(vertical = 8.dp, horizontal = 4.dp)
                     ) {
-                        BodyCell("Итого:", PT_CHECK + PT_NUM + PT_SELLER, end = true, bold = true)
+                        BodyCell("РС‚РѕРіРѕ:", PT_CHECK + PT_NUM + PT_SELLER, end = true, bold = true)
                         BodyCell(MoneyFormat.fromTiyin(totalSum), PT_TOTAL, end = true, bold = true)
                         BodyCell(MoneyFormat.fromTiyin(totalVat), PT_VAT, end = true, bold = true)
                         BodyCell("", PT_DATE)
@@ -741,36 +723,36 @@ private fun ReportPreviewCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("Шапка отчёта", fontWeight = FontWeight.SemiBold)
+            Text("РЁР°РїРєР° РѕС‚С‡С‘С‚Р°", fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(8.dp))
             Column {
-                InfoRow("Пользователь:", userFullName)
-                InfoRow("Должность:", position)
+                InfoRow("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ:", userFullName)
+                InfoRow("Р”РѕР»Р¶РЅРѕСЃС‚СЊ:", position)
                 InfoRow(
-                    "Период:",
-                    "${DateFormat.formatDate(from)} — ${DateFormat.formatDate(to)}"
+                    "РџРµСЂРёРѕРґ:",
+                    "${DateFormat.formatDate(from)} вЂ” ${DateFormat.formatDate(to)}"
                 )
-                InfoRow("Количество чеков:", count.toString())
+                InfoRow("РљРѕР»РёС‡РµСЃС‚РІРѕ С‡РµРєРѕРІ:", count.toString())
             }
             Spacer(Modifier.height(10.dp))
             HorizontalDivider()
             Spacer(Modifier.height(10.dp))
             Row {
                 Column(Modifier.weight(1f)) {
-                    Text("Итого сумма", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text("РС‚РѕРіРѕ СЃСѓРјРјР°", color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
                     Text(
-                        MoneyFormat.fromTiyin(totalSum) + " сум",
+                        MoneyFormat.fromTiyin(totalSum) + " СЃСѓРј",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                    Text("Итого НДС", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text("РС‚РѕРіРѕ РќР”РЎ", color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
                     Text(
-                        MoneyFormat.fromTiyin(totalVat) + " сум",
+                        MoneyFormat.fromTiyin(totalVat) + " СЃСѓРј",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -806,4 +788,6 @@ private fun InfoRow(label: String, value: String, endAlign: Boolean = false) {
         }
     }
 }
+
+
 

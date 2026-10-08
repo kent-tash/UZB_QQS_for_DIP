@@ -1,8 +1,7 @@
-package com.example.uzb_qqs_for_dip.ui.components
+﻿package com.example.uzb_qqs_for_dip.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +14,6 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -32,61 +30,61 @@ fun ExportActionGrid(
     saveProgress: Float,
     isSaveEnabled: Boolean = true,
     isOpenPrintEnabled: Boolean = true,
-    saveProgressLabel: String = "Сохранение… ${(saveProgress * 100).toInt()}%"
+    saveProgressLabel: String = "Сохранение %"
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        Button(
+            onClick = onSave,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            enabled = isSaveEnabled
         ) {
-            Button(
-                onClick = onSave,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                enabled = isSaveEnabled
-            ) {
-                Icon(Icons.Outlined.SaveAlt, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Сохранить")
-            }
-            androidx.compose.material3.FilledTonalButton(
-                onClick = onShare,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                enabled = isSaveEnabled
-            ) {
-                Icon(Icons.Outlined.Share, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Поделиться")
-            }
+            Icon(Icons.Outlined.SaveAlt, contentDescription = null)
+            Spacer(Modifier.size(8.dp))
+            Text("Сохранить")
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        Button(
+            onClick = onShare,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            enabled = isSaveEnabled,
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary
+            )
         ) {
-            OutlinedButton(
-                onClick = onOpen,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                enabled = isOpenPrintEnabled
-            ) {
-                Icon(Icons.Outlined.Visibility, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Открыть")
-            }
-            androidx.compose.material3.TextButton(
-                onClick = onPrint,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                enabled = isOpenPrintEnabled
-            ) {
-                Icon(Icons.Outlined.Print, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Печать")
-            }
+            Icon(Icons.Outlined.Share, contentDescription = null)
+            Spacer(Modifier.size(8.dp))
+            Text("Поделиться")
+        }
+        Button(
+            onClick = onOpen,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            enabled = isOpenPrintEnabled,
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.tertiary
+            )
+        ) {
+            Icon(Icons.Outlined.Visibility, contentDescription = null)
+            Spacer(Modifier.size(8.dp))
+            Text("Открыть")
+        }
+        Button(
+            onClick = onPrint,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            enabled = isOpenPrintEnabled,
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
+                contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
+            Icon(Icons.Outlined.Print, contentDescription = null)
+            Spacer(Modifier.size(8.dp))
+            Text("Печать")
         }
     }
 

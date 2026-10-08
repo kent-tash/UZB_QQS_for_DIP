@@ -4,7 +4,6 @@ import android.content.ContentValues
 import com.example.uzb_qqs_for_dip.data.db.DbHelper
 import com.example.uzb_qqs_for_dip.data.model.AuditDeclaration
 import com.example.uzb_qqs_for_dip.data.model.AuditStatus
-import com.example.uzb_qqs_for_dip.data.model.UserRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

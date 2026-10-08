@@ -69,8 +69,9 @@ object ReceiptsSheetPdfGenerator {
                 textAlign = Paint.Align.CENTER
             }
 
-            val totalPages = if (rowsInOrder.isEmpty()) 1
-            else (rowsInOrder.size + PER_PAGE - 1) / PER_PAGE
+            val manualReceiptsCount = rowsInOrder.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
+            val gridPages = if (rowsInOrder.isEmpty()) 1 else (rowsInOrder.size + PER_PAGE - 1) / PER_PAGE
+            val totalPages = gridPages + manualReceiptsCount
 
             val sheetTitle =
                 "Сохранённые чеки (${rowsInOrder.size}) за $periodLabel"
@@ -88,7 +89,7 @@ object ReceiptsSheetPdfGenerator {
             val cellW = (gridW - GAP * (COLS - 1)) / COLS
             val cellH = (gridH - GAP * (ROWS - 1)) / ROWS
 
-            for (pageIndex in 0 until totalPages) {
+            for (pageIndex in 0 until gridPages) {
                 val pageNumber = pageIndex + 1
                 val page = doc.startPage(
                     PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, pageNumber).create()
@@ -146,6 +147,47 @@ object ReceiptsSheetPdfGenerator {
                 )
 
                 doc.finishPage(page)
+            }
+
+            // --- Добавление страниц с фото для чеков, добавленных вручную ---
+            val manualReceipts = rowsInOrder.mapIndexedNotNull { index, row ->
+                if (row.receipt.isManual && row.receipt.manualPhotoUri != null) {
+                    index + 1 to row.receipt
+                } else null
+            }
+
+            var manualSeq = 1
+            for ((tableIdx, receipt) in manualReceipts) {
+                val photoFile = java.io.File(receipt.manualPhotoUri!!)
+                if (photoFile.exists()) {
+                    val pageNumber = gridPages + manualSeq
+                    val page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, pageNumber).create())
+                    val canvas = page.canvas
+
+                    val attachTitle = "Фото ручного чека № $tableIdx (в реестре)"
+                    canvas.drawText(attachTitle, PAGE_W / 2f, MARGIN + titlePaint.textSize, titlePaint.apply { textAlign = Paint.Align.CENTER })
+                    titlePaint.textAlign = Paint.Align.LEFT // Возвращаем как было
+
+                    val bitmap = android.graphics.BitmapFactory.decodeFile(receipt.manualPhotoUri)
+                    if (bitmap != null) {
+                        val imgMaxWidth = PAGE_W - 2f * MARGIN
+                        val imgMaxHeight = PAGE_H - 2f * MARGIN - titlePaint.textSize - 20f
+                        val scale = minOf(imgMaxWidth / bitmap.width, imgMaxHeight / bitmap.height, 1f)
+                        val scaledWidth = bitmap.width * scale
+                        val scaledHeight = bitmap.height * scale
+                        
+                        val imgLeft = (PAGE_W - scaledWidth) / 2f
+                        val imgTop = MARGIN + titlePaint.textSize + 20f
+                        
+                        val destRect = android.graphics.RectF(imgLeft, imgTop, imgLeft + scaledWidth, imgTop + scaledHeight)
+                        canvas.drawBitmap(bitmap, null, destRect, null)
+                        bitmap.recycle()
+                    }
+
+                    canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W / 2f, PAGE_H - 8f, pagePaint)
+                    doc.finishPage(page)
+                    manualSeq++
+                }
             }
 
             FileOutputStream(file).use { doc.writeTo(it) }
@@ -226,7 +268,7 @@ object ReceiptsSheetPdfGenerator {
 
     private fun ellipsizeToWidth(s: String, paint: TextPaint, maxWidth: Float): String {
         var u = s.trim()
-        while (u.isNotEmpty() && paint.measureText("$u…") > maxWidth) u = u.dropLast(1)
-        return if (u.isEmpty()) "…" else "$u…"
+        while (u.isNotEmpty() && paint.measureText("$u...") > maxWidth) u = u.dropLast(1)
+        return if (u.isEmpty()) "..." else "$u..."
     }
 }

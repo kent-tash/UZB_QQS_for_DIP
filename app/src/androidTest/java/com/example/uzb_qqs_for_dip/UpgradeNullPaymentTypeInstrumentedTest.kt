@@ -1,6 +1,5 @@
 package com.example.uzb_qqs_for_dip
 
-import android.content.ContentValues
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.uzb_qqs_for_dip.data.AppContainer
@@ -11,7 +10,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
 
 /**
  * Имитирует обновление с версии без колонки payment_type (v1.1):

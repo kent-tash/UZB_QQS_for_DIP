@@ -1,4 +1,4 @@
-package com.example.uzb_qqs_for_dip.ui.screens
+﻿package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -101,12 +102,6 @@ fun ProfileScreen(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            "Профиль",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -132,7 +127,7 @@ fun ProfileScreen(
                     Spacer(Modifier.size(14.dp))
                     Column {
                         Text(
-                            user?.fullName ?: "Не авторизован",
+                            user?.fullName ?: "РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -149,13 +144,13 @@ fun ProfileScreen(
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
 
-                ProfileRow("Имя", user?.fullName ?: "—")
-                ProfileRow("Должность", user?.position ?: "—")
-                ProfileRow("И.О. Фамилия для подписи", user?.initialsSurname ?: "—")
-                ProfileRow("Организация", user?.organization?.ifBlank { "—" } ?: "—")
+                ProfileRow("РРјСЏ", user?.fullName ?: "вЂ”")
+                ProfileRow("Р”РѕР»Р¶РЅРѕСЃС‚СЊ", user?.position ?: "вЂ”")
+                ProfileRow("Р.Рћ. Р¤Р°РјРёР»РёСЏ РґР»СЏ РїРѕРґРїРёСЃРё", user?.initialsSurname ?: "вЂ”")
+                ProfileRow("РћСЂРіР°РЅРёР·Р°С†РёСЏ", user?.organization?.ifBlank { "вЂ”" } ?: "вЂ”")
                 ProfileRow(
-                    "Роль",
-                    if (user?.role == UserRole.AUDITOR) "Аудитор" else "Сотрудник"
+                    "Р РѕР»СЊ",
+                    if (user?.role == UserRole.AUDITOR) "РђСѓРґРёС‚РѕСЂ" else "РЎРѕС‚СЂСѓРґРЅРёРє"
                 )
             }
         }
@@ -169,29 +164,29 @@ fun ProfileScreen(
         ) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "Режим работы",
+                    "Р РµР¶РёРј СЂР°Р±РѕС‚С‹",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     if (user?.role == UserRole.AUDITOR)
-                        "Вы работаете в режиме «Аудитор». Доступна вкладка «Аудит» для квартальной сверки."
+                        "Р’С‹ СЂР°Р±РѕС‚Р°РµС‚Рµ РІ СЂРµР¶РёРјРµ В«РђСѓРґРёС‚РѕСЂВ». Р”РѕСЃС‚СѓРїРЅР° РІРєР»Р°РґРєР° В«РђСѓРґРёС‚В» РґР»СЏ РєРІР°СЂС‚Р°Р»СЊРЅРѕР№ СЃРІРµСЂРєРё."
                     else
-                        "Вы работаете в режиме «Сотрудник». Включите режим аудитора, чтобы получить доступ к вкладке «Аудит».",
+                        "Р’С‹ СЂР°Р±РѕС‚Р°РµС‚Рµ РІ СЂРµР¶РёРјРµ В«РЎРѕС‚СЂСѓРґРЅРёРєВ». Р’РєР»СЋС‡РёС‚Рµ СЂРµР¶РёРј Р°СѓРґРёС‚РѕСЂР°, С‡С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ РґРѕСЃС‚СѓРї Рє РІРєР»Р°РґРєРµ В«РђСѓРґРёС‚В».",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Button(
                     onClick = { appViewModel.switchCurrentUserRole() },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
                     Text(
                         if (user?.role == UserRole.AUDITOR)
-                            "Переключить на «Сотрудник»"
+                            "РџРµСЂРµРєР»СЋС‡РёС‚СЊ РЅР° В«РЎРѕС‚СЂСѓРґРЅРёРєВ»"
                         else
-                            "Переключить на «Аудитор»"
+                            "РџРµСЂРµРєР»СЋС‡РёС‚СЊ РЅР° В«РђСѓРґРёС‚РѕСЂВ»"
                     )
                 }
             }
@@ -205,110 +200,107 @@ fun ProfileScreen(
         ) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "Резервная копия",
+                    "Р РµР·РµСЂРІРЅР°СЏ РєРѕРїРёСЏ",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    "Один файл JSON: все профили, сохранённые чеки и настройки отчёта.",
+                    "РћРґРёРЅ С„Р°Р№Р» JSON: РІСЃРµ РїСЂРѕС„РёР»Рё, СЃРѕС…СЂР°РЅС‘РЅРЅС‹Рµ С‡РµРєРё Рё РЅР°СЃС‚СЂРѕР№РєРё РѕС‚С‡С‘С‚Р°.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedButton(
+                Button(
                     onClick = {
                         val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
                         createBackupLauncher.launch("${AppBackup.FILE_BASE_NAME}_$stamp.json")
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(Icons.Outlined.SaveAlt, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text("Создать бэкап")
+                    Text("РЎРѕР·РґР°С‚СЊ Р±СЌРєР°Рї")
                 }
-                OutlinedButton(
-                    onClick = { appViewModel.shareBackup(context) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Outlined.Share, contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text("Поделиться данными")
-                }
-                OutlinedButton(
+                Button(
                     onClick = {
                         openBackupLauncher.launch(arrayOf(AppBackup.MIME_TYPE, "*/*"))
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
                 ) {
                     Icon(Icons.Outlined.FolderOpen, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text("Загрузить бэкап")
+                    Text("Р—Р°РіСЂСѓР·РёС‚СЊ Р±СЌРєР°Рї")
+                }
+                Button(
+                    onClick = { appViewModel.shareBackup(context) },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Icon(Icons.Outlined.Share, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text("РџРѕРґРµР»РёС‚СЊСЃСЏ РґР°РЅРЅС‹РјРё")
                 }
             }
         }
 
         if (user != null) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(
-                    onClick = {
-                        appViewModel.clearEditError()
-                        editing = true
-                    },
-                    modifier = Modifier.weight(1f),
+            Button(
+                onClick = {
+                    appViewModel.clearEditError()
+                    editing = true
+                },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Outlined.Edit, contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text("Редактировать")
-                }
-                OutlinedButton(
-                    onClick = { pendingDelete = true },
-                    modifier = Modifier.weight(1f),
+            ) {
+                Icon(Icons.Outlined.Edit, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text("Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ")
+            }
+
+            Button(
+                onClick = {
+                    appViewModel.logout()
+                    onLoggedOut()
+                },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Outlined.DeleteForever, contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text("Удалить")
-                }
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text("Р’С‹Р№С‚Рё РёР· РїСЂРѕС„РёР»СЏ")
+            }
+
+            Button(
+                onClick = { pendingDelete = true },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(Icons.Outlined.DeleteForever, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text("РЈРґР°Р»РёС‚СЊ")
             }
         }
-
-        OutlinedButton(
-            onClick = {
-                appViewModel.logout()
-                onLoggedOut()
-            },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.error
-            )
-        ) {
-            Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text("Выйти из профиля")
-        }
-
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Все ранее сохранённые чеки остаются в базе и привязаны к этому профилю. " +
-                "При удалении профиля все его чеки также будут удалены.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 
     selectedBackupUri?.let { uri ->
         if (!showReplaceWarning) {
             AlertDialog(
                 onDismissRequest = { selectedBackupUri = null },
-                title = { Text("Как использовать файл?") },
-                text = { Text("Вы можете добавить данные к текущим или полностью заменить базу.") },
+                title = { Text("РљР°Рє РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ С„Р°Р№Р»?") },
+                text = { Text("Р’С‹ РјРѕР¶РµС‚Рµ РґРѕР±Р°РІРёС‚СЊ РґР°РЅРЅС‹Рµ Рє С‚РµРєСѓС‰РёРј РёР»Рё РїРѕР»РЅРѕСЃС‚СЊСЋ Р·Р°РјРµРЅРёС‚СЊ Р±Р°Р·Сѓ.") },
                 confirmButton = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -320,27 +312,27 @@ fun ProfileScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error
                             )
-                        ) { Text("Полностью заменить") }
+                        ) { Text("РџРѕР»РЅРѕСЃС‚СЊСЋ Р·Р°РјРµРЅРёС‚СЊ") }
                         
                         Button(
                             onClick = {
                                 selectedBackupUri = null
-                                android.widget.Toast.makeText(context, "Начато слияние баз...", android.widget.Toast.LENGTH_SHORT).show()
+                                android.widget.Toast.makeText(context, "РќР°С‡Р°С‚Рѕ СЃР»РёСЏРЅРёРµ Р±Р°Р·...", android.widget.Toast.LENGTH_SHORT).show()
                                 appViewModel.mergeBackupFromUri(context, uri)
                             },
                             modifier = Modifier.weight(1f)
-                        ) { Text("Добавить к текущим") }
+                        ) { Text("Р”РѕР±Р°РІРёС‚СЊ Рє С‚РµРєСѓС‰РёРј") }
                     }
                 },
                 dismissButton = {
-                    OutlinedButton(onClick = { selectedBackupUri = null }) { Text("Отмена") }
+                    OutlinedButton(onClick = { selectedBackupUri = null }) { Text("РћС‚РјРµРЅР°") }
                 }
             )
         } else {
             AlertDialog(
                 onDismissRequest = { showReplaceWarning = false },
-                title = { Text("Внимание! Вы уверены в полной замене базы?") },
-                text = { Text("Текущие данные будут безвозвратно потеряны.") },
+                title = { Text("Р’РЅРёРјР°РЅРёРµ! Р’С‹ СѓРІРµСЂРµРЅС‹ РІ РїРѕР»РЅРѕР№ Р·Р°РјРµРЅРµ Р±Р°Р·С‹?") },
+                text = { Text("РўРµРєСѓС‰РёРµ РґР°РЅРЅС‹Рµ Р±СѓРґСѓС‚ Р±РµР·РІРѕР·РІСЂР°С‚РЅРѕ РїРѕС‚РµСЂСЏРЅС‹.") },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -351,10 +343,10 @@ fun ProfileScreen(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error
                         )
-                    ) { Text("Да, заменить") }
+                    ) { Text("Р”Р°, Р·Р°РјРµРЅРёС‚СЊ") }
                 },
                 dismissButton = {
-                    OutlinedButton(onClick = { showReplaceWarning = false }) { Text("Отмена") }
+                    OutlinedButton(onClick = { showReplaceWarning = false }) { Text("РћС‚РјРµРЅР°") }
                 }
             )
         }
@@ -392,11 +384,11 @@ fun ProfileScreen(
         val u = user
         AlertDialog(
             onDismissRequest = { pendingDelete = false },
-            title = { Text("Удалить профиль?") },
+            title = { Text("РЈРґР°Р»РёС‚СЊ РїСЂРѕС„РёР»СЊ?") },
             text = {
                 Text(
-                    "Профиль «${u?.fullName ?: ""}» и все связанные с ним сохранённые чеки " +
-                        "будут удалены безвозвратно."
+                    "РџСЂРѕС„РёР»СЊ В«${u?.fullName ?: ""}В» Рё РІСЃРµ СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ РЅРёРј СЃРѕС…СЂР°РЅС‘РЅРЅС‹Рµ С‡РµРєРё " +
+                        "Р±СѓРґСѓС‚ СѓРґР°Р»РµРЅС‹ Р±РµР·РІРѕР·РІСЂР°С‚РЅРѕ."
                 )
             },
             confirmButton = {
@@ -410,10 +402,10 @@ fun ProfileScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
-                ) { Text("Удалить") }
+                ) { Text("РЈРґР°Р»РёС‚СЊ") }
             },
             dismissButton = {
-                OutlinedButton(onClick = { pendingDelete = false }) { Text("Отмена") }
+                OutlinedButton(onClick = { pendingDelete = false }) { Text("РћС‚РјРµРЅР°") }
             }
         )
     }
@@ -442,8 +434,8 @@ private fun ProfileRow(label: String, value: String) {
 }
 
 /**
- * Диалог редактирования полей текущего профиля. Используется и из вкладки «Профиль»,
- * и из экрана авторизации (карандашик у каждого профиля).
+ * Р”РёР°Р»РѕРі СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РїРѕР»РµР№ С‚РµРєСѓС‰РµРіРѕ РїСЂРѕС„РёР»СЏ. РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ Рё РёР· РІРєР»Р°РґРєРё В«РџСЂРѕС„РёР»СЊВ»,
+ * Рё РёР· СЌРєСЂР°РЅР° Р°РІС‚РѕСЂРёР·Р°С†РёРё (РєР°СЂР°РЅРґР°С€РёРє Сѓ РєР°Р¶РґРѕРіРѕ РїСЂРѕС„РёР»СЏ).
  */
 @Composable
 fun EditProfileDialog(
@@ -454,7 +446,7 @@ fun EditProfileDialog(
     onClearError: () -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (fullName: String, position: String, organization: String) -> Unit,
-    title: String = "Редактирование профиля"
+    title: String = "Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РїСЂРѕС„РёР»СЏ"
 ) {
     var fullName by remember { mutableStateOf(initialFullName) }
     var position by remember { mutableStateOf(initialPosition) }
@@ -474,7 +466,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it; onClearError() },
-                    label = { Text("Имя пользователя (полностью)") },
+                    label = { Text("РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РїРѕР»РЅРѕСЃС‚СЊСЋ)") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -482,7 +474,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = position,
                     onValueChange = { position = it; onClearError() },
-                    label = { Text("Должность") },
+                    label = { Text("Р”РѕР»Р¶РЅРѕСЃС‚СЊ") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -490,7 +482,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = organization,
                     onValueChange = { organization = it; onClearError() },
-                    label = { Text("Организация (необязательно)") },
+                    label = { Text("РћСЂРіР°РЅРёР·Р°С†РёСЏ (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ)") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -506,13 +498,17 @@ fun EditProfileDialog(
         },
         confirmButton = {
             Button(onClick = { onConfirm(fullName, position, organization) }) {
-                Text("Сохранить")
+                Text("РЎРѕС…СЂР°РЅРёС‚СЊ")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
+            OutlinedButton(onClick = onDismiss) { Text("РћС‚РјРµРЅР°") }
         }
     )
 }
+
+
+
+
 
 

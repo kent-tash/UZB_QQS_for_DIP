@@ -43,6 +43,8 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_V
                 verified_at INTEGER,
                 verified_by INTEGER,
                 created_at INTEGER NOT NULL,
+                is_manual INTEGER NOT NULL DEFAULT 0,
+                manual_photo_uri TEXT,
                 FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
             )
             """.trimIndent()
@@ -99,7 +101,9 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_V
             "raw_text" to "TEXT",
             "source" to "TEXT NOT NULL DEFAULT 'APP'",
             "verified_at" to "INTEGER",
-            "verified_by" to "INTEGER"
+            "verified_by" to "INTEGER",
+            "is_manual" to "INTEGER NOT NULL DEFAULT 0",
+            "manual_photo_uri" to "TEXT"
         )
         for ((column, type) in optionalColumns) {
             if (column !in existing) {
@@ -156,6 +160,6 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_V
 
     companion object {
         const val DB_NAME = "uzb_qqs.db"
-        const val DB_VERSION = 9
+        const val DB_VERSION = 10
     }
 }

@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
@@ -46,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -134,7 +132,7 @@ fun MultiQrCameraScannerDialog(
     }
 }
 
-@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 private fun MultiQrCameraContent(
     onDismiss: () -> Unit,
@@ -146,6 +144,7 @@ private fun MultiQrCameraContent(
     var status by remember { mutableStateOf(ValidationStatus.IDLE) }
     var message by remember { mutableStateOf("") }
     val alreadyScanned = remember { mutableSetOf<String>() }
+    var successCount by remember { mutableStateOf(0) }
 
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val analyzing = remember { AtomicBoolean(false) }
@@ -216,8 +215,9 @@ private fun MultiQrCameraContent(
                                         val (success, msg) = onQrDetected(raw)
                                         message = msg
                                         status = if (success) ValidationStatus.SUCCESS else ValidationStatus.ERROR
+                                        if (success) successCount++
                                         
-                                        delay(1500)
+                                        delay(2500) // Keep the snackbar visible a bit longer
                                         status = ValidationStatus.IDLE
                                         message = ""
                                     }
@@ -244,36 +244,6 @@ private fun MultiQrCameraContent(
             }
         )
 
-        if (status != ValidationStatus.IDLE) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.6f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    when (status) {
-                        ValidationStatus.VALIDATING -> {
-                            CircularProgressIndicator(color = Color.White)
-                            Spacer(Modifier.height(16.dp))
-                            Text("Проверка...", color = Color.White, style = MaterialTheme.typography.titleLarge)
-                        }
-                        ValidationStatus.SUCCESS -> {
-                            Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(80.dp))
-                            Spacer(Modifier.height(16.dp))
-                            Text(message.ifEmpty { "Успешно сохранено!" }, color = Color.White, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
-                        }
-                        ValidationStatus.ERROR -> {
-                            Icon(Icons.Filled.Error, null, tint = Color(0xFFF44336), modifier = Modifier.size(80.dp))
-                            Spacer(Modifier.height(16.dp))
-                            Text(message, color = Color.White, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
-                        }
-                        else -> Unit
-                    }
-                }
-            }
-        }
-
         Column(
             Modifier
                 .fillMaxWidth()
@@ -292,6 +262,12 @@ private fun MultiQrCameraContent(
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleMedium
                 )
+                Text(
+                    "Успешно: $successCount",
+                    color = Color(0xFF4CAF50),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Outlined.Close, "Закрыть", tint = Color.White)
                 }
@@ -301,6 +277,36 @@ private fun MultiQrCameraContent(
                 color = Color.White.copy(alpha = 0.85f),
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+
+        if (status != ValidationStatus.IDLE) {
+            val bgColor = when {
+                status == ValidationStatus.VALIDATING -> Color.DarkGray
+                status == ValidationStatus.SUCCESS -> Color(0xFF4CAF50) // Green
+                message.contains("НДС") -> Color(0xFFFF9800) // Orange
+                message.contains("уже был") -> Color(0xFFFF9800) // Orange
+                else -> Color(0xFFF44336) // Red
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 90.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(bgColor, RoundedCornerShape(8.dp))
+                    .padding(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (status == ValidationStatus.VALIDATING) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.padding(horizontal = 8.dp))
+                    }
+                    Text(
+                        text = if (status == ValidationStatus.VALIDATING) "Проверка..." else message,
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
 
         Column(

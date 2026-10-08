@@ -1,4 +1,4 @@
-package com.example.uzb_qqs_for_dip.ui.navigation
+﻿package com.example.uzb_qqs_for_dip.ui.navigation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
@@ -36,7 +36,7 @@ import com.example.uzb_qqs_for_dip.data.model.UserRole
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
-import com.example.uzb_qqs_for_dip.ui.components.HelpDialog
+import com.example.uzb_qqs_for_dip.ui.components.HelpBottomSheet
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorReceiptSearchScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
@@ -54,11 +54,11 @@ private sealed class TopRoute(val route: String) {
 }
 
 private sealed class MainTab(val route: String, val title: String, val icon: ImageVector) {
-    data object Scan : MainTab("main/scan", "Добавить", Icons.Outlined.QrCodeScanner)
-    data object Receipts : MainTab("main/receipts", "Чеки", Icons.Outlined.TableChart)
-    data object Report : MainTab("main/report", "Отчёт", Icons.Outlined.Description)
-    data object Audit : MainTab("main/audit", "Аудит", Icons.AutoMirrored.Outlined.FactCheck)
-    data object Profile : MainTab("main/profile", "Профиль", Icons.Outlined.Person)
+    data object Scan : MainTab("main/scan", "Р”РѕР±Р°РІРёС‚СЊ", Icons.Outlined.QrCodeScanner)
+    data object Receipts : MainTab("main/receipts", "Р§РµРєРё", Icons.Outlined.TableChart)
+    data object Report : MainTab("main/report", "РћС‚С‡С‘С‚", Icons.Outlined.Description)
+    data object Audit : MainTab("main/audit", "РђСѓРґРёС‚", Icons.AutoMirrored.Outlined.FactCheck)
+    data object Profile : MainTab("main/profile", "РџСЂРѕС„РёР»СЊ", Icons.Outlined.Person)
     companion object {
         val employee = listOf(Scan, Receipts, Report, Profile)
         val auditor = listOf(Audit, Receipts, Report, Profile)
@@ -126,7 +126,7 @@ private fun MainScaffold(
 
     var showHelpDialog by remember { mutableStateOf(false) }
     if (showHelpDialog) {
-        HelpDialog(onDismissRequest = { showHelpDialog = false })
+        HelpBottomSheet(onDismissRequest = { showHelpDialog = false })
     }
 
     Scaffold(
@@ -142,7 +142,7 @@ private fun MainScaffold(
                 },
                 actions = {
                     IconButton(onClick = { showHelpDialog = true }) {
-                        Icon(Icons.Outlined.HelpOutline, contentDescription = "Помощь")
+                        Icon(Icons.Outlined.HelpOutline, contentDescription = "РџРѕРјРѕС‰СЊ")
                     }
                 }
             )
@@ -231,3 +231,5 @@ private fun MainScaffold(
         }
     }
 }
+
+

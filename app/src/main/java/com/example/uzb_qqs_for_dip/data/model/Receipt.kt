@@ -38,7 +38,9 @@ data class Receipt(
     val sn: String? = null,
     val rawText: String? = null,
     val source: ReceiptSource = ReceiptSource.APP,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val isManual: Boolean = false,
+    val manualPhotoUri: String? = null
 )
 
 /** То же, что [Receipt], но с полями пользователя — для отображения в таблице. */

@@ -1,4 +1,4 @@
-package com.example.uzb_qqs_for_dip.ui
+﻿package com.example.uzb_qqs_for_dip.ui
 
 import android.app.Application
 import android.content.Context
@@ -57,13 +57,13 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     ) { id, list -> list.firstOrNull { it.id == id } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    /** Общий стейт настроек (фильтр + сортировка), общий с вкладкой «Чеки». */
+    /** РћР±С‰РёР№ СЃС‚РµР№С‚ РЅР°СЃС‚СЂРѕРµРє (С„РёР»СЊС‚СЂ + СЃРѕСЂС‚РёСЂРѕРІРєР°), РѕР±С‰РёР№ СЃ РІРєР»Р°РґРєРѕР№ В«Р§РµРєРёВ». */
     val settings: StateFlow<ReportSettings> = container.reportSettings.settings
 
     /**
-     * Чеки выбранного пользователя за выбранный период, отсортированные согласно
-     * текущему [SortField]/[SortOrder]. На основе этого списка строится PDF-отчёт
-     * и подсвечивается № в карточке чека на вкладке «Чеки».
+     * Р§РµРєРё РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ, РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Рµ СЃРѕРіР»Р°СЃРЅРѕ
+     * С‚РµРєСѓС‰РµРјСѓ [SortField]/[SortOrder]. РќР° РѕСЃРЅРѕРІРµ СЌС‚РѕРіРѕ СЃРїРёСЃРєР° СЃС‚СЂРѕРёС‚СЃСЏ PDF-РѕС‚С‡С‘С‚
+     * Рё РїРѕРґСЃРІРµС‡РёРІР°РµС‚СЃСЏ в„– РІ РєР°СЂС‚РѕС‡РєРµ С‡РµРєР° РЅР° РІРєР»Р°РґРєРµ В«Р§РµРєРёВ».
      */
     val rows: StateFlow<List<ReceiptWithUser>> = combine(
         container.receiptRepository.receipts,
@@ -92,16 +92,16 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     val savePhase: StateFlow<String> = _savePhase.asStateFlow()
 
     /**
-     * Идентификаторы чеков, отмеченных пользователем для пакетного удаления.
-     * Множество живёт между перерисовками экрана и сбрасывается, когда меняются
-     * настройки фильтра (другой пользователь / период / сортировка), чтобы случайно
-     * не удалять записи, которые сейчас не видны.
+     * РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹ С‡РµРєРѕРІ, РѕС‚РјРµС‡РµРЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј РґР»СЏ РїР°РєРµС‚РЅРѕРіРѕ СѓРґР°Р»РµРЅРёСЏ.
+     * РњРЅРѕР¶РµСЃС‚РІРѕ Р¶РёРІС‘С‚ РјРµР¶РґСѓ РїРµСЂРµСЂРёСЃРѕРІРєР°РјРё СЌРєСЂР°РЅР° Рё СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ, РєРѕРіРґР° РјРµРЅСЏСЋС‚СЃСЏ
+     * РЅР°СЃС‚СЂРѕР№РєРё С„РёР»СЊС‚СЂР° (РґСЂСѓРіРѕР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ / РїРµСЂРёРѕРґ / СЃРѕСЂС‚РёСЂРѕРІРєР°), С‡С‚РѕР±С‹ СЃР»СѓС‡Р°Р№РЅРѕ
+     * РЅРµ СѓРґР°Р»СЏС‚СЊ Р·Р°РїРёСЃРё, РєРѕС‚РѕСЂС‹Рµ СЃРµР№С‡Р°СЃ РЅРµ РІРёРґРЅС‹.
      */
     private val _selectedIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedIds: StateFlow<Set<Long>> = _selectedIds.asStateFlow()
 
     init {
-        // Подставляем текущего пользователя в фильтр по умолчанию.
+        // РџРѕРґСЃС‚Р°РІР»СЏРµРј С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ С„РёР»СЊС‚СЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ.
         viewModelScope.launch {
             currentUser.collect { user ->
                 if (settings.value.userId == null && user != null) {
@@ -109,12 +109,12 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
-        // Любое изменение фильтра/сортировки/пользователя — снимаем выделение.
+        // Р›СЋР±РѕРµ РёР·РјРµРЅРµРЅРёРµ С„РёР»СЊС‚СЂР°/СЃРѕСЂС‚РёСЂРѕРІРєРё/РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ вЂ” СЃРЅРёРјР°РµРј РІС‹РґРµР»РµРЅРёРµ.
         viewModelScope.launch {
             settings.collect { _selectedIds.value = emptySet() }
         }
-        // На всякий случай чистим выделение, если выбранный чек больше не виден
-        // (например, удалён в другой вкладке или каскадно при удалении профиля).
+        // РќР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№ С‡РёСЃС‚РёРј РІС‹РґРµР»РµРЅРёРµ, РµСЃР»Рё РІС‹Р±СЂР°РЅРЅС‹Р№ С‡РµРє Р±РѕР»СЊС€Рµ РЅРµ РІРёРґРµРЅ
+        // (РЅР°РїСЂРёРјРµСЂ, СѓРґР°Р»С‘РЅ РІ РґСЂСѓРіРѕР№ РІРєР»Р°РґРєРµ РёР»Рё РєР°СЃРєР°РґРЅРѕ РїСЂРё СѓРґР°Р»РµРЅРёРё РїСЂРѕС„РёР»СЏ).
         viewModelScope.launch {
             rows.collect { visible ->
                 val visibleIds = visible.mapTo(HashSet()) { it.receipt.id }
@@ -139,8 +139,8 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Удаляет все отмеченные чеки одним батчем. Картинки-карточки удаляем тоже,
-     * чтобы они не оставались на диске «осиротевшими».
+     * РЈРґР°Р»СЏРµС‚ РІСЃРµ РѕС‚РјРµС‡РµРЅРЅС‹Рµ С‡РµРєРё РѕРґРЅРёРј Р±Р°С‚С‡РµРј. РљР°СЂС‚РёРЅРєРё-РєР°СЂС‚РѕС‡РєРё СѓРґР°Р»СЏРµРј С‚РѕР¶Рµ,
+     * С‡С‚РѕР±С‹ РѕРЅРё РЅРµ РѕСЃС‚Р°РІР°Р»РёСЃСЊ РЅР° РґРёСЃРєРµ В«РѕСЃРёСЂРѕС‚РµРІС€РёРјРёВ».
      */
     fun deleteSelected() {
         val ids = _selectedIds.value
@@ -156,7 +156,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                 _selectedIds.value = emptySet()
                 _event.value = ReportEvent.Deleted(removed)
             } catch (e: Throwable) {
-                _event.value = ReportEvent.Error("Не удалось удалить чеки: ${e.message}")
+                _event.value = ReportEvent.Error("РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ С‡РµРєРё: ${e.message}")
             }
         }
     }
@@ -173,7 +173,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             SortField.VAT -> compareBy { it.receipt.vatAmountTiyin }
             SortField.CREATED -> compareBy { it.receipt.createdAt }
         }
-        // Стабильный вторичный ключ — id, чтобы порядок не «прыгал» при равных значениях.
+        // РЎС‚Р°Р±РёР»СЊРЅС‹Р№ РІС‚РѕСЂРёС‡РЅС‹Р№ РєР»СЋС‡ вЂ” id, С‡С‚РѕР±С‹ РїРѕСЂСЏРґРѕРє РЅРµ В«РїСЂС‹РіР°Р»В» РїСЂРё СЂР°РІРЅС‹С… Р·РЅР°С‡РµРЅРёСЏС….
         val tie: Comparator<ReceiptWithUser> = compareBy { it.receipt.id }
         val sorted = rows.sortedWith(cmp.then(tie))
         return if (order == SortOrder.DESC) sorted.reversed() else sorted
@@ -200,7 +200,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     private fun suggestedReportBaseName(): String? {
         val s = settings.value
         val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value ?: return null
-        val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+        val safeName = user.fullName.replace(Regex("[^A-Za-zРђ-РЇР°-СЏ0-9_-]"), "_").take(40)
         return "report_${safeName}_${System.currentTimeMillis()}"
     }
 
@@ -226,23 +226,23 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             val s = settings.value
             val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value
             if (user == null) {
-                _event.value = ReportEvent.Error("Нет выбранного пользователя")
+                _event.value = ReportEvent.Error("РќРµС‚ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ")
                 return@launch
             }
             if (rows.value.isEmpty()) {
-                _event.value = ReportEvent.Error("Нет данных для экспорта")
+                _event.value = ReportEvent.Error("РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ СЌРєСЃРїРѕСЂС‚Р°")
                 return@launch
             }
             _isSaving.value = true
             _saveProgress.value = 0f
             try {
                 syncWithOfd { current, total ->
-                    _savePhase.value = "Синхронизация... Обработано $current из $total"
+                    _savePhase.value = "РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ... РћР±СЂР°Р±РѕС‚Р°РЅРѕ $current РёР· $total"
                     _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
                 }
-                _savePhase.value = "Формирование файла..."
+                _savePhase.value = "Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ С„Р°Р№Р»Р°..."
 
-                val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+                val safeName = user.fullName.replace(Regex("[^A-Za-zРђ-РЇР°-СЏ0-9_-]"), "_").take(40)
                 val file = if (asPdf) {
                     val params = ReportParams(
                         user = user,
@@ -250,7 +250,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                         periodEnd = s.to,
                         rows = rows.value,
                         quarterLabel = if (s.quarter == Quarter.Custom) null
-                        else "${s.quarter.label} ${s.year} г."
+                        else "${s.quarter.label} ${s.year} Рі."
                     )
                     PdfReportGenerator.generate(
                         context, params, "report_${safeName}_${System.currentTimeMillis()}.pdf"
@@ -262,7 +262,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                         periodEnd = s.to,
                         rows = rows.value,
                         quarterLabel = if (s.quarter == Quarter.Custom) null
-                        else "${s.quarter.label} ${s.year} г."
+                        else "${s.quarter.label} ${s.year} Рі."
                     )
                     XlsxExporter.exportReport(
                         context, params, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
@@ -277,11 +277,15 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 _event.value = ReportEvent.Share(
-                    Intent.createChooser(intent, if (asPdf) "Поделиться PDF" else "Поделиться Excel")
+                    Intent.createChooser(intent, if (asPdf) "РџРѕРґРµР»РёС‚СЊСЃСЏ PDF" else "РџРѕРґРµР»РёС‚СЊСЃСЏ Excel")
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } catch (e: Throwable) {
-                _event.value = ReportEvent.Error("Ошибка экспорта: ${e.message}")
+                _event.value = ReportEvent.Error("РћС€РёР±РєР° СЌРєСЃРїРѕСЂС‚Р°: ${e.message}")
+            } finally {
+                _isSaving.value = false
+                _saveProgress.value = 0f
+                _savePhase.value = ""
             }
         }
     }
@@ -299,21 +303,21 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
         val s = settings.value
         val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value
         if (user == null) {
-            _event.value = ReportEvent.Error("Нет выбранного пользователя")
+            _event.value = ReportEvent.Error("РќРµС‚ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ")
             return
         }
         _isSaving.value = true
         try {
-            // Фаза 1: Синхронизация с базой (ОФД)
+            // Р¤Р°Р·Р° 1: РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ СЃ Р±Р°Р·РѕР№ (РћР¤Р”)
             _saveProgress.value = 0f
             syncWithOfd { current, total ->
-                _savePhase.value = "Синхронизация... Обновлено $current из $total"
+                _savePhase.value = "РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ... РћР±РЅРѕРІР»РµРЅРѕ $current РёР· $total"
                 _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
             }
 
-            // Фаза 2: Формирование отчёта
-            _savePhase.value = "Формирование ${if (asPdf) "PDF" else "Excel"}..."
-            val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+            // Р¤Р°Р·Р° 2: Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ РѕС‚С‡С‘С‚Р°
+            _savePhase.value = "Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ ${if (asPdf) "PDF" else "Excel"}..."
+            val safeName = user.fullName.replace(Regex("[^A-Za-zРђ-РЇР°-СЏ0-9_-]"), "_").take(40)
             
             val file = if (asPdf) {
                 val params = ReportParams(
@@ -322,7 +326,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                     periodEnd = s.to,
                     rows = rows.value,
                     quarterLabel = if (s.quarter == Quarter.Custom) null
-                    else "${s.quarter.label} ${s.year} г."
+                    else "${s.quarter.label} ${s.year} Рі."
                 )
                 PdfReportGenerator.generate(
                     context, params, "report_${safeName}_${System.currentTimeMillis()}.pdf"
@@ -334,23 +338,23 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                     periodEnd = s.to,
                     rows = rows.value,
                     quarterLabel = if (s.quarter == Quarter.Custom) null
-                    else "${s.quarter.label} ${s.year} г."
+                    else "${s.quarter.label} ${s.year} Рі."
                 )
                 XlsxExporter.exportReport(
                     context, params, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
                 )
             }
             _saveProgress.value = 0.75f
-            _savePhase.value = "Сохранение файла..."
+            _savePhase.value = "РЎРѕС…СЂР°РЅРµРЅРёРµ С„Р°Р№Р»Р°..."
             UriFileWriter.copyFileToUri(context, file, uri)
             _saveProgress.value = 1f
-            _savePhase.value = "Готово!"
+            _savePhase.value = "Р“РѕС‚РѕРІРѕ!"
             _event.value = ReportEvent.Saved(
-                if (asPdf) "PDF-отчёт успешно сохранён" else "Excel-отчёт успешно сохранён"
+                if (asPdf) "PDF-РѕС‚С‡С‘С‚ СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅС‘РЅ" else "Excel-РѕС‚С‡С‘С‚ СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅС‘РЅ"
             )
         } catch (e: Throwable) {
             _event.value = ReportEvent.Error(
-                "Ошибка сохранения ${if (asPdf) "PDF" else "Excel"}: ${e.message}"
+                "РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ ${if (asPdf) "PDF" else "Excel"}: ${e.message}"
             )
         } finally {
             _isSaving.value = false
@@ -366,17 +370,17 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             val user = users.value.firstOrNull { it.id == s.userId }
                 ?: currentUser.value
             if (user == null) {
-                _event.value = ReportEvent.Error("Нет выбранного пользователя")
+                _event.value = ReportEvent.Error("РќРµС‚ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ")
                 return@launch
             }
             _isSaving.value = true
             _saveProgress.value = 0f
             try {
                 syncWithOfd { current, total ->
-                    _savePhase.value = "Синхронизация... Обработано $current из $total"
+                    _savePhase.value = "РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ... РћР±СЂР°Р±РѕС‚Р°РЅРѕ $current РёР· $total"
                     _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
                 }
-                _savePhase.value = "Формирование PDF..."
+                _savePhase.value = "Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ PDF..."
 
                 val params = ReportParams(
                     user = user,
@@ -384,15 +388,15 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                     periodEnd = s.to,
                     rows = rows.value,
                     quarterLabel = if (s.quarter == Quarter.Custom) null
-                        else "${s.quarter.label} ${s.year} г."
+                        else "${s.quarter.label} ${s.year} Рі."
                 )
-                val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+                val safeName = user.fullName.replace(Regex("[^A-Za-zРђ-РЇР°-СЏ0-9_-]"), "_").take(40)
                 val fileName = "report_${safeName}_${System.currentTimeMillis()}.pdf"
                 val file = PdfReportGenerator.generate(context, params, fileName)
                 if (openSystemPrint) {
                     _event.value = ReportEvent.Print(
                         file = file,
-                        jobName = "QQS отчёт ${user.fullName}"
+                        jobName = "QQS РѕС‚С‡С‘С‚ ${user.fullName}"
                     )
                 } else {
                     val uri = FileProvider.getUriForFile(
@@ -402,19 +406,24 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                         setDataAndType(uri, "application/pdf")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    val chooser = Intent.createChooser(intent, "Просмотр отчёта")
+                    val chooser = Intent.createChooser(intent, "РџСЂРѕСЃРјРѕС‚СЂ РѕС‚С‡С‘С‚Р°")
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     _event.value = ReportEvent.Open(chooser)
                 }
                 _saveProgress.value = 1f
             } catch (e: Throwable) {
-                _event.value = ReportEvent.Error("Ошибка формирования PDF: ${e.message}")
+                _event.value = ReportEvent.Error("РћС€РёР±РєР° С„РѕСЂРјРёСЂРѕРІР°РЅРёСЏ PDF: ${e.message}")
+            } finally {
+                _isSaving.value = false
+                _saveProgress.value = 0f
+                _savePhase.value = ""
             }
         }
     }
 
-    /** Удобный метод для UI: вызвать системный диалог печати по уже сформированному файлу. */
+    /** РЈРґРѕР±РЅС‹Р№ РјРµС‚РѕРґ РґР»СЏ UI: РІС‹Р·РІР°С‚СЊ СЃРёСЃС‚РµРјРЅС‹Р№ РґРёР°Р»РѕРі РїРµС‡Р°С‚Рё РїРѕ СѓР¶Рµ СЃС„РѕСЂРјРёСЂРѕРІР°РЅРЅРѕРјСѓ С„Р°Р№Р»Сѓ. */
     fun launchPrint(context: Context, file: File, jobName: String) {
         PdfPrint.print(context, file, jobName)
     }
 }
+

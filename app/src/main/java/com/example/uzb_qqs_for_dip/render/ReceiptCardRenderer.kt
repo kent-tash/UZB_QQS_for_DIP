@@ -6,7 +6,6 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.text.TextPaint
-import com.example.uzb_qqs_for_dip.data.model.PaymentType
 import com.example.uzb_qqs_for_dip.data.model.Receipt
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat

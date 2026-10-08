@@ -8,7 +8,7 @@ import android.graphics.pdf.PdfDocument
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.text.TextUtils
+
 import com.example.uzb_qqs_for_dip.data.repository.EmployeeSummary
 import com.example.uzb_qqs_for_dip.data.settings.AuditorSettings
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
@@ -244,18 +244,35 @@ object SummaryPdfGenerator {
         val namePaint = TextPaint(paint).apply { textAlign = Paint.Align.RIGHT }
         val rightEdge = x + CONTENT_WIDTH
 
+        fun drawRow(title: String, name: String, currentY: Float): Float {
+            val titleWidth = (CONTENT_WIDTH * 0.48f).toInt()
+            val titleLayout = StaticLayout.Builder
+                .obtain(title, 0, title.length, paint, titleWidth)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setLineSpacing(0f, 1f)
+                .build()
+
+            val lastLineBaseline = currentY + titleLayout.getLineBaseline(titleLayout.lineCount - 1)
+
+            canvas.save()
+            canvas.translate(x, currentY)
+            titleLayout.draw(canvas)
+            canvas.restore()
+
+            canvas.drawText(lineText, lineStartX, lastLineBaseline, paint)
+            canvas.drawText(name, rightEdge, lastLineBaseline, namePaint)
+
+            return currentY + titleLayout.height
+        }
+
         val dirTitle = s.directorTitle.ifBlank { "Руководитель организации" }
         val dirName  = s.directorName.ifBlank { "_______________" }
-        canvas.drawText(dirTitle, x, startY, paint)
-        canvas.drawText(lineText, lineStartX, startY, paint)
-        canvas.drawText(dirName, rightEdge, startY, namePaint)
+        val yAfterDir = drawRow(dirTitle, dirName, startY)
 
         val accTitle = s.accountantTitle.ifBlank { "Главный бухгалтер организации" }
         val accName  = s.accountantName.ifBlank { "_______________" }
-        val y2 = startY + LINE_SPACING * 2.4f
-        canvas.drawText(accTitle, x, y2, paint)
-        canvas.drawText(lineText, lineStartX, y2, paint)
-        canvas.drawText(accName, rightEdge, y2, namePaint)
+        val y2 = yAfterDir + LINE_SPACING * 1.5f
+        drawRow(accTitle, accName, y2)
     }
 
     private fun drawClippedText(
@@ -266,10 +283,15 @@ object SummaryPdfGenerator {
         maxWidth: Float,
         paint: TextPaint
     ) {
-        val ellipsized = TextUtils.ellipsize(
-            text, paint, maxWidth, TextUtils.TruncateAt.END
-        ).toString()
-        canvas.drawText(ellipsized, x, y, paint)
+        var result = text
+        if (paint.measureText(result) > maxWidth) {
+            result = result.trimEnd()
+            while (result.isNotEmpty() && paint.measureText(result + "...") > maxWidth) {
+                result = result.dropLast(1)
+            }
+            result = if (result.isEmpty()) "..." else result + "..."
+        }
+        canvas.drawText(result, x, y, paint)
     }
 
     /**

@@ -46,7 +46,7 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
             SELECT r.id, r.user_id, r.purchased_at, r.seller_name, r.total_amount_tiyin,
                    r.vat_amount_tiyin, r.qr_url, r.payment_type, r.fiscal_sign,
                    r.address, r.tin, r.terminal_id, r.receipt_number, r.nkm_name, r.sn,
-                   r.raw_text, r.source, r.created_at,
+                   r.raw_text, r.source, r.created_at, r.is_manual, r.manual_photo_uri,
                    u.full_name, u.position, u.initials_surname
             FROM receipts r
             INNER JOIN users u ON u.id = r.user_id
@@ -72,14 +72,16 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
                     sn = if (c.isNull(14)) null else c.getString(14),
                     rawText = if (c.isNull(15)) null else c.getString(15),
                     source = ReceiptSource.fromDb(if (c.isNull(16)) null else c.getString(16)),
-                    createdAt = c.getLong(17)
+                    createdAt = c.getLong(17),
+                    isManual = c.getInt(18) == 1,
+                    manualPhotoUri = if (c.isNull(19)) null else c.getString(19)
                 )
                 list.add(
                     ReceiptWithUser(
                         receipt = receipt,
-                        userFullName = c.getString(18),
-                        userPosition = c.getString(19),
-                        userInitialsSurname = c.getString(20)
+                        userFullName = c.getString(20),
+                        userPosition = c.getString(21),
+                        userInitialsSurname = c.getString(22)
                     )
                 )
             }
@@ -179,7 +181,7 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
             """SELECT id, user_id, purchased_at, seller_name, total_amount_tiyin,
                       vat_amount_tiyin, qr_url, payment_type, fiscal_sign,
                       address, tin, terminal_id, receipt_number, nkm_name, sn,
-                      raw_text, source, created_at
+                      raw_text, source, created_at, is_manual, manual_photo_uri
                FROM receipts WHERE qr_url = ?""",
             arrayOf(qrUrl)
         ).use { c ->
@@ -202,7 +204,9 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
                     sn = if (c.isNull(14)) null else c.getString(14),
                     rawText = if (c.isNull(15)) null else c.getString(15),
                     source = ReceiptSource.fromDb(if (c.isNull(16)) null else c.getString(16)),
-                    createdAt = c.getLong(17)
+                    createdAt = c.getLong(17),
+                    isManual = c.getInt(18) == 1,
+                    manualPhotoUri = if (c.isNull(19)) null else c.getString(19)
                 )
             } else null
         }
@@ -347,6 +351,8 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
         put("raw_text", receipt.rawText)
         put("source", receipt.source.name)
         put("created_at", receipt.createdAt)
+        put("is_manual", if (receipt.isManual) 1 else 0)
+        put("manual_photo_uri", receipt.manualPhotoUri)
     }
 
     suspend fun delete(id: Long): Boolean = withContext(Dispatchers.IO) {
