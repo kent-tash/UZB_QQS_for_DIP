@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui.components
+package com.example.uzb_qqs_for_dip.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -82,45 +82,49 @@ fun HelpBottomSheet(
             }
             HorizontalDivider()
             
-            AccordionItem(title = "Сканер") {
+            AccordionItem(title = "Как сканировать чеки (Сканер)") {
                 Text(
-                    text = "Отсканируй QR-код с чека. Если код не читается, выбери фото из галереи или введи данные вручную (сумма, магазин, дата).",
+                    text = "1. На вкладке «Сканер» нажмите на большую круглую кнопку с иконкой QR-кода.\n" +
+                           "2. Разрешите доступ к камере, если потребуется.\n" +
+                           "3. Наведите камеру на QR-код чека. Приложение автоматически распознает его и покажет детали.\n" +
+                           "4. Если у вас есть фото чека в галерее, используйте кнопку «Из галереи/памяти».\n" +
+                           "5. Для непрерывного сканирования используйте режим «Скан всех чеков».",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
             HorizontalDivider()
             
-            AccordionItem(title = "Чеки") {
+            AccordionItem(title = "Как добавить чек вручную") {
                 Text(
-                    text = "Список всех чеков, привязанных к текущему профилю. Тут их можно открыть как картинку, поделиться в PDF или удалить. Синхронизация обновляет данные с серверов.",
+                    text = "1. На вкладке «Сканер» нажмите «Вставить ссылку или добавить вручную».\n" +
+                           "2. Введите название магазина, дату, итоговую сумму и сумму НДС (QQS).\n" +
+                           "3. Прикрепите фото чека (через камеру или галерею).\n" +
+                           "4. Нажмите «Сохранить». В отчётах ручные чеки будут выводиться в самом конце списка.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            HorizontalDivider()
+
+            AccordionItem(title = "Генерация отчёта (PDF/Excel)") {
+                Text(
+                    text = "1. Перейдите на вкладку «Отчёт».\n" +
+                           "2. Разверните панель «Фильтры» и выберите пользователя, год, квартал или произвольный период.\n" +
+                           "3. Нажмите иконку PDF (для сохранения/печати реестра) или Excel (для выгрузки в формате xlsx).\n" +
+                           "4. Сгенерированный файл можно сразу открыть или отправить (Поделиться).",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
             HorizontalDivider()
             
-            AccordionItem(title = "Отчёт") {
+            AccordionItem(title = "Управление профилями (Аудит)") {
                 Text(
-                    text = "Формируй отчёты из чеков, выбирая нужный период. Отчёт можно сохранить в PDF/Excel, распечатать или поделиться.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            HorizontalDivider()
-            
-            AccordionItem(title = "Аудит") {
-                Text(
-                    text = "Режим для проверяющих (доступен если переключить роль в профиле). Позволяет проверять отчёты других сотрудников.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            HorizontalDivider()
-            
-            AccordionItem(title = "Профиль") {
-                Text(
-                    text = "Управляй личными данными для печати в отчётах, переключай роли и создавай резервные копии баз данных.",
+                    text = "1. Перейдите на вкладку «Профиль».\n" +
+                           "2. Нажмите «Переключить» для добавления нового пользователя или выбора существующего.\n" +
+                           "3. Администратор (или аудитор) может просматривать чеки любых пользователей, если переключится на их профиль.\n" +
+                           "4. Здесь же можно создавать и восстанавливать резервные копии базы данных (.db).",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -164,4 +168,3 @@ fun AccordionItem(
         }
     }
 }
-

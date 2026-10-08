@@ -49,6 +49,7 @@ object ReceiptsSheetPdfGenerator {
     ): File = withContext(Dispatchers.IO) {
         val file = File(ExportPaths.exportsDir(context), fileName)
         val doc = PdfDocument()
+        val printableRows = rowsInOrder.filter { !it.receipt.isManual }
         try {
             val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)

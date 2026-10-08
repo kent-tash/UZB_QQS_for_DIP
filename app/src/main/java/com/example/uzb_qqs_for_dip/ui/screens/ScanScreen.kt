@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui.screens
+package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -145,8 +145,8 @@ fun ScanScreen(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { Box(modifier = Modifier.clip(RoundedCornerShape(percent = 50)).background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 16.dp, vertical = 6.dp), contentAlignment = Alignment.Center) { Text(text = "Отсканировано: $scannedCount", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer) } }
-        Header(userName = currentUser?.fullName.orEmpty())
+
+        Header(userName = currentUser?.fullName.orEmpty(), scannedCount = scannedCount)
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -481,7 +481,7 @@ private fun AddLinkDialog(
 }
 
 @Composable
-private fun Header(userName: String) {
+private fun Header(userName: String, scannedCount: Int) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(
@@ -492,7 +492,14 @@ private fun Header(userName: String) {
             Text(
                 userName.ifEmpty { "—" },
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Отсканировано: $scannedCount",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
             )
         }
     }

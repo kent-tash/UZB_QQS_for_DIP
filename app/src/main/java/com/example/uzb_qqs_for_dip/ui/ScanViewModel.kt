@@ -1,561 +1,1128 @@
-﻿package com.example.uzb_qqs_for_dip.ui
-
-import android.app.Application
-import android.content.Context
-import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.uzb_qqs_for_dip.QqsApp
-import com.example.uzb_qqs_for_dip.data.AppContainer
-import com.example.uzb_qqs_for_dip.data.model.Receipt
-import com.example.uzb_qqs_for_dip.network.ParsedReceipt
-import com.example.uzb_qqs_for_dip.render.QrFromImageDecoder
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-
-/**
- * Описывает существующего владельца чека при дубликате QR:
- * null вЂ” чека нет в базе; SameUser вЂ” у текущего пользователя; OtherUser вЂ” у другого.
- */
-sealed interface ExistingOwner {
-    data object SameUser : ExistingOwner
-    data class OtherUser(val fullName: String) : ExistingOwner
-}
-
-sealed interface ScanState {
-    data object Idle : ScanState
-    data object Loading : ScanState
-    data class Parsed(val parsed: ParsedReceipt, val existingOwner: ExistingOwner? = null) : ScanState
-    data class Error(val message: String) : ScanState
-}
-
-fun Throwable.toReadableMessage(): String {
-    return when (this) {
-        is java.net.UnknownHostException -> "Нет подключения к интернету или сервер недоступен"
-        is java.net.SocketTimeoutException -> "Сервер налоговой не отвечает (тайм-аут)"
-        is java.net.ConnectException -> "Не удалось подключиться к серверу"
-        is java.net.SocketException -> "Прервано соединение с сервером"
-        is org.json.JSONException -> "Неверный формат ответа от сервера"
-        else -> this.message ?: this::class.simpleName ?: "Неизвестная ошибка"
-    }
-}
-
-class ScanViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val container: AppContainer = (app as QqsApp).container
-
-    private val _state = MutableStateFlow<ScanState>(ScanState.Idle)
-    val state: StateFlow<ScanState> = _state.asStateFlow()
-
-    private val _sheetPreviewItems = MutableStateFlow<List<SheetReceiptItem>>(emptyList())
-    val sheetPreviewItems: StateFlow<List<SheetReceiptItem>> = _sheetPreviewItems.asStateFlow()
-
-    private val _sheetSummary = MutableStateFlow<SheetSummary?>(null)
-    val sheetSummary: StateFlow<SheetSummary?> = _sheetSummary.asStateFlow()
-
-    private val _sheetLoading = MutableStateFlow(false)
-    val sheetLoading: StateFlow<Boolean> = _sheetLoading.asStateFlow()
-
-    val scannedCount: StateFlow<Int> = combine(
-        container.sessionManager.currentUserId,
-        container.receiptRepository.receipts
-    ) { userId, receipts ->
-        if (userId == null) 0 else receipts.count { it.receipt.userId == userId }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
-
-    fun reset() {
-        _state.value = ScanState.Idle
-    }
-
-    fun clearSheetPreview() {
-        _sheetPreviewItems.value = emptyList()
-        _sheetLoading.value = false
-    }
-
-    fun clearSheetSummary() {
-        _sheetSummary.value = null
-    }
-
-    fun toggleSheetItem(index: Int) {
-        val list = _sheetPreviewItems.value.toMutableList()
-        if (index !in list.indices) return
-        val item = list[index]
-        if (item.status == SheetItemStatus.OTHER_OWNER ||
-            item.status == SheetItemStatus.ERROR
-        ) {
-            return
-        }
-        list[index] = item.copy(selected = !item.selected)
-        _sheetPreviewItems.value = list
-    }
-
-    fun handleImageFromGallery(context: Context, uri: Uri) {
-        viewModelScope.launch {
-            _state.value = ScanState.Loading
-            val decoded = runCatching { QrFromImageDecoder.decode(context, uri) }
-            decoded.onSuccess { payload -> handleScan(payload) }
-                .onFailure { e ->
-                    _state.value = ScanState.Error(
-                        e.message ?: "Не удалось распознать QR на изображении"
-                    )
-                }
-        }
-    }
-
-    fun handleScan(qrPayload: String?) {
-        val raw = qrPayload?.trim().orEmpty()
-        if (raw.isEmpty()) {
-            _state.value = ScanState.Error("Пустой QR-код")
-            return
-        }
-        if (!raw.startsWith("http://") && !raw.startsWith("https://")) {
-            _state.value =
-                ScanState.Error("QR не содержит ссылку на чек: \"${raw.take(64)}\"")
-            return
-        }
-        viewModelScope.launch {
-            _state.value = ScanState.Loading
-            val currentUserId = container.sessionManager.currentUserId.value
-            container.receiptParser.fetchAndParse(raw)
-                .onSuccess { parsed ->
-                    val owner = container.receiptRepository.findOwner(
-                        qrUrl = parsed.qrUrl,
-                        fiscalSign = parsed.fiscalSign,
-                        terminalId = parsed.terminalId,
-                        receiptNumber = parsed.receiptNumber,
-                    )
-                    val existingOwner: ExistingOwner? = when {
-                        owner == null -> null
-                        owner.userId == currentUserId -> ExistingOwner.SameUser
-                        else -> ExistingOwner.OtherUser(owner.fullName)
-                    }
-                    _state.value = ScanState.Parsed(parsed, existingOwner)
-                }
-                .onFailure { e ->
-                    _state.value = ScanState.Error(
-                        "Не удалось загрузить чек: ${e.toReadableMessage()}"
-                    )
-                }
-        }
-    }
-
-    /**
-     * Декодирует все QR с фото, для каждого URL парсит чек и ищет владельца
-     * без вставки в БД вЂ” результат попадает в [sheetPreviewItems].
-     */
-    fun prepareSheetFromUri(context: Context, uri: Uri) {
-        viewModelScope.launch {
-            _sheetLoading.value = true
-            _sheetSummary.value = null
-            _sheetPreviewItems.value = emptyList()
-            val urls = runCatching { QrFromImageDecoder.decodeAll(context, uri) }
-                .getOrElse { e ->
-                    _sheetLoading.value = false
-                    _sheetSummary.value = SheetSummary(
-                        scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
-                        errors = 1, skipped = 0,
-                        message = e.message ?: "Не удалось распознать QR на изображении"
-                    )
-                    return@launch
-                }
-            _sheetLoading.value = false
-            prepareSheetFromUrls(urls)
-        }
-    }
-
-    suspend fun processSingleQr(rawUrl: String): Pair<Boolean, String> {
-        val userId = container.sessionManager.currentUserId.value
-            ?: return false to "Сессия истекла. Войдите снова."
-        val url = rawUrl.trim()
-        if (url.isEmpty()) return false to "Пустой QR-код"
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR-код не является чеком"
-
-        val parsedResult = container.receiptParser.fetchAndParse(url)
-        if (parsedResult.isFailure) {
-            val e = parsedResult.exceptionOrNull()
-            val msg = when (e) {
-                is java.net.UnknownHostException -> "Нет подключения к сети"
-                is java.net.SocketTimeoutException, is java.net.ConnectException -> "Сайт налоговой не отвечает"
-                else -> "Ошибка сети или сервера: " + (e?.toReadableMessage() ?: "")
-            }
-            return false to msg
-        }
-        val parsed = parsedResult.getOrThrow()
-
-        if (!parsed.isValid) return false to "Не все поля чека распознаны"
-
-        val existingOwner = container.receiptRepository.findOwner(
-            qrUrl = parsed.qrUrl,
-            fiscalSign = parsed.fiscalSign,
-            terminalId = parsed.terminalId,
-            receiptNumber = parsed.receiptNumber,
-        )
-
-        if (existingOwner != null) {
-            return if (existingOwner.userId == userId) false to "Этот чек уже был добавлен"
-            else false to "Чек принадлежит: ${existingOwner.fullName}"
-        }
-
-        val insertRes = insertParsed(parsed, userId)
-        return if (insertRes.isSuccess) {
-            val vat = parsed.vatAmountTiyin ?: 0L
-            if (vat == 0L) true to "В чеке нет НДС (0 сум)"
-            else true to "Чек добавлен (НДС: ${vat / 100} сум)"
-        }
-        else false to "Ошибка сохранения в БД"
-    }
-
-    /**
-     * Готовит превью пакетного скана по уже собранным URL (камера или галерея).
-     */
-    fun prepareSheetFromUrls(urls: List<String>) {
-        val userId = container.sessionManager.currentUserId.value
-        if (userId == null) {
-            _sheetSummary.value = SheetSummary(
-                scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
-                errors = 1, skipped = 0,
-                message = "Сессия истекла. Войдите снова"
-            )
-            return
-        }
-        viewModelScope.launch {
-            _sheetLoading.value = true
-            _sheetSummary.value = null
-            _sheetPreviewItems.value = emptyList()
-            try {
-                val distinct = urls.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
-                if (distinct.isEmpty()) {
-                    _sheetSummary.value = SheetSummary(
-                        scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
-                        errors = 1, skipped = 0,
-                        message = "QR-коды не найдены"
-                    )
-                    return@launch
-                }
-                val items = distinct.map { raw -> buildSheetItem(raw, userId) }
-                _sheetPreviewItems.value = items
-            } finally {
-                _sheetLoading.value = false
-            }
-        }
-    }
-
-    private suspend fun buildSheetItem(raw: String, userId: Long): SheetReceiptItem {
-        val url = raw.trim()
-        if (url.isEmpty()) {
-            return SheetReceiptItem(
-                qrUrl = raw,
-                status = SheetItemStatus.ERROR,
-                errorMessage = "Пустой QR-код"
-            )
-        }
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            return SheetReceiptItem(
-                qrUrl = url,
-                status = SheetItemStatus.ERROR,
-                errorMessage = "QR не содержит ссылку на чек"
-            )
-        }
-        return container.receiptParser.fetchAndParse(url)
-            .fold(
-                onSuccess = { parsed ->
-                    val existingOwner = container.receiptRepository.findOwner(
-                        qrUrl = parsed.qrUrl,
-                        fiscalSign = parsed.fiscalSign,
-                        terminalId = parsed.terminalId,
-                        receiptNumber = parsed.receiptNumber,
-                    )
-                    when {
-                        existingOwner != null && existingOwner.userId != userId ->
-                            SheetReceiptItem(
-                                qrUrl = parsed.qrUrl,
-                                parsed = parsed,
-                                status = SheetItemStatus.OTHER_OWNER,
-                                ownerName = existingOwner.fullName,
-                                selected = false
-                            )
-                        !parsed.isValid ->
-                            SheetReceiptItem(
-                                qrUrl = parsed.qrUrl,
-                                parsed = parsed,
-                                status = SheetItemStatus.ERROR,
-                                errorMessage = "Не все поля чека распознаны",
-                                selected = false
-                            )
-                        existingOwner?.userId == userId ->
-                            SheetReceiptItem(
-                                qrUrl = parsed.qrUrl,
-                                parsed = parsed,
-                                status = SheetItemStatus.ALREADY_THIS,
-                                ownerName = existingOwner.fullName,
-                                selected = false
-                            )
-                        else ->
-                            SheetReceiptItem(
-                                qrUrl = parsed.qrUrl,
-                                parsed = parsed,
-                                status = SheetItemStatus.NEW,
-                                selected = true
-                            )
-                    }
-                },
-                onFailure = { e ->
-                    SheetReceiptItem(
-                        qrUrl = url,
-                        status = SheetItemStatus.ERROR,
-                        errorMessage = "Не удалось загрузить чек: ${e.toReadableMessage()}",
-                        selected = false
-                    )
-                }
-            )
-    }
-
-    /**
-     * Сохраняет выбранные NEW для текущего пользователя.
-     * ALREADY_THIS учитывает в summary; OTHER_OWNER / ERROR / невыбранные вЂ” без insert.
-     */
-    fun confirmSheetSelection() {
-        val userId = container.sessionManager.currentUserId.value ?: return
-        val items = _sheetPreviewItems.value
-        if (items.isEmpty()) return
-
-        viewModelScope.launch {
-            _sheetLoading.value = true
-            var saved = 0
-            var alreadyInDb = 0
-            var conflicts = 0
-            var errors = 0
-            var skipped = 0
-
-            for (item in items) {
-                when {
-                    item.status == SheetItemStatus.OTHER_OWNER -> conflicts++
-                    item.status == SheetItemStatus.ERROR -> errors++
-                    !item.selected -> {
-                        if (item.status == SheetItemStatus.ALREADY_THIS) alreadyInDb++
-                        else skipped++
-                    }
-                    item.status == SheetItemStatus.ALREADY_THIS -> alreadyInDb++
-                    item.status == SheetItemStatus.NEW -> {
-                        val parsed = item.parsed
-                        if (parsed == null || !parsed.isValid) {
-                            errors++
-                            continue
-                        }
-                        val insertResult = insertParsed(parsed, userId)
-                        if (insertResult.isFailure) {
-                            val ownerAfterFail = container.receiptRepository.findOwner(
-                                qrUrl = parsed.qrUrl,
-                                fiscalSign = parsed.fiscalSign,
-                                terminalId = parsed.terminalId,
-                                receiptNumber = parsed.receiptNumber,
-                            )
-                            when {
-                                ownerAfterFail != null && ownerAfterFail.userId != userId ->
-                                    conflicts++
-                                ownerAfterFail != null && ownerAfterFail.userId == userId ->
-                                    alreadyInDb++
-                                else -> errors++
-                            }
-                        } else {
-                            saved++
-                        }
-                    }
-                    else -> skipped++
-                }
-            }
-
-            val scanned = items.size
-            val message = buildString {
-                append("Сканировано: $scanned")
-                append(". Сохранено: $saved")
-                append(". Уже в базе: $alreadyInDb")
-                append(". Конфликты: $conflicts")
-                if (errors > 0) append(". Ошибки: $errors")
-                if (skipped > 0) append(". Пропущено: $skipped")
-            }
-            _sheetSummary.value = SheetSummary(
-                scanned = scanned,
-                saved = saved,
-                alreadyVerified = alreadyInDb,
-                conflicts = conflicts,
-                errors = errors,
-                skipped = skipped,
-                message = message
-            )
-            _sheetPreviewItems.value = emptyList()
-            _sheetLoading.value = false
-        }
-    }
-
-    fun saveCurrent(onSaved: () -> Unit = {}) {
-        val current = _state.value
-        if (current !is ScanState.Parsed) return
-        val parsed = current.parsed
-        if (!parsed.isValid) {
-            _state.value = ScanState.Error("Не удалось распознать обязательные поля чека")
-            return
-        }
-        val userId = container.sessionManager.currentUserId.value
-        if (userId == null) {
-            _state.value = ScanState.Error("Сессия истекла. Войдите снова")
-            return
-        }
-        viewModelScope.launch {
-            // Повторная проверка перед записью (race condition guard).
-            val owner = container.receiptRepository.findOwner(
-                qrUrl = parsed.qrUrl,
-                fiscalSign = parsed.fiscalSign,
-                terminalId = parsed.terminalId,
-                receiptNumber = parsed.receiptNumber,
-            )
-            if (owner != null && owner.userId != userId) {
-                _state.value = ScanState.Error(
-                    "Данный чек уже есть у пользователя ${owner.fullName}"
-                )
-                return@launch
-            }
-            if (owner != null && owner.userId == userId) {
-                _state.value = ScanState.Error("Этот чек уже сохранён ранее")
-                return@launch
-            }
-            insertParsed(parsed, userId)
-                .onSuccess {
-                    _state.value = ScanState.Idle
-                    onSaved()
-                }
-                .onFailure { e ->
-                    val msg = if (e.message?.contains("UNIQUE", true) == true) {
-                        val existingOwner = container.receiptRepository.findOwner(
-                            qrUrl = parsed.qrUrl,
-                            fiscalSign = parsed.fiscalSign,
-                            terminalId = parsed.terminalId,
-                            receiptNumber = parsed.receiptNumber,
-                        )
-                        if (existingOwner != null && existingOwner.userId != userId) {
-                            "Данный чек уже есть у пользователя ${existingOwner.fullName}"
-                        } else {
-                            "Этот чек уже сохранён ранее"
-                        }
-                    } else "Не удалось сохранить чек: ${e.message}"
-                    _state.value = ScanState.Error(msg)
-                }
-        }
-    }
-
-    private suspend fun insertParsed(parsed: ParsedReceipt, userId: Long): Result<Long> {
-        val receipt = Receipt(
-            userId = userId,
-            purchasedAt = parsed.purchasedAt!!,
-            sellerName = parsed.sellerName!!,
-            totalAmountTiyin = parsed.totalAmountTiyin!!,
-            vatAmountTiyin = parsed.vatAmountTiyin!!,
-            qrUrl = parsed.qrUrl,
-            paymentType = parsed.paymentType,
-            fiscalSign = parsed.fiscalSign,
-            address = parsed.address,
-            tin = parsed.tin,
-            terminalId = parsed.terminalId,
-            receiptNumber = parsed.receiptNumber,
-            nkmName = parsed.nkmName,
-            sn = parsed.sn,
-            rawText = parsed.rawSnippet
-        )
-        return container.receiptRepository.insert(receipt)
-    }
-
-    fun saveManualReceipt(
-        context: Context,
-        storeName: String,
-        dateMs: Long,
-        totalAmountTiyin: Long,
-        vatAmountTiyin: Long,
-        photoUri: Uri?,
-        onSaved: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val userId = container.sessionManager.currentUserId.value
-        if (userId == null) {
-            onError("Сессия истекла. Войдите снова")
-            return
-        }
-        viewModelScope.launch {
-            _state.value = ScanState.Loading
-            var localPhotoPath: String? = null
-            if (photoUri != null) {
-                try {
-                    val fileName = "manual_${System.currentTimeMillis()}.jpg"
-                    val file = java.io.File(context.filesDir, fileName)
-                    context.contentResolver.openInputStream(photoUri)?.use { input ->
-                        file.outputStream().use { out -> input.copyTo(out) }
-                    }
-                    localPhotoPath = file.absolutePath
-                } catch (e: Exception) {
-                    _state.value = ScanState.Idle
-                    onError("Не удалось сохранить фото: ${e.message}")
-                    return@launch
-                }
-            }
-            
-            val receipt = Receipt(
-                userId = userId,
-                purchasedAt = dateMs,
-                sellerName = storeName,
-                totalAmountTiyin = totalAmountTiyin,
-                vatAmountTiyin = vatAmountTiyin,
-                qrUrl = "manual_${System.currentTimeMillis()}_${(1000..9999).random()}", // Fake QR URL for uniqueness constraint
-                isManual = true,
-                manualPhotoUri = localPhotoPath
-            )
-            
-            container.receiptRepository.insert(receipt)
-                .onSuccess {
-                    _state.value = ScanState.Idle
-                    onSaved()
-                }
-                .onFailure { e ->
-                    _state.value = ScanState.Idle
-                    onError(e.message ?: "Ошибка сохранения")
-                }
-        }
-    }
-
-    /**
-     * Сохраняет чек для указанного пользователя (используется аудитором при QR-верификации).
-     * Возвращает id новой записи или ошибку.
-     */
-    suspend fun saveForUser(
-        parsed: ParsedReceipt,
-        userId: Long,
-        auditorUserId: Long? = null
-    ): Result<Long> {
-        if (!parsed.isValid) return Result.failure(IllegalStateException("Неполные данные чека"))
-        val owner = container.receiptRepository.findOwner(
-            qrUrl = parsed.qrUrl,
-            fiscalSign = parsed.fiscalSign,
-            terminalId = parsed.terminalId,
-            receiptNumber = parsed.receiptNumber,
-        )
-        if (owner != null && owner.userId != userId) {
-            return Result.failure(
-                IllegalStateException("Данный чек уже есть у пользователя ${owner.fullName}")
-            )
-        }
-        if (owner != null && owner.userId == userId) {
-            return Result.success(owner.receiptId)
-        }
-        val result = insertParsed(parsed, userId)
-        if (result.isSuccess && auditorUserId != null) {
-            result.getOrNull()?.let { id ->
-                container.receiptRepository.markVerified(id, auditorUserId)
-            }
-        }
-        return result
-    }
-}
+﻿package com.example.uzb_qqs_for_dip.ui
+
+
+
+import android.app.Application
+
+import android.content.Context
+
+import android.net.Uri
+
+import androidx.lifecycle.AndroidViewModel
+
+import androidx.lifecycle.viewModelScope
+
+import com.example.uzb_qqs_for_dip.QqsApp
+
+import com.example.uzb_qqs_for_dip.data.AppContainer
+
+import com.example.uzb_qqs_for_dip.data.model.Receipt
+
+import com.example.uzb_qqs_for_dip.network.ParsedReceipt
+
+import com.example.uzb_qqs_for_dip.render.QrFromImageDecoder
+
+import kotlinx.coroutines.flow.MutableStateFlow
+
+import kotlinx.coroutines.flow.StateFlow
+
+import kotlinx.coroutines.flow.asStateFlow
+
+import kotlinx.coroutines.flow.SharingStarted
+
+import kotlinx.coroutines.flow.map
+
+import kotlinx.coroutines.flow.combine
+
+import kotlinx.coroutines.flow.stateIn
+
+import kotlinx.coroutines.launch
+
+
+
+/**
+
+ * Описывает существующего владельца чека при дубликате QR:
+
+ * null вЂ” чека нет в базе; SameUser вЂ” у текущего пользователя; OtherUser вЂ” у другого.
+
+ */
+
+sealed interface ExistingOwner {
+
+    data object SameUser : ExistingOwner
+
+    data class OtherUser(val fullName: String) : ExistingOwner
+
+}
+
+
+
+sealed interface ScanState {
+
+    data object Idle : ScanState
+
+    data object Loading : ScanState
+
+    data class Parsed(val parsed: ParsedReceipt, val existingOwner: ExistingOwner? = null) : ScanState
+
+    data class Error(val message: String) : ScanState
+
+}
+
+
+
+fun Throwable.toReadableMessage(): String {
+
+    return when (this) {
+
+        is java.net.UnknownHostException -> "Нет подключения к интернету или сервер недоступен"
+
+        is java.net.SocketTimeoutException -> "Сервер налоговой не отвечает (тайм-аут)"
+
+        is java.net.ConnectException -> "Не удалось подключиться к серверу"
+
+        is java.net.SocketException -> "Прервано соединение с сервером"
+
+        is org.json.JSONException -> "Неверный формат ответа от сервера"
+
+        else -> this.message ?: this::class.simpleName ?: "Неизвестная ошибка"
+
+    }
+
+}
+
+
+
+class ScanViewModel(app: Application) : AndroidViewModel(app) {
+
+
+
+    private val container: AppContainer = (app as QqsApp).container
+
+
+
+    private val _state = MutableStateFlow<ScanState>(ScanState.Idle)
+
+    val state: StateFlow<ScanState> = _state.asStateFlow()
+
+
+
+    private val _sheetPreviewItems = MutableStateFlow<List<SheetReceiptItem>>(emptyList())
+
+    val sheetPreviewItems: StateFlow<List<SheetReceiptItem>> = _sheetPreviewItems.asStateFlow()
+
+
+
+    private val _sheetSummary = MutableStateFlow<SheetSummary?>(null)
+
+    val sheetSummary: StateFlow<SheetSummary?> = _sheetSummary.asStateFlow()
+
+
+
+    private val _sheetLoading = MutableStateFlow(false)
+
+    val sheetLoading: StateFlow<Boolean> = _sheetLoading.asStateFlow()
+
+
+
+    val scannedCount: StateFlow<Int> = combine(
+
+        container.sessionManager.currentUserId,
+
+        container.receiptRepository.receipts
+
+    ) { userId, receipts ->
+
+        if (userId == null) 0 else receipts.count { it.receipt.userId == userId }
+
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+
+
+    fun reset() {
+
+        _state.value = ScanState.Idle
+
+    }
+
+
+
+    fun clearSheetPreview() {
+
+        _sheetPreviewItems.value = emptyList()
+
+        _sheetLoading.value = false
+
+    }
+
+
+
+    fun clearSheetSummary() {
+
+        _sheetSummary.value = null
+
+    }
+
+
+
+    fun toggleSheetItem(index: Int) {
+
+        val list = _sheetPreviewItems.value.toMutableList()
+
+        if (index !in list.indices) return
+
+        val item = list[index]
+
+        if (item.status == SheetItemStatus.OTHER_OWNER ||
+
+            item.status == SheetItemStatus.ERROR
+
+        ) {
+
+            return
+
+        }
+
+        list[index] = item.copy(selected = !item.selected)
+
+        _sheetPreviewItems.value = list
+
+    }
+
+
+
+    fun handleImageFromGallery(context: Context, uri: Uri) {
+
+        viewModelScope.launch {
+
+            _state.value = ScanState.Loading
+
+            val decoded = runCatching { QrFromImageDecoder.decode(context, uri) }
+
+            decoded.onSuccess { payload -> handleScan(payload) }
+
+                .onFailure { e ->
+
+                    _state.value = ScanState.Error(
+
+                        e.message ?: "Не удалось распознать QR на изображении"
+
+                    )
+
+                }
+
+        }
+
+    }
+
+
+
+    fun handleScan(qrPayload: String?) {
+
+        val raw = qrPayload?.trim().orEmpty()
+
+        if (raw.isEmpty()) {
+
+            _state.value = ScanState.Error("Пустой QR-код")
+
+            return
+
+        }
+
+        if (!raw.startsWith("http://") && !raw.startsWith("https://")) {
+
+            _state.value =
+
+                ScanState.Error("QR не содержит ссылку на чек: \"${raw.take(64)}\"")
+
+            return
+
+        }
+
+        viewModelScope.launch {
+
+            _state.value = ScanState.Loading
+
+            val currentUserId = container.sessionManager.currentUserId.value
+
+            container.receiptParser.fetchAndParse(raw)
+
+                .onSuccess { parsed ->
+
+                    val owner = container.receiptRepository.findOwner(
+
+                        qrUrl = parsed.qrUrl,
+
+                        fiscalSign = parsed.fiscalSign,
+
+                        terminalId = parsed.terminalId,
+
+                        receiptNumber = parsed.receiptNumber,
+
+                    )
+
+                    val existingOwner: ExistingOwner? = when {
+
+                        owner == null -> null
+
+                        owner.userId == currentUserId -> ExistingOwner.SameUser
+
+                        else -> ExistingOwner.OtherUser(owner.fullName)
+
+                    }
+
+                    _state.value = ScanState.Parsed(parsed, existingOwner)
+
+                }
+
+                .onFailure { e ->
+
+                    _state.value = ScanState.Error(
+
+                        "Не удалось загрузить чек: ${e.toReadableMessage()}"
+
+                    )
+
+                }
+
+        }
+
+    }
+
+
+
+    /**
+
+     * Декодирует все QR с фото, для каждого URL парсит чек и ищет владельца
+
+     * без вставки в БД вЂ” результат попадает в [sheetPreviewItems].
+
+     */
+
+    fun prepareSheetFromUri(context: Context, uri: Uri) {
+
+        viewModelScope.launch {
+
+            _sheetLoading.value = true
+
+            _sheetSummary.value = null
+
+            _sheetPreviewItems.value = emptyList()
+
+            val urls = runCatching { QrFromImageDecoder.decodeAll(context, uri) }
+
+                .getOrElse { e ->
+
+                    _sheetLoading.value = false
+
+                    _sheetSummary.value = SheetSummary(
+
+                        scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
+
+                        errors = 1, skipped = 0,
+
+                        message = e.message ?: "Не удалось распознать QR на изображении"
+
+                    )
+
+                    return@launch
+
+                }
+
+            _sheetLoading.value = false
+
+            prepareSheetFromUrls(urls)
+
+        }
+
+    }
+
+
+
+    suspend fun processSingleQr(rawUrl: String): Pair<Boolean, String> {
+
+        val userId = container.sessionManager.currentUserId.value
+
+            ?: return false to "Сессия истекла. Войдите снова."
+
+        val url = rawUrl.trim()
+
+        if (url.isEmpty()) return false to "Пустой QR-код"
+
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR-код не является чеком"
+
+
+
+        val parsedResult = container.receiptParser.fetchAndParse(url)
+
+        if (parsedResult.isFailure) {
+
+            val e = parsedResult.exceptionOrNull()
+
+            val msg = when (e) {
+
+                is java.net.UnknownHostException -> "Нет соединения с интернет или сайт недоступен"
+
+                is java.net.SocketTimeoutException, is java.net.ConnectException -> "Нет соединения с интернет или сайт недоступен"
+
+                else -> "Ошибка сети или сервера: " + (e?.toReadableMessage() ?: "")
+
+            }
+
+            return false to msg
+
+        }
+
+        val parsed = parsedResult.getOrThrow()
+
+
+
+        if (!parsed.isValid) {
+            val raw = parsed.rawSnippet?.lowercase() ?: ""
+            if (raw.contains("topilmadi") || raw.contains("ma\'lumot yo\'q") || raw.contains("не найден") || raw.contains("не загружен") || raw.contains("not found")) {
+                return false to "Информация о чеке не загружена, попробуйте позже"
+            }
+            return false to "Не все поля чека распознаны"
+        }
+
+
+
+        val existingOwner = container.receiptRepository.findOwner(
+
+            qrUrl = parsed.qrUrl,
+
+            fiscalSign = parsed.fiscalSign,
+
+            terminalId = parsed.terminalId,
+
+            receiptNumber = parsed.receiptNumber,
+
+        )
+
+
+
+        if (existingOwner != null) {
+
+            return if (existingOwner.userId == userId) false to "Чек уже отсканирован"
+
+            else false to "Чек принадлежит: ${existingOwner.fullName}"
+
+        }
+
+
+
+        val insertRes = insertParsed(parsed, userId)
+
+        return if (insertRes.isSuccess) {
+
+            val vat = parsed.vatAmountTiyin ?: 0L
+
+            if (vat == 0L) true to "Чек с нулевым QQS"
+
+            else true to "Чек добавлен (НДС: ${vat / 100} сум)"
+
+        }
+
+        else false to "Ошибка сохранения в БД"
+
+    }
+
+
+
+    /**
+
+     * Готовит превью пакетного скана по уже собранным URL (камера или галерея).
+
+     */
+
+    fun prepareSheetFromUrls(urls: List<String>) {
+
+        val userId = container.sessionManager.currentUserId.value
+
+        if (userId == null) {
+
+            _sheetSummary.value = SheetSummary(
+
+                scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
+
+                errors = 1, skipped = 0,
+
+                message = "Сессия истекла. Войдите снова"
+
+            )
+
+            return
+
+        }
+
+        viewModelScope.launch {
+
+            _sheetLoading.value = true
+
+            _sheetSummary.value = null
+
+            _sheetPreviewItems.value = emptyList()
+
+            try {
+
+                val distinct = urls.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+
+                if (distinct.isEmpty()) {
+
+                    _sheetSummary.value = SheetSummary(
+
+                        scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
+
+                        errors = 1, skipped = 0,
+
+                        message = "QR-коды не найдены"
+
+                    )
+
+                    return@launch
+
+                }
+
+                val items = distinct.map { raw -> buildSheetItem(raw, userId) }
+
+                _sheetPreviewItems.value = items
+
+            } finally {
+
+                _sheetLoading.value = false
+
+            }
+
+        }
+
+    }
+
+
+
+    private suspend fun buildSheetItem(raw: String, userId: Long): SheetReceiptItem {
+
+        val url = raw.trim()
+
+        if (url.isEmpty()) {
+
+            return SheetReceiptItem(
+
+                qrUrl = raw,
+
+                status = SheetItemStatus.ERROR,
+
+                errorMessage = "Пустой QR-код"
+
+            )
+
+        }
+
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+
+            return SheetReceiptItem(
+
+                qrUrl = url,
+
+                status = SheetItemStatus.ERROR,
+
+                errorMessage = "QR не содержит ссылку на чек"
+
+            )
+
+        }
+
+        return container.receiptParser.fetchAndParse(url)
+
+            .fold(
+
+                onSuccess = { parsed ->
+
+                    val existingOwner = container.receiptRepository.findOwner(
+
+                        qrUrl = parsed.qrUrl,
+
+                        fiscalSign = parsed.fiscalSign,
+
+                        terminalId = parsed.terminalId,
+
+                        receiptNumber = parsed.receiptNumber,
+
+                    )
+
+                    when {
+
+                        existingOwner != null && existingOwner.userId != userId ->
+
+                            SheetReceiptItem(
+
+                                qrUrl = parsed.qrUrl,
+
+                                parsed = parsed,
+
+                                status = SheetItemStatus.OTHER_OWNER,
+
+                                ownerName = existingOwner.fullName,
+
+                                selected = false
+
+                            )
+
+                        !parsed.isValid ->
+
+                            SheetReceiptItem(
+
+                                qrUrl = parsed.qrUrl,
+
+                                parsed = parsed,
+
+                                status = SheetItemStatus.ERROR,
+
+                                errorMessage = "Не все поля чека распознаны",
+
+                                selected = false
+
+                            )
+
+                        existingOwner?.userId == userId ->
+
+                            SheetReceiptItem(
+
+                                qrUrl = parsed.qrUrl,
+
+                                parsed = parsed,
+
+                                status = SheetItemStatus.ALREADY_THIS,
+
+                                ownerName = existingOwner.fullName,
+
+                                selected = false
+
+                            )
+
+                        else ->
+
+                            SheetReceiptItem(
+
+                                qrUrl = parsed.qrUrl,
+
+                                parsed = parsed,
+
+                                status = SheetItemStatus.NEW,
+
+                                selected = true
+
+                            )
+
+                    }
+
+                },
+
+                onFailure = { e ->
+
+                    SheetReceiptItem(
+
+                        qrUrl = url,
+
+                        status = SheetItemStatus.ERROR,
+
+                        errorMessage = "Не удалось загрузить чек: ${e.toReadableMessage()}",
+
+                        selected = false
+
+                    )
+
+                }
+
+            )
+
+    }
+
+
+
+    /**
+
+     * Сохраняет выбранные NEW для текущего пользователя.
+
+     * ALREADY_THIS учитывает в summary; OTHER_OWNER / ERROR / невыбранные вЂ” без insert.
+
+     */
+
+    fun confirmSheetSelection() {
+
+        val userId = container.sessionManager.currentUserId.value ?: return
+
+        val items = _sheetPreviewItems.value
+
+        if (items.isEmpty()) return
+
+
+
+        viewModelScope.launch {
+
+            _sheetLoading.value = true
+
+            var saved = 0
+
+            var alreadyInDb = 0
+
+            var conflicts = 0
+
+            var errors = 0
+
+            var skipped = 0
+
+
+
+            for (item in items) {
+
+                when {
+
+                    item.status == SheetItemStatus.OTHER_OWNER -> conflicts++
+
+                    item.status == SheetItemStatus.ERROR -> errors++
+
+                    !item.selected -> {
+
+                        if (item.status == SheetItemStatus.ALREADY_THIS) alreadyInDb++
+
+                        else skipped++
+
+                    }
+
+                    item.status == SheetItemStatus.ALREADY_THIS -> alreadyInDb++
+
+                    item.status == SheetItemStatus.NEW -> {
+
+                        val parsed = item.parsed
+
+                        if (parsed == null || !parsed.isValid) {
+
+                            errors++
+
+                            continue
+
+                        }
+
+                        val insertResult = insertParsed(parsed, userId)
+
+                        if (insertResult.isFailure) {
+
+                            val ownerAfterFail = container.receiptRepository.findOwner(
+
+                                qrUrl = parsed.qrUrl,
+
+                                fiscalSign = parsed.fiscalSign,
+
+                                terminalId = parsed.terminalId,
+
+                                receiptNumber = parsed.receiptNumber,
+
+                            )
+
+                            when {
+
+                                ownerAfterFail != null && ownerAfterFail.userId != userId ->
+
+                                    conflicts++
+
+                                ownerAfterFail != null && ownerAfterFail.userId == userId ->
+
+                                    alreadyInDb++
+
+                                else -> errors++
+
+                            }
+
+                        } else {
+
+                            saved++
+
+                        }
+
+                    }
+
+                    else -> skipped++
+
+                }
+
+            }
+
+
+
+            val scanned = items.size
+
+            val message = buildString {
+
+                append("Сканировано: $scanned")
+
+                append(". Сохранено: $saved")
+
+                append(". Уже в базе: $alreadyInDb")
+
+                append(". Конфликты: $conflicts")
+
+                if (errors > 0) append(". Ошибки: $errors")
+
+                if (skipped > 0) append(". Пропущено: $skipped")
+
+            }
+
+            _sheetSummary.value = SheetSummary(
+
+                scanned = scanned,
+
+                saved = saved,
+
+                alreadyVerified = alreadyInDb,
+
+                conflicts = conflicts,
+
+                errors = errors,
+
+                skipped = skipped,
+
+                message = message
+
+            )
+
+            _sheetPreviewItems.value = emptyList()
+
+            _sheetLoading.value = false
+
+        }
+
+    }
+
+
+
+    fun saveCurrent(onSaved: () -> Unit = {}) {
+
+        val current = _state.value
+
+        if (current !is ScanState.Parsed) return
+
+        val parsed = current.parsed
+
+        if (!parsed.isValid) {
+
+            _state.value = ScanState.Error("Не удалось распознать обязательные поля чека")
+
+            return
+
+        }
+
+        val userId = container.sessionManager.currentUserId.value
+
+        if (userId == null) {
+
+            _state.value = ScanState.Error("Сессия истекла. Войдите снова")
+
+            return
+
+        }
+
+        viewModelScope.launch {
+
+            // Повторная проверка перед записью (race condition guard).
+
+            val owner = container.receiptRepository.findOwner(
+
+                qrUrl = parsed.qrUrl,
+
+                fiscalSign = parsed.fiscalSign,
+
+                terminalId = parsed.terminalId,
+
+                receiptNumber = parsed.receiptNumber,
+
+            )
+
+            if (owner != null && owner.userId != userId) {
+
+                _state.value = ScanState.Error(
+
+                    "Данный чек уже есть у пользователя ${owner.fullName}"
+
+                )
+
+                return@launch
+
+            }
+
+            if (owner != null && owner.userId == userId) {
+
+                _state.value = ScanState.Error("Этот чек уже сохранён ранее")
+
+                return@launch
+
+            }
+
+            insertParsed(parsed, userId)
+
+                .onSuccess {
+
+                    _state.value = ScanState.Idle
+
+                    onSaved()
+
+                }
+
+                .onFailure { e ->
+
+                    val msg = if (e.message?.contains("UNIQUE", true) == true) {
+
+                        val existingOwner = container.receiptRepository.findOwner(
+
+                            qrUrl = parsed.qrUrl,
+
+                            fiscalSign = parsed.fiscalSign,
+
+                            terminalId = parsed.terminalId,
+
+                            receiptNumber = parsed.receiptNumber,
+
+                        )
+
+                        if (existingOwner != null && existingOwner.userId != userId) {
+
+                            "Данный чек уже есть у пользователя ${existingOwner.fullName}"
+
+                        } else {
+
+                            "Этот чек уже сохранён ранее"
+
+                        }
+
+                    } else "Не удалось сохранить чек: ${e.message}"
+
+                    _state.value = ScanState.Error(msg)
+
+                }
+
+        }
+
+    }
+
+
+
+    private suspend fun insertParsed(parsed: ParsedReceipt, userId: Long): Result<Long> {
+
+        val receipt = Receipt(
+
+            userId = userId,
+
+            purchasedAt = parsed.purchasedAt!!,
+
+            sellerName = parsed.sellerName!!,
+
+            totalAmountTiyin = parsed.totalAmountTiyin!!,
+
+            vatAmountTiyin = parsed.vatAmountTiyin!!,
+
+            qrUrl = parsed.qrUrl,
+
+            paymentType = parsed.paymentType,
+
+            fiscalSign = parsed.fiscalSign,
+
+            address = parsed.address,
+
+            tin = parsed.tin,
+
+            terminalId = parsed.terminalId,
+
+            receiptNumber = parsed.receiptNumber,
+
+            nkmName = parsed.nkmName,
+
+            sn = parsed.sn,
+
+            rawText = parsed.rawSnippet
+
+        )
+
+        return container.receiptRepository.insert(receipt)
+
+    }
+
+
+
+    fun saveManualReceipt(
+
+        context: Context,
+
+        storeName: String,
+
+        dateMs: Long,
+
+        totalAmountTiyin: Long,
+
+        vatAmountTiyin: Long,
+
+        photoUri: Uri?,
+
+        onSaved: () -> Unit,
+
+        onError: (String) -> Unit
+
+    ) {
+
+        val userId = container.sessionManager.currentUserId.value
+
+        if (userId == null) {
+
+            onError("Сессия истекла. Войдите снова")
+
+            return
+
+        }
+
+        viewModelScope.launch {
+
+            _state.value = ScanState.Loading
+
+            var localPhotoPath: String? = null
+
+            if (photoUri != null) {
+
+                try {
+
+                    val fileName = "manual_${System.currentTimeMillis()}.jpg"
+
+                    val file = java.io.File(context.filesDir, fileName)
+
+                    context.contentResolver.openInputStream(photoUri)?.use { input ->
+
+                        file.outputStream().use { out -> input.copyTo(out) }
+
+                    }
+
+                    localPhotoPath = file.absolutePath
+
+                } catch (e: Exception) {
+
+                    _state.value = ScanState.Idle
+
+                    onError("Не удалось сохранить фото: ${e.message}")
+
+                    return@launch
+
+                }
+
+            }
+
+            
+
+            val receipt = Receipt(
+
+                userId = userId,
+
+                purchasedAt = dateMs,
+
+                sellerName = storeName,
+
+                totalAmountTiyin = totalAmountTiyin,
+
+                vatAmountTiyin = vatAmountTiyin,
+
+                qrUrl = "manual_${System.currentTimeMillis()}_${(1000..9999).random()}", // Fake QR URL for uniqueness constraint
+
+                isManual = true,
+
+                manualPhotoUri = localPhotoPath
+
+            )
+
+            
+
+            container.receiptRepository.insert(receipt)
+
+                .onSuccess {
+
+                    _state.value = ScanState.Idle
+
+                    onSaved()
+
+                }
+
+                .onFailure { e ->
+
+                    _state.value = ScanState.Idle
+
+                    onError(e.message ?: "Ошибка сохранения")
+
+                }
+
+        }
+
+    }
+
+
+
+    /**
+
+     * Сохраняет чек для указанного пользователя (используется аудитором при QR-верификации).
+
+     * Возвращает id новой записи или ошибку.
+
+     */
+
+    suspend fun saveForUser(
+
+        parsed: ParsedReceipt,
+
+        userId: Long,
+
+        auditorUserId: Long? = null
+
+    ): Result<Long> {
+
+        if (!parsed.isValid) return Result.failure(IllegalStateException("Неполные данные чека"))
+
+        val owner = container.receiptRepository.findOwner(
+
+            qrUrl = parsed.qrUrl,
+
+            fiscalSign = parsed.fiscalSign,
+
+            terminalId = parsed.terminalId,
+
+            receiptNumber = parsed.receiptNumber,
+
+        )
+
+        if (owner != null && owner.userId != userId) {
+
+            return Result.failure(
+
+                IllegalStateException("Данный чек уже есть у пользователя ${owner.fullName}")
+
+            )
+
+        }
+
+        if (owner != null && owner.userId == userId) {
+
+            return Result.success(owner.receiptId)
+
+        }
+
+        val result = insertParsed(parsed, userId)
+
+        if (result.isSuccess && auditorUserId != null) {
+
+            result.getOrNull()?.let { id ->
+
+                container.receiptRepository.markVerified(id, auditorUserId)
+
+            }
+
+        }
+
+        return result
+
+    }
+
+}
+
