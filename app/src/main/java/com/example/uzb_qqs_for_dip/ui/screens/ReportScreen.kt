@@ -1,4 +1,4 @@
-package com.example.uzb_qqs_for_dip.ui.screens
+﻿package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -78,6 +79,7 @@ private data class UserChoice(val id: Long?, val label: String)
 private data class YearChoice(val year: Int)
 private data class QuarterChoice(val quarter: Quarter)
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(
     appViewModel: AppViewModel,
@@ -96,6 +98,7 @@ fun ReportScreen(
     var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
     var showSaveFormatDialog by remember { mutableStateOf(false) }
     var showShareFormatDialog by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
 
     val savePdfLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
@@ -160,9 +163,26 @@ fun ReportScreen(
     val totalSum = rows.sumOf { it.receipt.totalAmountTiyin }
     val totalVat = rows.sumOf { it.receipt.vatAmountTiyin }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
+    if (showHelp) {
+        com.example.uzb_qqs_for_dip.ui.components.HelpDialog(onDismissRequest = { showHelp = false })
+    }
+
+    androidx.compose.material3.Scaffold(
+        topBar = {
+            androidx.compose.material3.TopAppBar(
+                title = { Text("Отчёт") },
+                actions = {
+                    androidx.compose.material3.IconButton(onClick = { showHelp = true }) {
+                        Icon(androidx.compose.material.icons.Icons.Outlined.HelpOutline, contentDescription = "Помощь")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
@@ -427,6 +447,7 @@ fun ReportScreen(
                 Button(onClick = { saveSuccessMessage = null }) { Text("OK") }
             }
         )
+    }
     }
 }
 
@@ -790,3 +811,4 @@ private fun InfoRow(label: String, value: String, endAlign: Boolean = false) {
         }
     }
 }
+

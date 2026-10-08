@@ -172,10 +172,11 @@ fun ProfileScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedButton(
+                Button(
                     onClick = { appViewModel.switchCurrentUserRole() },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
                     Text(
                         if (user?.role == UserRole.AUDITOR)
@@ -499,3 +500,5 @@ fun EditProfileDialog(
         }
     )
 }
+
+

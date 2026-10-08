@@ -2,18 +2,25 @@ package com.example.uzb_qqs_for_dip.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.automirrored.outlined.FactCheck
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.TableChart
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,11 +35,11 @@ import com.example.uzb_qqs_for_dip.data.model.UserRole
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
+import com.example.uzb_qqs_for_dip.ui.components.HelpDialog
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorReceiptSearchScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuthScreen
-
 import com.example.uzb_qqs_for_dip.ui.screens.ProfileScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ReceiptsScreen
 import com.example.uzb_qqs_for_dip.ui.screens.RegisterScreen
@@ -51,7 +58,6 @@ private sealed class MainTab(val route: String, val title: String, val icon: Ima
     data object Report : MainTab("main/report", "Отчёт", Icons.Outlined.Description)
     data object Audit : MainTab("main/audit", "Аудит", Icons.AutoMirrored.Outlined.FactCheck)
     data object Profile : MainTab("main/profile", "Профиль", Icons.Outlined.Person)
-
     companion object {
         val employee = listOf(Scan, Receipts, Report, Profile)
         val auditor = listOf(Audit, Receipts, Report, Profile)
@@ -60,7 +66,6 @@ private sealed class MainTab(val route: String, val title: String, val icon: Ima
 
 private const val ROUTE_AUDIT_VERIFY = "main/audit/verify"
 private const val ROUTE_AUDIT_SEARCH = "main/audit/search"
-
 private const val ARG_USER_ID = "userId"
 private const val ARG_QUARTER = "quarter"
 private const val ARG_YEAR = "year"
@@ -70,9 +75,7 @@ private const val ARG_MANUAL = "manual"
 fun AppNavHost(appViewModel: AppViewModel = viewModel()) {
     val navController = rememberNavController()
     val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
-
     val startDestination = if (currentUser == null) TopRoute.Auth.route else TopRoute.Main.route
-
     NavHost(navController = navController, startDestination = startDestination) {
         composable(TopRoute.Auth.route) {
             AuthScreen(
@@ -89,11 +92,7 @@ fun AppNavHost(appViewModel: AppViewModel = viewModel()) {
             RegisterScreen(
                 appViewModel = appViewModel,
                 onBack = { navController.popBackStack() },
-                onCreated = {
-                    navController.navigate(TopRoute.Main.route) {
-                        popUpTo(TopRoute.Auth.route) { inclusive = true }
-                    }
-                }
+                onCreated = { }
             )
         }
         composable(TopRoute.Main.route) {
@@ -109,6 +108,7 @@ fun AppNavHost(appViewModel: AppViewModel = viewModel()) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainScaffold(
     appViewModel: AppViewModel,
@@ -117,21 +117,31 @@ private fun MainScaffold(
     val tabsNav = rememberNavController()
     val backStackEntry by tabsNav.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-
     val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
     val isAuditor = currentUser?.role == UserRole.AUDITOR
     val tabs = if (isAuditor) MainTab.auditor else MainTab.employee
-
     val startTab = if (isAuditor) MainTab.Audit.route else MainTab.Scan.route
 
+    var showHelpDialog by remember { mutableStateOf(false) }
+    if (showHelpDialog) {
+        HelpDialog(onDismissRequest = { showHelpDialog = false })
+    }
+
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("UZB QQS") },
+                actions = {
+                    IconButton(onClick = { showHelpDialog = true }) {
+                        Icon(Icons.Outlined.HelpOutline, contentDescription = "Помощь")
+                    }
+                }
+            )
+        },
         bottomBar = {
             NavigationBar {
                 tabs.forEach { tab ->
-                    val selected = currentRoute?.let { route ->
-                        backStackEntry?.destination?.hierarchy?.any { it.route == tab.route } == true ||
-                            route == tab.route
-                    } ?: false
+                    val selected = backStackEntry?.destination?.hierarchy?.any { it.route == tab.route } == true
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -179,14 +189,11 @@ private fun MainScaffold(
                 )
             }
             composable(ROUTE_AUDIT_SEARCH) {
-                val auditorVm: AuditorViewModel = viewModel()
-                val quarter by auditorVm.quarter.collectAsStateWithLifecycle()
-                val year by auditorVm.year.collectAsStateWithLifecycle()
                 AuditorReceiptSearchScreen(
                     onBack = { tabsNav.popBackStack() },
                     onOpenEmployee = { userId ->
                         tabsNav.navigate(
-                            "$ROUTE_AUDIT_VERIFY?$ARG_USER_ID=$userId&$ARG_QUARTER=${quarter.name}&$ARG_YEAR=$year"
+                            "$ROUTE_AUDIT_VERIFY?$ARG_USER_ID=$userId&$ARG_QUARTER=Q1&$ARG_YEAR=2026"
                         )
                     }
                 )
@@ -206,7 +213,6 @@ private fun MainScaffold(
                     onBack = { tabsNav.popBackStack() }
                 )
             }
-
             composable(MainTab.Profile.route) {
                 ProfileScreen(
                     appViewModel = appViewModel,

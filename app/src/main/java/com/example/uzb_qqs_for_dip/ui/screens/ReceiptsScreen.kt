@@ -74,8 +74,6 @@ fun ReceiptsScreen(
     val users by receiptsViewModel.users.collectAsStateWithLifecycle()
     val currentUser by receiptsViewModel.currentUser.collectAsStateWithLifecycle()
     val exportEvent by receiptsViewModel.exportEvents.collectAsStateWithLifecycle()
-    val isUpdating by receiptsViewModel.isUpdating.collectAsStateWithLifecycle()
-    val updateProgress by receiptsViewModel.updateProgress.collectAsStateWithLifecycle()
     val isSaving by receiptsViewModel.isSaving.collectAsStateWithLifecycle()
     val saveProgress by receiptsViewModel.saveProgress.collectAsStateWithLifecycle()
 
@@ -174,19 +172,6 @@ fun ReceiptsScreen(
                     SettingsRow("Чеков", rows.size.toString())
                 }
             }
-
-            Spacer(Modifier.height(10.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                UpdateProgressButton(
-                    modifier = Modifier.weight(1f),
-                    isUpdating = isUpdating,
-                    progress = updateProgress,
-                    enabled = !isUpdating && !isSaving && rows.isNotEmpty(),
-                    onClick = { receiptsViewModel.updateVisibleReceiptsFromSite() }
-                )
-            }
-
             Spacer(Modifier.height(8.dp))
 
             ExportActionGrid(
@@ -196,7 +181,7 @@ fun ReceiptsScreen(
                 onShare = { showShareFormatDialog = true },
                 isSaving = isSaving,
                 saveProgress = saveProgress,
-                isSaveEnabled = !isSaving && !isUpdating && rows.isNotEmpty(),
+                isSaveEnabled = !isSaving && rows.isNotEmpty(),
                 isOpenPrintEnabled = rows.isNotEmpty()
             )
 
@@ -533,3 +518,4 @@ private fun UpdateProgressButton(
         }
     }
 }
+

@@ -624,3 +624,4 @@ private fun ReceiptField(label: String, value: String?, bold: Boolean = false) {
         )
     }
 }
+
