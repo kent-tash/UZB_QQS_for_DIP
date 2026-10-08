@@ -233,7 +233,15 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                 _event.value = ReportEvent.Error("Нет данных для экспорта")
                 return@launch
             }
+            _isSaving.value = true
+            _saveProgress.value = 0f
             try {
+                syncWithOfd { current, total ->
+                    _savePhase.value = "Синхронизация... Обработано $current из $total"
+                    _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
+                }
+                _savePhase.value = "Формирование файла..."
+
                 val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
                 val file = if (asPdf) {
                     val params = ReportParams(
@@ -361,7 +369,15 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                 _event.value = ReportEvent.Error("Нет выбранного пользователя")
                 return@launch
             }
+            _isSaving.value = true
+            _saveProgress.value = 0f
             try {
+                syncWithOfd { current, total ->
+                    _savePhase.value = "Синхронизация... Обработано $current из $total"
+                    _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
+                }
+                _savePhase.value = "Формирование PDF..."
+
                 val params = ReportParams(
                     user = user,
                     periodStart = s.from,
@@ -390,6 +406,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     _event.value = ReportEvent.Open(chooser)
                 }
+                _saveProgress.value = 1f
             } catch (e: Throwable) {
                 _event.value = ReportEvent.Error("Ошибка формирования PDF: ${e.message}")
             }

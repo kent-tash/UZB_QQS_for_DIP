@@ -70,6 +70,15 @@ fun ProfileScreen(
     var selectedBackupUri by remember { mutableStateOf<Uri?>(null) }
     var showReplaceWarning by remember { mutableStateOf(false) }
 
+    val scrollState = rememberScrollState()
+    LaunchedEffect(appViewModel.scrollToTopEvent) {
+        appViewModel.scrollToTopEvent.collect { route ->
+            if (route == "main/profile") {
+                scrollState.animateScrollTo(0)
+            }
+        }
+    }
+
     val createBackupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument(AppBackup.MIME_TYPE)
     ) { uri ->
@@ -88,8 +97,8 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .verticalScroll(scrollState)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
@@ -301,11 +310,15 @@ fun ProfileScreen(
                 title = { Text("Как использовать файл?") },
                 text = { Text("Вы можете добавить данные к текущим или полностью заменить базу.") },
                 confirmButton = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
                             onClick = { showReplaceWarning = true },
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
                             )
                         ) { Text("Полностью заменить") }
                         
@@ -314,7 +327,8 @@ fun ProfileScreen(
                                 selectedBackupUri = null
                                 android.widget.Toast.makeText(context, "Начато слияние баз...", android.widget.Toast.LENGTH_SHORT).show()
                                 appViewModel.mergeBackupFromUri(context, uri)
-                            }
+                            },
+                            modifier = Modifier.weight(1f)
                         ) { Text("Добавить к текущим") }
                     }
                 },

@@ -52,7 +52,7 @@ fun ExportActionGrid(
                 Spacer(Modifier.size(6.dp))
                 Text("Сохранить")
             }
-            OutlinedButton(
+            androidx.compose.material3.FilledTonalButton(
                 onClick = onShare,
                 modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(14.dp),
@@ -77,7 +77,7 @@ fun ExportActionGrid(
                 Spacer(Modifier.size(6.dp))
                 Text("Открыть")
             }
-            Button(
+            androidx.compose.material3.TextButton(
                 onClick = onPrint,
                 modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(14.dp),

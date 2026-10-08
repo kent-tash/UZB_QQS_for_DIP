@@ -314,41 +314,49 @@ fun AuditorScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Аудит") },
-                actions = {
-                    IconButton(onClick = onSearchReceipts) {
-                        Icon(Icons.Outlined.Search, "Найти чек")
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
+        appViewModel.scrollToTopEvent.collect { route ->
+            if (route == "main/audit") {
+                listState.animateScrollToItem(0)
+            }
+        }
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = onSearchReceipts) {
+                    Icon(Icons.Outlined.Search, "Найти чек")
+                }
+                IconButton(onClick = { showAddEmployeeDialog = true }) {
+                    Icon(Icons.Outlined.PersonAdd, "Добавить сотрудника")
+                }
+                Box {
+                    IconButton(onClick = { showMoreMenu = true }) {
+                        Icon(Icons.Default.MoreVert, "Больше")
                     }
-                    IconButton(onClick = { showAddEmployeeDialog = true }) {
-                        Icon(Icons.Outlined.PersonAdd, "Добавить сотрудника")
-                    }
-                    Box {
-                        IconButton(onClick = { showMoreMenu = true }) {
-                            Icon(Icons.Default.MoreVert, "Больше")
-                        }
-                        DropdownMenu(expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
-                            DropdownMenuItem(
-                                text = { Text("Реквизиты организации") },
-                                onClick = { showMoreMenu = false; showAuditorSettingsDialog = true }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Импорт бэкапов") },
-                                onClick = { showMoreMenu = false; batchImportLauncher.launch(arrayOf("application/json")) }
-                            )
-                        }
+                    DropdownMenu(expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Реквизиты организации") },
+                            onClick = { showMoreMenu = false; showAuditorSettingsDialog = true }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Импорт бэкапов") },
+                            onClick = { showMoreMenu = false; batchImportLauncher.launch(arrayOf("application/json")) }
+                        )
                     }
                 }
-            )
-        }
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+            }
+
             // Quarter/Year selector
             QuarterYearRow(
                 quarter = quarter,
@@ -394,19 +402,20 @@ fun AuditorScreen(
             )
 
             FilterChipsRow(currentFilter = filter, onFilterChange = vm::setFilter)
+        }
 
-            if (isLoading) {
+        if (isLoading) {
+            item {
                 Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-                return@Column
             }
-
-            if (filtered.isEmpty()) {
+        } else if (filtered.isEmpty()) {
+            item {
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .weight(1f),
+                        .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -415,34 +424,27 @@ fun AuditorScreen(
                         textAlign = TextAlign.Center
                     )
                 }
-                return@Column
             }
-
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(filtered, key = { it.userId }) { summary ->
-                    EmployeeCard(
-                        summary = summary,
-                        hasConflict = conflicts.any {
-                            it.user1Id == summary.userId || it.user2Id == summary.userId
-                        },
-                        onVerify = { onVerifyEmployee(summary.userId) },
-                        onEditDeclaration = { showDeclarationDialog = summary },
-                        onShowDiscrepancy = {
-                            showDiscrepancyDetail = vm.getDiscrepancyDetail(summary.userId)
-                        }
-                    )
-                }
-                item {
-                    TotalsCard(
-                        total = filtered.sumOf { it.totalTiyin },
-                        vat = filtered.sumOf { it.vatTiyin },
-                        count = filtered.size
-                    )
-                }
+        } else {
+            items(filtered, key = { it.userId }) { summary ->
+                EmployeeCard(
+                    summary = summary,
+                    hasConflict = conflicts.any {
+                        it.user1Id == summary.userId || it.user2Id == summary.userId
+                    },
+                    onVerify = { onVerifyEmployee(summary.userId) },
+                    onEditDeclaration = { showDeclarationDialog = summary },
+                    onShowDiscrepancy = {
+                        showDiscrepancyDetail = vm.getDiscrepancyDetail(summary.userId)
+                    }
+                )
+            }
+            item {
+                TotalsCard(
+                    total = filtered.sumOf { it.totalTiyin },
+                    vat = filtered.sumOf { it.vatTiyin },
+                    count = filtered.size
+                )
             }
         }
     }

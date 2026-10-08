@@ -18,6 +18,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +34,12 @@ import kotlinx.coroutines.withContext
  * умеет логинить/выводить из системы. Используется на экране авторизации и навигационным графом.
  */
 class AppViewModel(app: Application) : AndroidViewModel(app) {
+    private val _scrollToTopEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val scrollToTopEvent = _scrollToTopEvent.asSharedFlow()
+
+    fun requestScrollToTop(route: String) {
+        _scrollToTopEvent.tryEmit(route)
+    }
 
     private val container: AppContainer = (app as QqsApp).container
 

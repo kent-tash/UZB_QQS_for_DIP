@@ -1,5 +1,6 @@
 package com.example.uzb_qqs_for_dip.ui.navigation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FactCheck
@@ -121,6 +122,7 @@ private fun MainScaffold(
     val isAuditor = currentUser?.role == UserRole.AUDITOR
     val tabs = if (isAuditor) MainTab.auditor else MainTab.employee
     val startTab = if (isAuditor) MainTab.Audit.route else MainTab.Scan.route
+    val currentTitle = tabs.find { it.route == currentRoute }?.title ?: "UZB QQS"
 
     var showHelpDialog by remember { mutableStateOf(false) }
     if (showHelpDialog) {
@@ -130,7 +132,14 @@ private fun MainScaffold(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("UZB QQS") },
+                title = {
+                    Text(
+                        text = currentTitle,
+                        modifier = Modifier.clickable {
+                            currentRoute?.let { appViewModel.requestScrollToTop(it) }
+                        }
+                    )
+                },
                 actions = {
                     IconButton(onClick = { showHelpDialog = true }) {
                         Icon(Icons.Outlined.HelpOutline, contentDescription = "Помощь")

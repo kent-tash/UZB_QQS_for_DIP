@@ -136,10 +136,20 @@ fun ReceiptsScreen(
     }
     val sortLabel = "${settings.sortField.label} • ${settings.sortOrder.label}"
 
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
+        appViewModel.scrollToTopEvent.collect { route ->
+            if (route == "main/receipts" && rows.isNotEmpty()) {
+                listState.animateScrollToItem(0)
+            }
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         item {
             Text(

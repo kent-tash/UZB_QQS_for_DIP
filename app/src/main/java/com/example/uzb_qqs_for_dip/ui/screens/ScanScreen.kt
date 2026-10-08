@@ -105,6 +105,15 @@ fun ScanScreen(
     var showSheetSourceDialog by remember { mutableStateOf(false) }
     var showSheetCamera by remember { mutableStateOf(false) }
 
+    val scrollState = rememberScrollState()
+    androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
+        appViewModel.scrollToTopEvent.collect { route ->
+            if (route == "main/scan") {
+                scrollState.animateScrollTo(0)
+            }
+        }
+    }
+
     val isBusy = state is ScanState.Loading ||
         state is ScanState.Parsed ||
         sheetLoading ||
@@ -113,8 +122,8 @@ fun ScanScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .verticalScroll(scrollState)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Header(userName = currentUser?.fullName.orEmpty())
@@ -173,14 +182,15 @@ fun ScanScreen(
                     },
                     enabled = !isBusy,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Outlined.QrCodeScanner, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text(if (state is ScanState.Loading) "Загрузка чека..." else "Сканировать QR-код")
                 }
                 Spacer(Modifier.height(10.dp))
-                OutlinedButton(
+                Button(
                     onClick = {
                         if (!isBusy) {
                             pickImageLauncher.launch(
@@ -192,29 +202,32 @@ fun ScanScreen(
                     },
                     enabled = !isBusy,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
                     Icon(Icons.Outlined.PhotoLibrary, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text("Загрузить фото чека")
                 }
                 Spacer(Modifier.height(10.dp))
-                OutlinedButton(
+                Button(
                     onClick = { if (!isBusy) showLinkDialog = true },
                     enabled = !isBusy,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
                     Icon(Icons.Outlined.Link, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text("Добавить по ссылке")
                 }
                 Spacer(Modifier.height(10.dp))
-                OutlinedButton(
+                Button(
                     onClick = { if (!isBusy) showSheetSourceDialog = true },
                     enabled = !isBusy,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
                 ) {
                     Icon(Icons.Outlined.GridView, contentDescription = null)
                     Spacer(Modifier.size(8.dp))

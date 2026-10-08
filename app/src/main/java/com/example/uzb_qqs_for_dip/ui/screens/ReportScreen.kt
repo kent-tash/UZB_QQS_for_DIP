@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui.screens
+package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -167,24 +167,20 @@ fun ReportScreen(
         com.example.uzb_qqs_for_dip.ui.components.HelpDialog(onDismissRequest = { showHelp = false })
     }
 
-    androidx.compose.material3.Scaffold(
-        topBar = {
-            androidx.compose.material3.TopAppBar(
-                title = { Text("Отчёт") },
-                actions = {
-                    androidx.compose.material3.IconButton(onClick = { showHelp = true }) {
-                        Icon(androidx.compose.material.icons.Icons.Outlined.HelpOutline, contentDescription = "Помощь")
-                    }
-                }
-            )
+    val scrollState = rememberScrollState()
+    androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
+        appViewModel.scrollToTopEvent.collect { route ->
+            if (route == "main/report") {
+                scrollState.animateScrollTo(0)
+            }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             "PDF-отчёт для печати",
@@ -447,7 +443,6 @@ fun ReportScreen(
                 Button(onClick = { saveSuccessMessage = null }) { Text("OK") }
             }
         )
-    }
     }
 }
 
