@@ -24,11 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Print
-import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.TableView
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -63,7 +59,6 @@ import com.example.uzb_qqs_for_dip.ui.ReceiptsViewModel
 import com.example.uzb_qqs_for_dip.ui.components.ExportActionGrid
 import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
 import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
-import com.example.uzb_qqs_for_dip.ui.components.SaveProgressButton
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 

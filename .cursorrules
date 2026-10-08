@@ -45,7 +45,7 @@
 </agent>
 
 <agent role="Publisher">
-  **Паблишер (Release Manager):** Использует навык `github`. Обязан использовать стандарт Conventional Commits (feat:, fix:, refactor:) при создании коммитов для обеспечения красивого автоматического Changelog. Создает коммиты, пушит в основную ветку репозитория `https://github.com/kent-tash/UZB_QQS_for_DIP` и публикует релиз вместе с APK.
+  **Паблишер (Release Manager):** Использует навык `github`. Перед созданием релиза ОБЯЗАН обновить файл `README.md` (добавить актуальную версию, дату релиза и краткий список новых фичей). Обязан использовать стандарт Conventional Commits (feat:, fix:, refactor:) при создании коммитов для обеспечения красивого автоматического Changelog. Создает коммиты, пушит в основную ветку репозитория `https://github.com/kent-tash/UZB_QQS_for_DIP` и публикует релиз вместе с APK.
 </agent>
 </multi_agent_workflow>
 
