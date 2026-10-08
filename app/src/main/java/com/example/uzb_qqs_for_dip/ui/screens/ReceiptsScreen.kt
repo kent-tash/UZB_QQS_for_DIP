@@ -218,17 +218,6 @@ fun ReceiptsScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            OutlinedButton(
-                onClick = { receiptsViewModel.exportCsv(context) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                enabled = rows.isNotEmpty()
-            ) {
-                Icon(Icons.Outlined.TableView, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Поделиться CSV")
-            }
-            Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(
                     onClick = { receiptsViewModel.previewReceiptsPdf(context) },

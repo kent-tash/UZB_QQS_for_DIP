@@ -71,8 +71,8 @@ object OrgReportPdfGenerator {
         year: Int,
         s: AuditorSettings,
     ) {
-        val bold = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        val regular = Typeface.SANS_SERIF
+        val bold = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+        val regular = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
 
         val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = bold; textSize = 11f; color = 0xFF111827.toInt()
@@ -176,12 +176,14 @@ object OrgReportPdfGenerator {
 
         var globalIndex = 0
 
+        val bottomMarginExtra = 80f // Увеличенный нижний отступ
+
         for ((orgName, orgRows) in grouped) {
             var orgVatTotal = 0L
 
             for ((localIdx, summary) in orgRows.withIndex()) {
                 globalIndex++
-                if (y + ROW_H > PAGE_HEIGHT - MARGIN - SUBTOTAL_ROW_H - ROW_H) {
+                if (y + ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra - SUBTOTAL_ROW_H - ROW_H) {
                     doc.finishPage(currentPage)
                     currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
                     canvas = currentPage.canvas
@@ -213,7 +215,7 @@ object OrgReportPdfGenerator {
             }
 
             // Subtotal row for this org
-            if (y + SUBTOTAL_ROW_H > PAGE_HEIGHT - MARGIN) {
+            if (y + SUBTOTAL_ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra) {
                 doc.finishPage(currentPage)
                 currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
                 canvas = currentPage.canvas
@@ -235,7 +237,7 @@ object OrgReportPdfGenerator {
         }
 
         // ── Grand total row ───────────────────────────────────────────────────
-        if (y + ROW_H + SIGNATURE_HEIGHT > PAGE_HEIGHT - MARGIN) {
+        if (y + ROW_H + SIGNATURE_HEIGHT > PAGE_HEIGHT - MARGIN - bottomMarginExtra) {
             doc.finishPage(currentPage)
             currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
             canvas = currentPage.canvas

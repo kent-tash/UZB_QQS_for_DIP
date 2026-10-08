@@ -141,6 +141,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     /** Делится PNG одного чека (с актуальным № в чёрном квадрате). */
     fun shareReceiptImage(context: Context, item: ReceiptWithUser) {
         viewModelScope.launch {
+            container.receiptRepository.refresh()
             try {
                 val ordinal = receipts.value.indexOfFirst { it.receipt.id == item.receipt.id } + 1
                 if (ordinal <= 0) {
@@ -169,6 +170,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     /** Печать всех чеков в текущей сортировке (6 на лист, в порядке № таблицы). */
     fun printAllAsSheets(context: Context) {
         viewModelScope.launch {
+            container.receiptRepository.refresh()
             try {
                 val file = generateReceiptsSheetPdf(context)
                 _exportEvents.value = ExportEvent.Print(file, "QQS чеки (${receipts.value.size} шт.)")
@@ -181,6 +183,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     /** Предпросмотр PDF с чеками для печати (6 на лист). */
     fun previewReceiptsPdf(context: Context) {
         viewModelScope.launch {
+            container.receiptRepository.refresh()
             try {
                 val file = generateReceiptsSheetPdf(context)
                 val uri = FileProvider.getUriForFile(
@@ -246,6 +249,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun shareReceiptsPdf(context: Context) {
         viewModelScope.launch {
+            container.receiptRepository.refresh()
             try {
                 val file = generateReceiptsSheetPdf(context)
                 val uri = FileProvider.getUriForFile(
@@ -267,6 +271,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun saveReceiptsFile(context: Context, uri: Uri, asPdf: Boolean) {
+        container.receiptRepository.refresh()
         val rows = receipts.value
         if (rows.isEmpty()) {
             _exportEvents.value = ExportEvent.Error("Нет чеков для сохранения")
@@ -359,6 +364,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         block: suspend (List<ReceiptWithUser>) -> Pair<File, String>
     ) {
         viewModelScope.launch {
+            container.receiptRepository.refresh()
             try {
                 val rows = receipts.value
                 if (rows.isEmpty()) {

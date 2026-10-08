@@ -219,6 +219,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun shareReport(context: Context, asPdf: Boolean) {
         viewModelScope.launch {
+            container.receiptRepository.refresh()
             val s = settings.value
             val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value
             if (user == null) {
@@ -275,6 +276,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun saveReportFile(context: Context, uri: Uri, asPdf: Boolean) {
+        container.receiptRepository.refresh()
         val s = settings.value
         val user = users.value.firstOrNull { it.id == s.userId } ?: currentUser.value
         if (user == null) {
@@ -329,6 +331,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun generate(context: Context, openSystemPrint: Boolean) {
         viewModelScope.launch {
+            container.receiptRepository.refresh()
             val s = settings.value
             val user = users.value.firstOrNull { it.id == s.userId }
                 ?: currentUser.value

@@ -20,10 +20,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,15 +37,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -52,17 +57,22 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Полноэкранный сканер листа: камера непрерывно читает все QR в кадре,
- * накапливает уникальные URL. «Готово» возвращает список.
- */
+enum class ValidationStatus {
+    IDLE,
+    VALIDATING,
+    SUCCESS,
+    ERROR
+}
+
 @Composable
 fun MultiQrCameraScannerDialog(
     onDismiss: () -> Unit,
-    onFinished: (List<String>) -> Unit
+    onQrDetected: suspend (String) -> Pair<Boolean, String>
 ) {
     val context = LocalContext.current
     var hasPermission by remember {
@@ -101,7 +111,7 @@ fun MultiQrCameraScannerDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            "Нужен доступ к камере, чтобы сканировать QR на листе",
+                            "Нужен доступ к камере, чтобы сканировать QR",
                             color = Color.White,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -116,7 +126,7 @@ fun MultiQrCameraScannerDialog(
                 else -> {
                     MultiQrCameraContent(
                         onDismiss = onDismiss,
-                        onFinished = onFinished
+                        onQrDetected = onQrDetected
                     )
                 }
             }
@@ -127,12 +137,15 @@ fun MultiQrCameraScannerDialog(
 @Composable
 private fun MultiQrCameraContent(
     onDismiss: () -> Unit,
-    onFinished: (List<String>) -> Unit
+    onQrDetected: suspend (String) -> Pair<Boolean, String>
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val foundUrls = remember { linkedSetOf<String>() }
-    var foundCount by remember { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
+
+    var status by remember { mutableStateOf(ValidationStatus.IDLE) }
+    var message by remember { mutableStateOf("") }
+    val alreadyScanned = remember { mutableSetOf<String>() }
+
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val analyzing = remember { AtomicBoolean(false) }
 
@@ -167,6 +180,11 @@ private fun MultiQrCameraContent(
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build()
                     analysis.setAnalyzer(analysisExecutor) { imageProxy ->
+                        if (status != ValidationStatus.IDLE) {
+                            imageProxy.close()
+                            return@setAnalyzer
+                        }
+
                         if (!analyzing.compareAndSet(false, true)) {
                             imageProxy.close()
                             return@setAnalyzer
@@ -183,21 +201,26 @@ private fun MultiQrCameraContent(
                         )
                         scanner.process(image)
                             .addOnSuccessListener { barcodes ->
-                                var added = false
                                 for (barcode in barcodes) {
                                     val raw = barcode.rawValue?.trim().orEmpty()
                                     if (raw.isEmpty()) continue
                                     if (!raw.startsWith("http://") && !raw.startsWith("https://")) continue
-                                    synchronized(foundUrls) {
-                                        if (foundUrls.add(raw)) added = true
+                                    
+                                    if (alreadyScanned.contains(raw)) continue
+
+                                    status = ValidationStatus.VALIDATING
+                                    alreadyScanned.add(raw)
+
+                                    scope.launch {
+                                        val (success, msg) = onQrDetected(raw)
+                                        message = msg
+                                        status = if (success) ValidationStatus.SUCCESS else ValidationStatus.ERROR
+                                        
+                                        delay(1500)
+                                        status = ValidationStatus.IDLE
+                                        message = ""
                                     }
-                                }
-                                if (added) {
-                                    previewView.post {
-                                        synchronized(foundUrls) {
-                                            foundCount = foundUrls.size
-                                        }
-                                    }
+                                    break
                                 }
                             }
                             .addOnCompleteListener {
@@ -214,12 +237,41 @@ private fun MultiQrCameraContent(
                             analysis
                         )
                     } catch (_: Exception) {
-                        // камера недоступна
                     }
                 }, ContextCompat.getMainExecutor(ctx))
                 previewView
             }
         )
+
+        if (status != ValidationStatus.IDLE) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    when (status) {
+                        ValidationStatus.VALIDATING -> {
+                            CircularProgressIndicator(color = Color.White)
+                            Spacer(Modifier.height(16.dp))
+                            Text("Проверка...", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                        }
+                        ValidationStatus.SUCCESS -> {
+                            Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(80.dp))
+                            Spacer(Modifier.height(16.dp))
+                            Text(message.ifEmpty { "Успешно сохранено!" }, color = Color.White, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
+                        }
+                        ValidationStatus.ERROR -> {
+                            Icon(Icons.Filled.Error, null, tint = Color(0xFFF44336), modifier = Modifier.size(80.dp))
+                            Spacer(Modifier.height(16.dp))
+                            Text(message, color = Color.White, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
+                        }
+                        else -> Unit
+                    }
+                }
+            }
+        }
 
         Column(
             Modifier
@@ -234,7 +286,7 @@ private fun MultiQrCameraContent(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "Скан листа камерой",
+                    "Скан чеков",
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleMedium
@@ -244,7 +296,7 @@ private fun MultiQrCameraContent(
                 }
             }
             Text(
-                "Наведите на лист с чеками. Найденные QR накапливаются автоматически.",
+                "Наведите на QR код. Сканер автоматически проверит и сохранит его.",
                 color = Color.White.copy(alpha = 0.85f),
                 style = MaterialTheme.typography.bodySmall
             )
@@ -258,32 +310,12 @@ private fun MultiQrCameraContent(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Найдено QR: $foundCount",
-                color = Color.White,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(12.dp))
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                ) { Text("Отмена") }
-                Button(
-                    onClick = {
-                        val list = synchronized(foundUrls) { foundUrls.toList() }
-                        onFinished(list)
-                    },
-                    modifier = Modifier.weight(1f),
-                    enabled = foundCount > 0,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Готово ($foundCount)")
-                }
+                Text("Завершить сканирование")
             }
         }
     }

@@ -69,8 +69,8 @@ object SummaryPdfGenerator {
         year: Int,
         s: AuditorSettings,
     ) {
-        val bold = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        val regular = Typeface.SANS_SERIF
+        val bold = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+        val regular = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
 
         val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = bold; textSize = 11f; color = 0xFF111827.toInt()
@@ -167,9 +167,11 @@ object SummaryPdfGenerator {
 
         y = drawTableHeader(canvas, y)
 
+        val bottomMarginExtra = 80f // Увеличенный нижний отступ
+
         // ── Data rows ─────────────────────────────────────────────────────────
         rows.forEachIndexed { idx, summary ->
-            if (y + ROW_H > PAGE_HEIGHT - MARGIN - ROW_H * 3) {
+            if (y + ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra - ROW_H * 3) {
                 doc.finishPage(currentPage)
                 currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
                 canvas = currentPage.canvas
@@ -203,7 +205,7 @@ object SummaryPdfGenerator {
         }
 
         // ── ИТОГО row ─────────────────────────────────────────────────────────
-        if (y + ROW_H > PAGE_HEIGHT - MARGIN) {
+        if (y + ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra) {
             doc.finishPage(currentPage)
             currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
             canvas = currentPage.canvas

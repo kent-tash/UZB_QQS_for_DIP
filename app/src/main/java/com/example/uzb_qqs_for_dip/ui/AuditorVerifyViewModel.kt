@@ -363,6 +363,66 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
         _sheetPreviewItems.value = list
     }
 
+    suspend fun processSingleQr(rawUrl: String): Pair<Boolean, String> {
+        val employee = _selectedEmployee.value ?: return false to "Сотрудник не выбран"
+        val auditorId = container.sessionManager.currentUserId.value ?: return false to "Сессия истекла"
+        
+        val url = rawUrl.trim()
+        if (url.isEmpty()) return false to "Пустой QR-код"
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR не содержит ссылку на чек"
+
+        val parsedResult = container.receiptParser.fetchAndParse(url)
+        if (parsedResult.isFailure) return false to "Ошибка сети или сервера: " + (parsedResult.exceptionOrNull()?.message ?: "")
+        val parsed = parsedResult.getOrThrow()
+
+        if (!parsed.isValid) return false to "Не все поля чека распознаны"
+
+        val owner = container.receiptRepository.findOwner(
+            qrUrl = parsed.qrUrl,
+            fiscalSign = parsed.fiscalSign,
+            terminalId = parsed.terminalId,
+            receiptNumber = parsed.receiptNumber,
+        )
+
+        val (fromMs, toMs) = periodBounds()
+        val pMs = parsed.purchasedAt ?: 0L
+        val outOfPeriod = pMs < fromMs || pMs > toMs
+        val periodMsg = if (outOfPeriod) " (Вне периода)" else ""
+
+        when {
+            owner != null && owner.userId != employee.id -> {
+                return false to "Чек принадлежит: ${owner.fullName}"
+            }
+            owner != null && owner.userId == employee.id -> {
+                container.receiptRepository.markVerified(owner.receiptId, auditorId)
+                refreshEmployeeData()
+                return true to "Чек подтверждён (уже в базе)!$periodMsg"
+            }
+            else -> {
+                val r = Receipt(
+                    userId = employee.id,
+                    qrUrl = parsed.qrUrl,
+                    fiscalSign = parsed.fiscalSign,
+                    terminalId = parsed.terminalId,
+                    receiptNumber = parsed.receiptNumber,
+                    sellerName = parsed.sellerName ?: "",
+                    address = parsed.address ?: "",
+                    tin = parsed.tin ?: "",
+                    totalAmountTiyin = parsed.totalAmountTiyin ?: 0,
+                    vatAmountTiyin = parsed.vatAmountTiyin ?: 0,
+                    purchasedAt = parsed.purchasedAt ?: System.currentTimeMillis(),
+                    source = com.example.uzb_qqs_for_dip.data.model.ReceiptSource.APP
+                )
+                val insertedId = container.receiptRepository.insert(r).getOrNull() ?: -1L
+                if (insertedId > 0L) {
+                    container.receiptRepository.markVerified(insertedId, auditorId)
+                }
+                refreshEmployeeData()
+                return true to "Сохранено и подтверждено!$periodMsg"
+            }
+        }
+    }
+
     /**
      * Декодирует все QR с фото листа, для каждого URL парсит чек и ищет владельца
      * без вставки в БД — результат попадает в [sheetPreviewItems].

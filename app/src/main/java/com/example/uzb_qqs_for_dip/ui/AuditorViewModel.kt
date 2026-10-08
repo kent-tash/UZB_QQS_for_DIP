@@ -43,6 +43,7 @@ enum class AuditorExportKind {
     SUMMARY_XLSX,
     ORG_PDF,
     ORG_XLSX,
+    ZIP_ALL_RECEIPTS
 }
 
 class AuditorViewModel(app: Application) : AndroidViewModel(app) {
@@ -223,6 +224,8 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
 
     fun exportOrgXlsx(context: Context) = shareExport(context, AuditorExportKind.ORG_XLSX)
 
+    fun exportZipAllReceipts(context: Context) = shareExport(context, AuditorExportKind.ZIP_ALL_RECEIPTS)
+
     fun shareExportKind(context: Context, kind: AuditorExportKind) = shareExport(context, kind)
 
     fun suggestedFilename(kind: AuditorExportKind): String {
@@ -233,11 +236,13 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
             AuditorExportKind.SUMMARY_XLSX -> "audit_summary_${q}_$y.xlsx"
             AuditorExportKind.ORG_PDF -> "audit_org_report_${q}_$y.pdf"
             AuditorExportKind.ORG_XLSX -> "audit_org_report_${q}_$y.xlsx"
+            AuditorExportKind.ZIP_ALL_RECEIPTS -> "receipts_${q}_$y.zip"
         }
     }
 
     fun saveExportToUri(context: Context, uri: Uri, kind: AuditorExportKind) {
         viewModelScope.launch {
+            _isLoading.value = true
             val appCtx = context.applicationContext
             runCatching {
                 val file = withContext(Dispatchers.IO) {
@@ -257,11 +262,13 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                     ).show()
                 }
             }
+            _isLoading.value = false
         }
     }
 
     private fun shareExport(context: Context, kind: AuditorExportKind) {
         viewModelScope.launch {
+            _isLoading.value = true
             val appCtx = context.applicationContext
             runCatching {
                 val file = withContext(Dispatchers.IO) {
@@ -278,6 +285,8 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                     AuditorExportKind.ORG_XLSX ->
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" to
                             "Экспорт отчёта по организациям Excel"
+                    AuditorExportKind.ZIP_ALL_RECEIPTS ->
+                        "application/zip" to "Архив всех чеков"
                 }
                 shareFile(appCtx, file, mime, title)
             }.onFailure { e ->
@@ -285,6 +294,7 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                     Toast.makeText(appCtx, "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
+            _isLoading.value = false
         }
     }
 
@@ -303,6 +313,29 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                 SummaryTableExporter.exportXlsx(context, sums, quarter, year, settings, fileName)
             AuditorExportKind.ORG_XLSX ->
                 SummaryTableExporter.exportOrgXlsx(context, sums, quarter, year, settings, fileName)
+            AuditorExportKind.ZIP_ALL_RECEIPTS -> {
+                val from = ReportSettings.quarterStart(year, quarter)
+                val to = ReportSettings.quarterEnd(year, quarter)
+                val pdfs = sums.mapNotNull { summary ->
+                    val receipts = container.receiptRepository.search(
+                        query = "",
+                        userId = summary.userId,
+                        fromMs = from,
+                        toMs = to
+                    )
+                    if (receipts.isEmpty()) return@mapNotNull null
+                    val pdfName = "receipts_${summary.fullName.replace(" ", "_")}.pdf"
+                    com.example.uzb_qqs_for_dip.export.ReceiptsSheetPdfGenerator.generate(
+                        context = context,
+                        rowsInOrder = receipts,
+                        headerRightText = summary.fullName,
+                        periodLabel = "${quarter.name} $year",
+                        fileName = pdfName
+                    )
+                }
+                val zipFile = java.io.File(com.example.uzb_qqs_for_dip.export.ExportPaths.exportsDir(context), fileName)
+                com.example.uzb_qqs_for_dip.export.ZipExporter.createZip(pdfs, zipFile)
+            }
         }
     }
 

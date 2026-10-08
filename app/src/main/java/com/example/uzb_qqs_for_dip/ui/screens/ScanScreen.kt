@@ -308,9 +308,8 @@ fun ScanScreen(
     if (showSheetCamera) {
         MultiQrCameraScannerDialog(
             onDismiss = { showSheetCamera = false },
-            onFinished = { urls ->
-                showSheetCamera = false
-                scanViewModel.prepareSheetFromUrls(urls)
+            onQrDetected = { url ->
+                scanViewModel.processSingleQr(url)
             }
         )
     }

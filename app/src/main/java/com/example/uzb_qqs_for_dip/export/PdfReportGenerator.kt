@@ -114,8 +114,8 @@ object PdfReportGenerator {
      * на каждой странице добавляет в правый нижний угол должность и подпись из профиля.
      */
     private fun renderOnce(doc: PdfDocument, params: ReportParams, totalPages: Int) {
-        val typeface = Typeface.SANS_SERIF
-        val typefaceBold = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        val typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+        val typefaceBold = Typeface.create(Typeface.SERIF, Typeface.BOLD)
 
         val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typefaceBold
@@ -267,9 +267,10 @@ object PdfReportGenerator {
 
         y = drawTableHeader(y)
 
-        // Минимум места для строки с итогами + подписи
+        // Минимум места для строки с итогами + подписи + увеличенный отступ
         val signatureBlockHeight = 110f
-        val bottomLimit = PAGE_HEIGHT - MARGIN - signatureBlockHeight
+        val bottomMarginExtra = 80f // Увеличенный нижний отступ
+        val bottomLimit = PAGE_HEIGHT - MARGIN - bottomMarginExtra - signatureBlockHeight
 
         // Строки данных
         params.rows.forEachIndexed { idx, item ->
@@ -286,6 +287,7 @@ object PdfReportGenerator {
                 CELL_PADDING_V * 2f + sellerLines.size * LINE_HEIGHT
             )
 
+            // Проверяем, влезет ли эта строка полностью, не перекрывая bottomLimit. Если нет — новая страница.
             if (y + rowHeight > bottomLimit) {
                 finalizeAndFinishPage()
                 pageNumber++

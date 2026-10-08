@@ -64,8 +64,8 @@ object ReceiptCardRenderer {
         val padX = 14f * unit
         var y = top + 14f * unit
 
-        val typeface = Typeface.SANS_SERIF
-        val typefaceBold = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        val typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+        val typefaceBold = Typeface.create(Typeface.SERIF, Typeface.BOLD)
 
         val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
@@ -232,7 +232,7 @@ object ReceiptCardRenderer {
         val text = ordinal.toString()
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             color = 0xFFFFFFFF.toInt()
-            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
             // подбираем размер так, чтобы число влезало в квадрат
             textSize = side * when (text.length) { 1 -> 0.7f; 2 -> 0.55f; 3 -> 0.42f; else -> 0.34f }

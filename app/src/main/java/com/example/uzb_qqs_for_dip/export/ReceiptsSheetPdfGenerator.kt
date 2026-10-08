@@ -51,19 +51,19 @@ object ReceiptsSheetPdfGenerator {
         val doc = PdfDocument()
         try {
             val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
                 textSize = 13f
                 color = 0xFF111827.toInt()
                 textAlign = Paint.Align.LEFT
             }
             val subtitlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.SANS_SERIF
+                typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
                 textSize = 10f
                 color = 0xFF6B7280.toInt()
                 textAlign = Paint.Align.RIGHT
             }
             val pagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.SANS_SERIF
+                typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
                 textSize = 9f
                 color = 0xFF6B7280.toInt()
                 textAlign = Paint.Align.CENTER

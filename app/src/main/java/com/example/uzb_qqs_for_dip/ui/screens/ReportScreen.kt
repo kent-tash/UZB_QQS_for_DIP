@@ -262,7 +262,7 @@ fun ReportScreen(
                 FilterChip(
                     selected = createdSortActive,
                     onClick = { reportViewModel.toggleSort(SortField.CREATED) },
-                    label = { Text("По дате добавления") },
+                    label = { Text("Сортировка по дате добавления") },
                     trailingIcon = if (createdSortActive) {
                         {
                             Icon(

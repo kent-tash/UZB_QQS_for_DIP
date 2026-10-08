@@ -32,7 +32,7 @@ import com.example.uzb_qqs_for_dip.ui.screens.AuditorReceiptSearchScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuthScreen
-import com.example.uzb_qqs_for_dip.ui.screens.PaperReportScanScreen
+
 import com.example.uzb_qqs_for_dip.ui.screens.ProfileScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ReceiptsScreen
 import com.example.uzb_qqs_for_dip.ui.screens.RegisterScreen
@@ -60,7 +60,7 @@ private sealed class MainTab(val route: String, val title: String, val icon: Ima
 
 private const val ROUTE_AUDIT_VERIFY = "main/audit/verify"
 private const val ROUTE_AUDIT_SEARCH = "main/audit/search"
-private const val ROUTE_AUDIT_PAPER_SCAN = "main/audit/paper-scan"
+
 private const val ARG_USER_ID = "userId"
 private const val ARG_QUARTER = "quarter"
 private const val ARG_YEAR = "year"
@@ -173,11 +173,6 @@ private fun MainScaffold(
                             "$ROUTE_AUDIT_VERIFY?$ARG_USER_ID=$userId&$ARG_QUARTER=${quarter.name}&$ARG_YEAR=$year"
                         )
                     },
-                    onPaperScan = { userId, manual ->
-                        tabsNav.navigate(
-                            "$ROUTE_AUDIT_PAPER_SCAN?$ARG_USER_ID=$userId&$ARG_QUARTER=${quarter.name}&$ARG_YEAR=$year&$ARG_MANUAL=$manual"
-                        )
-                    },
                     onSearchReceipts = {
                         tabsNav.navigate(ROUTE_AUDIT_SEARCH)
                     }
@@ -211,27 +206,7 @@ private fun MainScaffold(
                     onBack = { tabsNav.popBackStack() }
                 )
             }
-            composable(
-                "$ROUTE_AUDIT_PAPER_SCAN?$ARG_USER_ID={$ARG_USER_ID}&$ARG_QUARTER={$ARG_QUARTER}&$ARG_YEAR={$ARG_YEAR}&$ARG_MANUAL={$ARG_MANUAL}"
-            ) { backStack ->
-                val userId = backStack.arguments?.getString(ARG_USER_ID)?.toLongOrNull()
-                val quarterName = backStack.arguments?.getString(ARG_QUARTER)
-                val year = backStack.arguments?.getString(ARG_YEAR)?.toIntOrNull()
-                val manual = backStack.arguments?.getString(ARG_MANUAL)?.toBooleanStrictOrNull() == true
-                val quarter = quarterName?.let { runCatching { Quarter.valueOf(it) }.getOrNull() }
-                    ?: Quarter.Q1
-                if (userId == null || year == null) {
-                    tabsNav.popBackStack()
-                } else {
-                    PaperReportScanScreen(
-                        userId = userId,
-                        quarter = quarter,
-                        year = year,
-                        startManual = manual,
-                        onBack = { tabsNav.popBackStack() }
-                    )
-                }
-            }
+
             composable(MainTab.Profile.route) {
                 ProfileScreen(
                     appViewModel = appViewModel,

@@ -147,6 +147,36 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    suspend fun processSingleQr(rawUrl: String): Pair<Boolean, String> {
+        val userId = container.sessionManager.currentUserId.value
+            ?: return false to "Сессия истекла. Войдите снова."
+        val url = rawUrl.trim()
+        if (url.isEmpty()) return false to "Пустой QR-код"
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR не содержит ссылку на чек"
+
+        val parsedResult = container.receiptParser.fetchAndParse(url)
+        if (parsedResult.isFailure) return false to ("Ошибка сети или сервера: " + (parsedResult.exceptionOrNull()?.message ?: ""))
+        val parsed = parsedResult.getOrThrow()
+
+        if (!parsed.isValid) return false to "Не все поля чека распознаны"
+
+        val existingOwner = container.receiptRepository.findOwner(
+            qrUrl = parsed.qrUrl,
+            fiscalSign = parsed.fiscalSign,
+            terminalId = parsed.terminalId,
+            receiptNumber = parsed.receiptNumber,
+        )
+
+        if (existingOwner != null) {
+            return if (existingOwner.userId == userId) false to "Чек уже добавлен вам"
+            else false to "Чек принадлежит: ${existingOwner.fullName}"
+        }
+
+        val insertRes = insertParsed(parsed, userId)
+        return if (insertRes.isSuccess) true to "Сохранено!"
+        else false to "Ошибка сохранения в БД"
+    }
+
     /**
      * Готовит превью пакетного скана по уже собранным URL (камера или галерея).
      */
