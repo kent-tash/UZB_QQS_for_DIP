@@ -60,6 +60,7 @@ import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.ExportEvent
 import com.example.uzb_qqs_for_dip.ui.ReceiptsViewModel
+import com.example.uzb_qqs_for_dip.ui.components.ExportActionGrid
 import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
 import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
 import com.example.uzb_qqs_for_dip.ui.components.SaveProgressButton
@@ -163,7 +164,7 @@ fun ReceiptsScreen(
             Spacer(Modifier.height(12.dp))
 
             Card(
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(20.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
@@ -193,53 +194,16 @@ fun ReceiptsScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SaveProgressButton(
-                    modifier = Modifier.weight(1f),
-                    text = "Сохранить",
-                    progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
-                    icon = Icons.Outlined.SaveAlt,
-                    isSaving = isSaving,
-                    progress = saveProgress,
-                    enabled = !isSaving && !isUpdating && rows.isNotEmpty(),
-                    onClick = { showSaveFormatDialog = true }
-                )
-                OutlinedButton(
-                    onClick = { showShareFormatDialog = true },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isSaving && !isUpdating && rows.isNotEmpty()
-                ) {
-                    Icon(Icons.Outlined.Share, contentDescription = null)
-                    Spacer(Modifier.size(6.dp))
-                    Text("Поделиться")
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(
-                    onClick = { receiptsViewModel.previewReceiptsPdf(context) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = rows.isNotEmpty()
-                ) {
-                    Icon(Icons.Outlined.Visibility, contentDescription = null)
-                    Spacer(Modifier.size(6.dp))
-                    Text("Открыть")
-                }
-                Button(
-                    onClick = { receiptsViewModel.printAllAsSheets(context) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = rows.isNotEmpty()
-                ) {
-                    Icon(Icons.Outlined.Print, contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text("Печать")
-                }
-            }
+            ExportActionGrid(
+                onOpen = { receiptsViewModel.previewReceiptsPdf(context) },
+                onPrint = { receiptsViewModel.printAllAsSheets(context) },
+                onSave = { showSaveFormatDialog = true },
+                onShare = { showShareFormatDialog = true },
+                isSaving = isSaving,
+                saveProgress = saveProgress,
+                isSaveEnabled = !isSaving && !isUpdating && rows.isNotEmpty(),
+                isOpenPrintEnabled = rows.isNotEmpty()
+            )
 
             Spacer(Modifier.height(12.dp))
         }
@@ -382,7 +346,7 @@ private fun ReceiptListRow(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -521,7 +485,7 @@ private fun UpdateProgressButton(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(14.dp)
     val trackColor = MaterialTheme.colorScheme.secondaryContainer
     val fillColor = MaterialTheme.colorScheme.primary
     val contentColor = MaterialTheme.colorScheme.onSecondaryContainer

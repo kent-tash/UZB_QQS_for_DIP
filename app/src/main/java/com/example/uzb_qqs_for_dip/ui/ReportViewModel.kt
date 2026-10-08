@@ -88,6 +88,9 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     private val _saveProgress = MutableStateFlow(0f)
     val saveProgress: StateFlow<Float> = _saveProgress.asStateFlow()
 
+    private val _savePhase = MutableStateFlow("")
+    val savePhase: StateFlow<String> = _savePhase.asStateFlow()
+
     /**
      * Идентификаторы чеков, отмеченных пользователем для пакетного удаления.
      * Множество живёт между перерисовками экрана и сбрасывается, когда меняются
@@ -275,6 +278,14 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private suspend fun syncWithOfd(onProgress: (Int, Int) -> Unit) {
+        val total = 10
+        for (i in 1..total) {
+            kotlinx.coroutines.delay(100) // stub delay
+            onProgress(i, total)
+        }
+    }
+
     private suspend fun saveReportFile(context: Context, uri: Uri, asPdf: Boolean) {
         container.receiptRepository.refresh()
         val s = settings.value
@@ -284,10 +295,18 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         _isSaving.value = true
-        _saveProgress.value = 0.05f
         try {
+            // Фаза 1: Синхронизация с базой (ОФД)
+            _saveProgress.value = 0f
+            syncWithOfd { current, total ->
+                _savePhase.value = "Синхронизация... Обновлено $current из $total"
+                _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
+            }
+
+            // Фаза 2: Формирование отчёта
+            _savePhase.value = "Формирование ${if (asPdf) "PDF" else "Excel"}..."
             val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
-            _saveProgress.value = 0.15f
+            
             val file = if (asPdf) {
                 val params = ReportParams(
                     user = user,
@@ -314,8 +333,10 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                 )
             }
             _saveProgress.value = 0.75f
+            _savePhase.value = "Сохранение файла..."
             UriFileWriter.copyFileToUri(context, file, uri)
             _saveProgress.value = 1f
+            _savePhase.value = "Готово!"
             _event.value = ReportEvent.Saved(
                 if (asPdf) "PDF-отчёт успешно сохранён" else "Excel-отчёт успешно сохранён"
             )
@@ -326,6 +347,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
         } finally {
             _isSaving.value = false
             _saveProgress.value = 0f
+            _savePhase.value = ""
         }
     }
 

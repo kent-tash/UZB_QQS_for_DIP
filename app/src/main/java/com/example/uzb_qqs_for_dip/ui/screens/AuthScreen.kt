@@ -78,7 +78,8 @@ fun AuthScreen(
                 Text(
                     "QQS Сканер",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     "Учёт фискальных чеков Узбекистана",
@@ -93,7 +94,8 @@ fun AuthScreen(
         Text(
             "Выберите пользователя",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.height(12.dp))
 
@@ -110,7 +112,7 @@ fun AuthScreen(
                 items(users, key = { it.id }) { user ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(20.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
@@ -204,7 +206,6 @@ fun AuthScreen(
         EditProfileDialog(
             initialFullName = user.fullName,
             initialPosition = user.position,
-            initialInitialsSurname = user.initialsSurname,
             initialOrganization = user.organization,
             error = editError,
             onClearError = { appViewModel.clearEditError() },
@@ -212,12 +213,11 @@ fun AuthScreen(
                 editing = null
                 appViewModel.clearEditError()
             },
-            onConfirm = { fullName, position, initialsSurname, organization ->
+            onConfirm = { fullName, position, organization ->
                 appViewModel.updateProfile(
                     userId = user.id,
                     fullName = fullName,
                     position = position,
-                    initialsSurname = initialsSurname,
                     organization = organization,
                     onDone = { editing = null }
                 )

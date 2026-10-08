@@ -134,6 +134,7 @@ fun MultiQrCameraScannerDialog(
     }
 }
 
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 private fun MultiQrCameraContent(
     onDismiss: () -> Unit,

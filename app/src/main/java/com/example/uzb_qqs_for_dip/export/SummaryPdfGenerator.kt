@@ -167,11 +167,9 @@ object SummaryPdfGenerator {
 
         y = drawTableHeader(canvas, y)
 
-        val bottomMarginExtra = 80f // Увеличенный нижний отступ
-
         // ── Data rows ─────────────────────────────────────────────────────────
         rows.forEachIndexed { idx, summary ->
-            if (y + ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra - ROW_H * 3) {
+            if (y + ROW_H > PAGE_HEIGHT - 5.67f - ROW_H * 3) {
                 doc.finishPage(currentPage)
                 currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
                 canvas = currentPage.canvas
@@ -205,7 +203,7 @@ object SummaryPdfGenerator {
         }
 
         // ── ИТОГО row ─────────────────────────────────────────────────────────
-        if (y + ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra) {
+        if (y + ROW_H > PAGE_HEIGHT - 5.67f) {
             doc.finishPage(currentPage)
             currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
             canvas = currentPage.canvas

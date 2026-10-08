@@ -36,6 +36,9 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.UploadFile
 import android.net.Uri
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -128,8 +131,8 @@ fun AuditorScreen(
             (s.receiptCount > 0 && s.verifiedCount >= s.receiptCount)
     }
 
-    var showExportMenu by remember { mutableStateOf(false) }
-    var showSaveMenu by remember { mutableStateOf(false) }
+    var showExportSheet by remember { mutableStateOf(false) }
+    var showMoreMenu by remember { mutableStateOf(false) }
     var pendingSaveKind by remember { mutableStateOf<AuditorExportKind?>(null) }
     /** После выбора типа отчёта — диалог PDF/xlsx. null = закрыт. */
     var pendingFormatAction by remember { mutableStateOf<AuditorFormatAction?>(null) }
@@ -219,8 +222,8 @@ fun AuditorScreen(
         AddEmployeeDialog(
             error = addEmployeeError,
             onDismiss = { showAddEmployeeDialog = false; vm.clearAddEmployeeError() },
-            onSave = { name, pos, initials, org ->
-                vm.addEmployee(name, pos, initials, org) { showAddEmployeeDialog = false }
+            onSave = { name, pos, org ->
+                vm.addEmployee(name, pos, org) { showAddEmployeeDialog = false }
             }
         )
     }
@@ -281,6 +284,36 @@ fun AuditorScreen(
         )
     }
 
+    if (showExportSheet) {
+        ExportBottomSheet(
+            onDismiss = { showExportSheet = false },
+            onSummaryShare = {
+                showExportSheet = false
+                pendingFormatAction = AuditorFormatAction(AuditorReportType.SUMMARY, share = true)
+            },
+            onSummarySave = {
+                showExportSheet = false
+                pendingFormatAction = AuditorFormatAction(AuditorReportType.SUMMARY, share = false)
+            },
+            onOrgShare = {
+                showExportSheet = false
+                pendingFormatAction = AuditorFormatAction(AuditorReportType.ORG, share = true)
+            },
+            onOrgSave = {
+                showExportSheet = false
+                pendingFormatAction = AuditorFormatAction(AuditorReportType.ORG, share = false)
+            },
+            onZipShare = {
+                showExportSheet = false
+                vm.shareExportKind(context, AuditorExportKind.ZIP_ALL_RECEIPTS)
+            },
+            onZipSave = {
+                showExportSheet = false
+                launchSave(AuditorExportKind.ZIP_ALL_RECEIPTS)
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -289,54 +322,23 @@ fun AuditorScreen(
                     IconButton(onClick = onSearchReceipts) {
                         Icon(Icons.Outlined.Search, "Найти чек")
                     }
-                    IconButton(onClick = { showAuditorSettingsDialog = true }) {
-                        Icon(Icons.Outlined.Settings, "Настройки аудитора")
-                    }
                     IconButton(onClick = { showAddEmployeeDialog = true }) {
                         Icon(Icons.Outlined.PersonAdd, "Добавить сотрудника")
                     }
-                    IconButton(onClick = { batchImportLauncher.launch(arrayOf("application/json")) }) {
-                        Icon(Icons.Outlined.UploadFile, "Импорт бэкапов")
-                    }
                     Box {
-                        IconButton(onClick = { showExportMenu = true }) {
-                            Icon(Icons.Outlined.Share, "Экспорт / поделиться")
+                        IconButton(onClick = { showMoreMenu = true }) {
+                            Icon(Icons.Default.MoreVert, "Больше")
                         }
-                        AuditorReportTypeMenu(
-                            expanded = showExportMenu,
-                            onDismiss = { showExportMenu = false },
-                            onSummary = {
-                                pendingFormatAction = AuditorFormatAction(
-                                    AuditorReportType.SUMMARY, share = true
-                                )
-                            },
-                            onOrg = {
-                                pendingFormatAction = AuditorFormatAction(
-                                    AuditorReportType.ORG, share = true
-                                )
-                            },
-                            onZipAll = { vm.shareExportKind(context, AuditorExportKind.ZIP_ALL_RECEIPTS) }
-                        )
-                    }
-                    Box {
-                        IconButton(onClick = { showSaveMenu = true }) {
-                            Icon(Icons.Outlined.Download, "Сохранить")
+                        DropdownMenu(expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Реквизиты организации") },
+                                onClick = { showMoreMenu = false; showAuditorSettingsDialog = true }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Импорт бэкапов") },
+                                onClick = { showMoreMenu = false; batchImportLauncher.launch(arrayOf("application/json")) }
+                            )
                         }
-                        AuditorReportTypeMenu(
-                            expanded = showSaveMenu,
-                            onDismiss = { showSaveMenu = false },
-                            onSummary = {
-                                pendingFormatAction = AuditorFormatAction(
-                                    AuditorReportType.SUMMARY, share = false
-                                )
-                            },
-                            onOrg = {
-                                pendingFormatAction = AuditorFormatAction(
-                                    AuditorReportType.ORG, share = false
-                                )
-                            },
-                            onZipAll = { launchSave(AuditorExportKind.ZIP_ALL_RECEIPTS) }
-                        )
                     }
                 }
             )
@@ -365,6 +367,17 @@ fun AuditorScreen(
                     totalVat = totalVat,
                     onConflictsClick = { if (conflicts.isNotEmpty()) showConflicts = true }
                 )
+                
+                Button(
+                    onClick = { showExportSheet = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Сформировать отчёт", style = MaterialTheme.typography.titleMedium)
+                }
             }
 
             // Search bar + filter chips
@@ -435,28 +448,77 @@ fun AuditorScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AuditorReportTypeMenu(
-    expanded: Boolean,
+private fun ExportBottomSheet(
     onDismiss: () -> Unit,
-    onSummary: () -> Unit,
-    onOrg: () -> Unit,
-    onZipAll: (() -> Unit)? = null
+    onSummaryShare: () -> Unit,
+    onSummarySave: () -> Unit,
+    onOrgShare: () -> Unit,
+    onOrgSave: () -> Unit,
+    onZipShare: () -> Unit,
+    onZipSave: () -> Unit
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
-        DropdownMenuItem(
-            text = { Text("Сводная таблица") },
-            onClick = { onDismiss(); onSummary() }
-        )
-        DropdownMenuItem(
-            text = { Text("Возврат НДС по организациям") },
-            onClick = { onDismiss(); onOrg() }
-        )
-        if (onZipAll != null) {
-            DropdownMenuItem(
-                text = { Text("Архив всех чеков (ZIP)") },
-                onClick = { onDismiss(); onZipAll() }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp, start = 16.dp, end = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text("Сформировать отчёт", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            
+            ExportOptionRow(
+                title = "Сводная таблица",
+                desc = "Список сотрудников с итогами (PDF / Excel)",
+                onShare = onSummaryShare,
+                onSave = onSummarySave
             )
+            HorizontalDivider()
+            ExportOptionRow(
+                title = "Возврат НДС",
+                desc = "Отчёт по организациям (PDF / Excel)",
+                onShare = onOrgShare,
+                onSave = onOrgSave
+            )
+            HorizontalDivider()
+            ExportOptionRow(
+                title = "Архив чеков",
+                desc = "Все чеки в одном ZIP-архиве",
+                onShare = onZipShare,
+                onSave = onZipSave
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExportOptionRow(
+    title: String,
+    desc: String,
+    onShare: () -> Unit,
+    onSave: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Row {
+            IconButton(onClick = onShare) {
+                Icon(Icons.Outlined.Share, contentDescription = "Поделиться")
+            }
+            IconButton(onClick = onSave) {
+                Icon(Icons.Outlined.Download, contentDescription = "Сохранить")
+            }
         }
     }
 }
@@ -1068,11 +1130,10 @@ private fun AuditStatus.label(): String = when (this) {
 private fun AddEmployeeDialog(
     error: String?,
     onDismiss: () -> Unit,
-    onSave: (name: String, position: String, initials: String, organization: String) -> Unit
+    onSave: (name: String, position: String, organization: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var position by remember { mutableStateOf("") }
-    var initials by remember { mutableStateOf("") }
     var organization by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -1093,12 +1154,6 @@ private fun AddEmployeeDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
-                    value = initials, onValueChange = { initials = it },
-                    label = { Text("И.О. Фамилия (для подписи)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
                     value = organization, onValueChange = { organization = it },
                     label = { Text("Организация (необязательно)") },
                     singleLine = true,
@@ -1110,7 +1165,7 @@ private fun AddEmployeeDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onSave(name, position, initials, organization) }) { Text("Добавить") }
+            Button(onClick = { onSave(name, position, organization) }) { Text("Добавить") }
         },
         dismissButton = { OutlinedButton(onClick = onDismiss) { Text("Отмена") } }
     )

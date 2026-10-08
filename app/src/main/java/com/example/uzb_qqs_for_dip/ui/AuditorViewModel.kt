@@ -14,6 +14,7 @@ import com.example.uzb_qqs_for_dip.data.model.AuditDeclaration
 import com.example.uzb_qqs_for_dip.data.model.AuditStatus
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.data.model.UserRole
+import com.example.uzb_qqs_for_dip.util.toInitials
 import com.example.uzb_qqs_for_dip.data.repository.DiscrepancyDetail
 import com.example.uzb_qqs_for_dip.data.repository.EmployeeSummary
 import com.example.uzb_qqs_for_dip.data.repository.ReceiptConflict
@@ -176,17 +177,16 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
     fun addEmployee(
         fullName: String,
         position: String,
-        initialsSurname: String,
         organization: String = "",
         onSuccess: () -> Unit
     ) {
         val name = fullName.trim()
         val pos = position.trim()
-        val initials = initialsSurname.trim()
-        if (name.isEmpty() || pos.isEmpty() || initials.isEmpty()) {
+        if (name.isEmpty() || pos.isEmpty()) {
             _addEmployeeError.value = "Заполните все поля"
             return
         }
+        val initials = name.toInitials()
         viewModelScope.launch {
             val res = container.userRepository.create(
                 User(

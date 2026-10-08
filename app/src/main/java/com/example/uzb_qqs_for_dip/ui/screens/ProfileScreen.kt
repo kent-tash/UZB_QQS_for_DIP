@@ -68,8 +68,8 @@ fun ProfileScreen(
 
     var editing by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf(false) }
-    var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
-    var pendingMergeUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedBackupUri by remember { mutableStateOf<Uri?>(null) }
+    var showReplaceWarning by remember { mutableStateOf(false) }
 
     val createBackupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument(AppBackup.MIME_TYPE)
@@ -80,13 +80,10 @@ fun ProfileScreen(
     val openBackupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        if (uri != null) pendingRestoreUri = uri
-    }
-
-    val mergeBackupLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) pendingMergeUri = uri
+        if (uri != null) {
+            selectedBackupUri = uri
+            showReplaceWarning = false
+        }
     }
 
     Column(
@@ -204,11 +201,7 @@ fun ProfileScreen(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    "Один файл JSON: все профили, сохранённые чеки и настройки отчёта " +
-                        "(период, сортировка, выбранный пользователь в фильтре).\n\n" +
-                        "• «Загрузить бэкап» — полностью заменяет текущие данные.\n" +
-                        "• «Добавить из бэкапа» — добавляет данные из файла к текущим без удаления " +
-                        "(например, чеки другого пользователя). Дубликаты чеков пропускаются.",
+                    "Один файл JSON: все профили, сохранённые чеки и настройки отчёта.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -243,17 +236,6 @@ fun ProfileScreen(
                     Icon(Icons.Outlined.FolderOpen, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text("Загрузить бэкап")
-                }
-                OutlinedButton(
-                    onClick = {
-                        mergeBackupLauncher.launch(arrayOf(AppBackup.MIME_TYPE, "*/*"))
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Outlined.LibraryAdd, contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text("Добавить из бэкапа")
                 }
             }
         }
@@ -312,53 +294,56 @@ fun ProfileScreen(
         )
     }
 
-    pendingRestoreUri?.let { uri ->
-        AlertDialog(
-            onDismissRequest = { pendingRestoreUri = null },
-            title = { Text("Загрузить бэкап?") },
-            text = {
-                Text(
-                    "Все текущие профили, чеки и настройки отчёта будут безвозвратно заменены " +
-                        "данными из выбранного файла."
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        pendingRestoreUri = null
-                        appViewModel.importBackupFromUri(context, uri, onLoggedOut)
+    selectedBackupUri?.let { uri ->
+        if (!showReplaceWarning) {
+            AlertDialog(
+                onDismissRequest = { selectedBackupUri = null },
+                title = { Text("Как использовать файл?") },
+                text = { Text("Вы можете добавить данные к текущим или полностью заменить базу.") },
+                confirmButton = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { showReplaceWarning = true },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) { Text("Полностью заменить") }
+                        
+                        Button(
+                            onClick = {
+                                selectedBackupUri = null
+                                android.widget.Toast.makeText(context, "Начато слияние баз...", android.widget.Toast.LENGTH_SHORT).show()
+                                appViewModel.mergeBackupFromUri(context, uri)
+                            }
+                        ) { Text("Добавить к текущим") }
                     }
-                ) { Text("Восстановить") }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { pendingRestoreUri = null }) { Text("Отмена") }
-            }
-        )
-    }
-
-    pendingMergeUri?.let { uri ->
-        AlertDialog(
-            onDismissRequest = { pendingMergeUri = null },
-            title = { Text("Добавить из бэкапа?") },
-            text = {
-                Text(
-                    "Данные из выбранного файла будут добавлены к текущим без удаления. " +
-                        "Совпадающие профили объединяются по имени, а уже имеющиеся чеки " +
-                        "(по той же ссылке) повторно не добавляются."
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        pendingMergeUri = null
-                        appViewModel.mergeBackupFromUri(context, uri)
-                    }
-                ) { Text("Добавить") }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { pendingMergeUri = null }) { Text("Отмена") }
-            }
-        )
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { selectedBackupUri = null }) { Text("Отмена") }
+                }
+            )
+        } else {
+            AlertDialog(
+                onDismissRequest = { showReplaceWarning = false },
+                title = { Text("Внимание! Вы уверены в полной замене базы?") },
+                text = { Text("Текущие данные будут безвозвратно потеряны.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            selectedBackupUri = null
+                            showReplaceWarning = false
+                            appViewModel.importBackupFromUri(context, uri, onLoggedOut)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) { Text("Да, заменить") }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { showReplaceWarning = false }) { Text("Отмена") }
+                }
+            )
+        }
     }
 
     if (editing) {
@@ -369,7 +354,6 @@ fun ProfileScreen(
             EditProfileDialog(
                 initialFullName = u.fullName,
                 initialPosition = u.position,
-                initialInitialsSurname = u.initialsSurname,
                 initialOrganization = u.organization,
                 error = editError,
                 onClearError = { appViewModel.clearEditError() },
@@ -377,12 +361,11 @@ fun ProfileScreen(
                     editing = false
                     appViewModel.clearEditError()
                 },
-                onConfirm = { fullName, position, initialsSurname, organization ->
+                onConfirm = { fullName, position, organization ->
                     appViewModel.updateProfile(
                         userId = u.id,
                         fullName = fullName,
                         position = position,
-                        initialsSurname = initialsSurname,
                         organization = organization,
                         onDone = { editing = false }
                     )
@@ -452,23 +435,20 @@ private fun ProfileRow(label: String, value: String) {
 fun EditProfileDialog(
     initialFullName: String,
     initialPosition: String,
-    initialInitialsSurname: String,
     initialOrganization: String = "",
     error: String?,
     onClearError: () -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (fullName: String, position: String, initials: String, organization: String) -> Unit,
+    onConfirm: (fullName: String, position: String, organization: String) -> Unit,
     title: String = "Редактирование профиля"
 ) {
     var fullName by remember { mutableStateOf(initialFullName) }
     var position by remember { mutableStateOf(initialPosition) }
-    var initials by remember { mutableStateOf(initialInitialsSurname) }
     var organization by remember { mutableStateOf(initialOrganization) }
 
-    LaunchedEffect(initialFullName, initialPosition, initialInitialsSurname, initialOrganization) {
+    LaunchedEffect(initialFullName, initialPosition, initialOrganization) {
         fullName = initialFullName
         position = initialPosition
-        initials = initialInitialsSurname
         organization = initialOrganization
     }
 
@@ -494,14 +474,6 @@ fun EditProfileDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
-                    value = initials,
-                    onValueChange = { initials = it; onClearError() },
-                    label = { Text("И.О. Фамилия (для подписи)") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
                     value = organization,
                     onValueChange = { organization = it; onClearError() },
                     label = { Text("Организация (необязательно)") },
@@ -519,7 +491,7 @@ fun EditProfileDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(fullName, position, initials, organization) }) {
+            Button(onClick = { onConfirm(fullName, position, organization) }) {
                 Text("Сохранить")
             }
         },

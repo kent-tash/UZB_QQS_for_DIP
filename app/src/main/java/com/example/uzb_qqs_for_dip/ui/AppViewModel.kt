@@ -13,6 +13,7 @@ import com.example.uzb_qqs_for_dip.data.AppContainer
 import com.example.uzb_qqs_for_dip.data.backup.AppBackup
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.data.model.UserRole
+import com.example.uzb_qqs_for_dip.util.toInitials
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -57,18 +58,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun register(
         fullName: String,
         position: String,
-        initialsSurname: String,
         organization: String = "",
         autoLogin: Boolean = true,
         role: UserRole = UserRole.EMPLOYEE
     ) {
         val name = fullName.trim()
         val pos = position.trim()
-        val initials = initialsSurname.trim()
-        if (name.isEmpty() || pos.isEmpty() || initials.isEmpty()) {
+        if (name.isEmpty() || pos.isEmpty()) {
             _registerError.value = "Заполните все поля профиля"
             return
         }
+        val initials = name.toInitials()
         viewModelScope.launch {
             val res = container.userRepository.create(
                 User(fullName = name, position = pos, initialsSurname = initials,
@@ -101,18 +101,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         userId: Long,
         fullName: String,
         position: String,
-        initialsSurname: String,
         organization: String = "",
         role: UserRole = UserRole.EMPLOYEE,
         onDone: () -> Unit = {}
     ) {
         val name = fullName.trim()
         val pos = position.trim()
-        val initials = initialsSurname.trim()
-        if (name.isEmpty() || pos.isEmpty() || initials.isEmpty()) {
+        if (name.isEmpty() || pos.isEmpty()) {
             _editError.value = "Заполните все поля профиля"
             return
         }
+        val initials = name.toInitials()
         viewModelScope.launch {
             val res = container.userRepository.update(
                 User(id = userId, fullName = name, position = pos, initialsSurname = initials,

@@ -3,6 +3,7 @@ package com.example.uzb_qqs_for_dip.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -45,6 +46,7 @@ import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -69,6 +71,7 @@ import com.example.uzb_qqs_for_dip.ui.ReportEvent
 import com.example.uzb_qqs_for_dip.ui.ReportViewModel
 import com.example.uzb_qqs_for_dip.ui.components.DateField
 import com.example.uzb_qqs_for_dip.ui.components.DatePickerSheet
+import com.example.uzb_qqs_for_dip.ui.components.ExportActionGrid
 import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
 import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
 import com.example.uzb_qqs_for_dip.ui.components.SaveProgressButton
@@ -184,7 +187,7 @@ fun ReportScreen(
         Spacer(Modifier.height(16.dp))
 
         Card(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
@@ -295,53 +298,19 @@ fun ReportScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(
-                onClick = { reportViewModel.previewPdf(context) },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                enabled = selectedUser.id != null
-            ) {
-                Icon(Icons.Outlined.Visibility, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Открыть")
-            }
-            Button(
-                onClick = { reportViewModel.printPdf(context) },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                enabled = selectedUser.id != null
-            ) {
-                Icon(Icons.Outlined.Print, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Печать / PDF")
-            }
-        }
+        val savePhase by reportViewModel.savePhase.collectAsState()
 
-        Spacer(Modifier.height(10.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            SaveProgressButton(
-                modifier = Modifier.weight(1f),
-                text = "Сохранить",
-                progressLabel = "Сохранение… ${(saveProgress * 100).toInt()}%",
-                icon = Icons.Outlined.SaveAlt,
-                isSaving = isSaving,
-                progress = saveProgress,
-                enabled = !isSaving && selectedUser.id != null && rows.isNotEmpty(),
-                onClick = { showSaveFormatDialog = true }
-            )
-            OutlinedButton(
-                onClick = { showShareFormatDialog = true },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                enabled = !isSaving && selectedUser.id != null && rows.isNotEmpty()
-            ) {
-                Icon(Icons.Outlined.Share, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Поделиться")
-            }
-        }
+        ExportActionGrid(
+            onOpen = { reportViewModel.previewPdf(context) },
+            onPrint = { reportViewModel.printPdf(context) },
+            onSave = { showSaveFormatDialog = true },
+            onShare = { showShareFormatDialog = true },
+            isSaving = isSaving,
+            saveProgress = saveProgress,
+            isSaveEnabled = !isSaving && selectedUser.id != null && rows.isNotEmpty(),
+            isOpenPrintEnabled = selectedUser.id != null,
+            saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "Сохранение… ${(saveProgress * 100).toInt()}%"
+        )
 
         Spacer(Modifier.height(20.dp))
         Text(
@@ -354,13 +323,15 @@ fun ReportScreen(
         Spacer(Modifier.height(20.dp))
 
         // Панель пакетного удаления — появляется, когда выбран хотя бы один чек.
-        if (selectedIds.isNotEmpty()) {
-            SelectionActionBar(
-                selectedCount = selectedIds.size,
-                onClear = { reportViewModel.clearSelection() },
-                onDelete = { showDeleteConfirm = true }
-            )
-            Spacer(Modifier.height(8.dp))
+        androidx.compose.foundation.layout.Column(modifier = Modifier.animateContentSize()) {
+            if (selectedIds.isNotEmpty()) {
+                SelectionActionBar(
+                    selectedCount = selectedIds.size,
+                    onClear = { reportViewModel.clearSelection() },
+                    onDelete = { showDeleteConfirm = true }
+                )
+                Spacer(Modifier.height(8.dp))
+            }
         }
 
         // Превью таблицы — то же содержимое, что попадёт в PDF/печать.
@@ -532,7 +503,7 @@ private fun ReportTablePreview(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -754,27 +725,21 @@ private fun ReportPreviewCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(Modifier.padding(16.dp)) {
             Text("Шапка отчёта", fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(8.dp))
-            Row {
-                Column(Modifier.weight(1f)) {
-                    InfoRow("Пользователь:", userFullName)
-                    InfoRow("Должность:", position)
-                    InfoRow("Подпись:", initialsSurname)
-                }
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                    InfoRow(
-                        "Период:",
-                        "${DateFormat.formatDate(from)} — ${DateFormat.formatDate(to)}",
-                        endAlign = true
-                    )
-                    InfoRow("Чеков:", count.toString(), endAlign = true)
-                }
+            Column {
+                InfoRow("Пользователь:", userFullName)
+                InfoRow("Должность:", position)
+                InfoRow(
+                    "Период:",
+                    "${DateFormat.formatDate(from)} — ${DateFormat.formatDate(to)}"
+                )
+                InfoRow("Количество чеков:", count.toString())
             }
             Spacer(Modifier.height(10.dp))
             HorizontalDivider()

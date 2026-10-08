@@ -372,7 +372,7 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
         if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR не содержит ссылку на чек"
 
         val parsedResult = container.receiptParser.fetchAndParse(url)
-        if (parsedResult.isFailure) return false to "Ошибка сети или сервера: " + (parsedResult.exceptionOrNull()?.message ?: "")
+        if (parsedResult.isFailure) return false to "Ошибка сети или сервера: " + (parsedResult.exceptionOrNull()?.toReadableMessage() ?: "")
         val parsed = parsedResult.getOrThrow()
 
         if (!parsed.isValid) return false to "Не все поля чека распознаны"
@@ -561,7 +561,7 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                     SheetReceiptItem(
                         qrUrl = url,
                         status = SheetItemStatus.ERROR,
-                        errorMessage = "Не удалось загрузить чек: ${e.message ?: e::class.simpleName}",
+                        errorMessage = "Не удалось проверить чек: ${e.toReadableMessage()}",
                         selected = false
                     )
                 }

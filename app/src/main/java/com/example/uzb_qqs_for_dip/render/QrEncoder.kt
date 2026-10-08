@@ -26,8 +26,8 @@ object QrEncoder {
             writer.encode(
                 content,
                 BarcodeFormat.QR_CODE,
-                256,
-                256,
+                512,
+                512,
                 mapOf(
                     EncodeHintType.MARGIN to 0,
                     EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
@@ -53,20 +53,21 @@ object QrEncoder {
 
         val w = matrix.width
         val h = matrix.height
-        val cellW = side / w
-        val cellH = side / h
-        val rect = RectF()
+        val pixels = IntArray(w * h)
+        var offset = 0
         for (y in 0 until h) {
             for (x in 0 until w) {
-                if (!matrix.get(x, y)) continue
-                rect.set(
-                    left + x * cellW,
-                    top + y * cellH,
-                    left + (x + 1) * cellW + 0.5f,
-                    top + (y + 1) * cellH + 0.5f
-                )
-                canvas.drawRect(rect, blackPaint)
+                pixels[offset++] = if (matrix.get(x, y)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
             }
         }
+        val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+        bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
+
+        val paint = Paint().apply {
+            isFilterBitmap = false
+            isAntiAlias = false
+        }
+        val destRect = RectF(left, top, left + side, top + side)
+        canvas.drawBitmap(bitmap, null, destRect, paint)
     }
 }

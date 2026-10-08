@@ -269,8 +269,7 @@ object PdfReportGenerator {
 
         // Минимум места для строки с итогами + подписи + увеличенный отступ
         val signatureBlockHeight = 110f
-        val bottomMarginExtra = 80f // Увеличенный нижний отступ
-        val bottomLimit = PAGE_HEIGHT - MARGIN - bottomMarginExtra - signatureBlockHeight
+        val bottomLimit = PAGE_HEIGHT - 5.67f - signatureBlockHeight
 
         // Строки данных
         params.rows.forEachIndexed { idx, item ->
@@ -395,7 +394,7 @@ object PdfReportGenerator {
         y += ROW_HEIGHT_MIN
 
         // ----- Блок подписи (выровнен к нижней части страницы) -----
-        val signatureTop = (PAGE_HEIGHT - MARGIN - signatureBlockHeight).coerceAtLeast(y + 30f)
+        val signatureTop = (PAGE_HEIGHT - 5.67f - signatureBlockHeight).coerceAtLeast(y + 30f)
 
         // Одной строкой:  [Должность]   ____подпись____   [И.О. Фамилия]
         // Должность и подпись (И.О. Фамилия) выровнены по одной базовой линии,

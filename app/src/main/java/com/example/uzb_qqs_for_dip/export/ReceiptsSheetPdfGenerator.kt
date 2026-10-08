@@ -84,7 +84,7 @@ object ReceiptsSheetPdfGenerator {
             // Размер ячейки
             val gridLeft = MARGIN
             val gridW = PAGE_W - MARGIN * 2
-            val gridH = PAGE_H - gridTop - MARGIN
+            val gridH = PAGE_H - gridTop - 5.67f
             val cellW = (gridW - GAP * (COLS - 1)) / COLS
             val cellH = (gridH - GAP * (ROWS - 1)) / ROWS
 

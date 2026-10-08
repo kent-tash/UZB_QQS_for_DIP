@@ -176,14 +176,12 @@ object OrgReportPdfGenerator {
 
         var globalIndex = 0
 
-        val bottomMarginExtra = 80f // Увеличенный нижний отступ
-
         for ((orgName, orgRows) in grouped) {
             var orgVatTotal = 0L
 
             for ((localIdx, summary) in orgRows.withIndex()) {
                 globalIndex++
-                if (y + ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra - SUBTOTAL_ROW_H - ROW_H) {
+                if (y + ROW_H > PAGE_HEIGHT - 5.67f - SUBTOTAL_ROW_H - ROW_H) {
                     doc.finishPage(currentPage)
                     currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
                     canvas = currentPage.canvas
@@ -215,7 +213,7 @@ object OrgReportPdfGenerator {
             }
 
             // Subtotal row for this org
-            if (y + SUBTOTAL_ROW_H > PAGE_HEIGHT - MARGIN - bottomMarginExtra) {
+            if (y + SUBTOTAL_ROW_H > PAGE_HEIGHT - 5.67f) {
                 doc.finishPage(currentPage)
                 currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
                 canvas = currentPage.canvas
@@ -237,7 +235,7 @@ object OrgReportPdfGenerator {
         }
 
         // ── Grand total row ───────────────────────────────────────────────────
-        if (y + ROW_H + SIGNATURE_HEIGHT > PAGE_HEIGHT - MARGIN - bottomMarginExtra) {
+        if (y + ROW_H + SIGNATURE_HEIGHT > PAGE_HEIGHT - 5.67f) {
             doc.finishPage(currentPage)
             currentPage = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, ++pageNum).create())
             canvas = currentPage.canvas

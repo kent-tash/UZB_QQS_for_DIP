@@ -31,6 +31,17 @@ sealed interface ScanState {
     data class Error(val message: String) : ScanState
 }
 
+fun Throwable.toReadableMessage(): String {
+    return when (this) {
+        is java.net.UnknownHostException -> "Нет подключения к интернету или сервер недоступен"
+        is java.net.SocketTimeoutException -> "Сервер налоговой не отвечает (тайм-аут)"
+        is java.net.ConnectException -> "Не удалось подключиться к серверу"
+        is java.net.SocketException -> "Прервано соединение с сервером"
+        is org.json.JSONException -> "Неверный формат ответа от сервера"
+        else -> this.message ?: this::class.simpleName ?: "Неизвестная ошибка"
+    }
+}
+
 class ScanViewModel(app: Application) : AndroidViewModel(app) {
 
     private val container: AppContainer = (app as QqsApp).container
@@ -117,7 +128,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 .onFailure { e ->
                     _state.value = ScanState.Error(
-                        "Не удалось загрузить чек: ${e.message ?: e::class.simpleName}"
+                        "Не удалось загрузить чек: ${e.toReadableMessage()}"
                     )
                 }
         }
@@ -155,7 +166,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR не содержит ссылку на чек"
 
         val parsedResult = container.receiptParser.fetchAndParse(url)
-        if (parsedResult.isFailure) return false to ("Ошибка сети или сервера: " + (parsedResult.exceptionOrNull()?.message ?: ""))
+        if (parsedResult.isFailure) return false to ("Ошибка сети или сервера: " + (parsedResult.exceptionOrNull()?.toReadableMessage() ?: ""))
         val parsed = parsedResult.getOrThrow()
 
         if (!parsed.isValid) return false to "Не все поля чека распознаны"
@@ -275,7 +286,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                     SheetReceiptItem(
                         qrUrl = url,
                         status = SheetItemStatus.ERROR,
-                        errorMessage = "Не удалось загрузить чек: ${e.message ?: e::class.simpleName}",
+                        errorMessage = "Не удалось загрузить чек: ${e.toReadableMessage()}",
                         selected = false
                     )
                 }

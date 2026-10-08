@@ -38,9 +38,9 @@ fun SaveProgressButton(
     isSaving: Boolean,
     progress: Float,
     enabled: Boolean,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(14.dp),
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(12.dp)
     val trackColor = MaterialTheme.colorScheme.secondaryContainer
     val fillColor = MaterialTheme.colorScheme.primary
     val contentColor = MaterialTheme.colorScheme.onSecondaryContainer
