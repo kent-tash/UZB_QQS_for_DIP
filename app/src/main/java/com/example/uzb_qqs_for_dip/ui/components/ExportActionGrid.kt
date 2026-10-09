@@ -65,8 +65,7 @@ fun ExportActionGrid(
             shape = RoundedCornerShape(12.dp),
             enabled = isOpenPrintEnabled,
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.tertiary
             )
         ) {
             Icon(Icons.Outlined.Visibility, contentDescription = null)

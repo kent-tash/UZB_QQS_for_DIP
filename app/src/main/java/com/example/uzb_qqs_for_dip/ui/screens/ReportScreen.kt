@@ -1,2344 +1,793 @@
 package com.example.uzb_qqs_for_dip.ui.screens
 
-
-
-
-
 import android.widget.Toast
-
-
 import androidx.activity.compose.rememberLauncherForActivityResult
-
-
 import androidx.activity.result.contract.ActivityResultContracts
-
-
 import androidx.compose.animation.animateContentSize
-
-
 import androidx.compose.foundation.background
-
-
 import androidx.compose.foundation.clickable
-
-
 import androidx.compose.foundation.horizontalScroll
-
-
 import androidx.compose.foundation.layout.Arrangement
-
-
 import androidx.compose.foundation.layout.Box
-
-
 import androidx.compose.foundation.layout.Column
-
-
 import androidx.compose.foundation.layout.Row
-
-
 import androidx.compose.foundation.layout.Spacer
-
-
 import androidx.compose.foundation.layout.fillMaxSize
-
-
 import androidx.compose.foundation.layout.fillMaxWidth
-
-
 import androidx.compose.foundation.layout.height
-
-
 import androidx.compose.foundation.layout.padding
-
-
 import androidx.compose.foundation.layout.size
-
-
 import androidx.compose.foundation.layout.width
-
-
 import androidx.compose.foundation.rememberScrollState
-
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-
 import androidx.compose.foundation.verticalScroll
-
-
 import androidx.compose.material.icons.Icons
-
-
 import androidx.compose.material.icons.filled.ArrowDownward
-
-
 import androidx.compose.material.icons.filled.ArrowUpward
-
-
 import androidx.compose.material.icons.outlined.DeleteForever
-
-
 import androidx.compose.material3.AlertDialog
-
-
 import androidx.compose.material3.Button
-
-
 import androidx.compose.material3.ButtonDefaults
-
-
 import androidx.compose.material3.Card
-
-
 import androidx.compose.material3.CardDefaults
-
-
 import androidx.compose.material3.Checkbox
-
-
 import androidx.compose.material3.CheckboxDefaults
-
-
 import androidx.compose.material3.FilterChip
-
-
 import androidx.compose.material3.HorizontalDivider
-
-
 import androidx.compose.material3.Icon
-
-
 import androidx.compose.material3.MaterialTheme
-
-
 import androidx.compose.material3.OutlinedButton
-
-
 import androidx.compose.material3.Text
-
-
 import androidx.compose.material3.TriStateCheckbox
-
-
 import androidx.compose.runtime.Composable
-
-
 import androidx.compose.runtime.LaunchedEffect
-
-
 import androidx.compose.runtime.getValue
-
-
 import androidx.compose.runtime.collectAsState
-
-
 import androidx.compose.runtime.mutableStateOf
-
-
 import androidx.compose.runtime.remember
-
-
 import androidx.compose.runtime.setValue
-
-
 import androidx.compose.ui.Alignment
-
-
 import androidx.compose.ui.Modifier
-
-
 import androidx.compose.ui.platform.LocalContext
-
-
 import androidx.compose.ui.state.ToggleableState
-
-
 import androidx.compose.ui.text.font.FontWeight
-
-
 import androidx.compose.ui.text.style.TextAlign
-
-
 import androidx.compose.ui.text.style.TextOverflow
-
-
 import androidx.compose.ui.unit.Dp
-
-
 import androidx.compose.ui.unit.dp
-
-
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-
 import androidx.lifecycle.viewmodel.compose.viewModel
-
-
 import com.example.uzb_qqs_for_dip.data.model.ReceiptWithUser
-
-
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
-
-
 import com.example.uzb_qqs_for_dip.data.settings.ReportSettings
-
-
 import com.example.uzb_qqs_for_dip.data.settings.SortField
-
-
 import com.example.uzb_qqs_for_dip.data.settings.SortOrder
-
-
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
-
-
 import com.example.uzb_qqs_for_dip.ui.ReportEvent
-
-
 import com.example.uzb_qqs_for_dip.ui.ReportViewModel
-
-
 import com.example.uzb_qqs_for_dip.ui.components.DateField
-
-
 import com.example.uzb_qqs_for_dip.ui.components.DatePickerSheet
-
-
 import com.example.uzb_qqs_for_dip.ui.components.ExportActionGrid
-
-
 import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
-
-
 import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
-
-
 import com.example.uzb_qqs_for_dip.ui.components.SelectField
-
-
 import com.example.uzb_qqs_for_dip.util.DateFormat
-
-
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 
-
-
-
-
 private data class UserChoice(val id: Long?, val label: String)
-
-
 private data class YearChoice(val year: Int)
-
-
 private data class QuarterChoice(val quarter: Quarter)
 
-
-
-
-
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-
-
 @Composable
-
-
 fun ReportScreen(
-
-
     appViewModel: AppViewModel,
-
-
     reportViewModel: ReportViewModel = viewModel()
-
-
 ) {
-
-
     val context = LocalContext.current
-
-
     val users by reportViewModel.users.collectAsStateWithLifecycle()
-
-
     val rows by reportViewModel.rows.collectAsStateWithLifecycle()
-
-
     val settings by reportViewModel.settings.collectAsStateWithLifecycle()
-
-
     val event by reportViewModel.event.collectAsStateWithLifecycle()
-
-
     val selectedIds by reportViewModel.selectedIds.collectAsStateWithLifecycle()
-
-
     val isSaving by reportViewModel.isSaving.collectAsStateWithLifecycle()
-
-
     val saveProgress by reportViewModel.saveProgress.collectAsStateWithLifecycle()
-
-
     val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
 
-
-
-
-
     var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
-
-
     var showSaveFormatDialog by remember { mutableStateOf(false) }
-
-
     var showShareFormatDialog by remember { mutableStateOf(false) }
 
 
-
-
-
-
-
-
     val savePdfLauncher = rememberLauncherForActivityResult(
-
-
         contract = ActivityResultContracts.CreateDocument("application/pdf")
-
-
     ) { uri ->
-
-
         if (uri != null) reportViewModel.savePdfToUri(context, uri)
-
-
     }
-
-
     val saveXlsxLauncher = rememberLauncherForActivityResult(
-
-
         contract = ActivityResultContracts.CreateDocument(
-
-
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-
-
         )
-
-
     ) { uri ->
-
-
         if (uri != null) reportViewModel.saveXlsxToUri(context, uri)
-
-
     }
-
-
-
-
 
     LaunchedEffect(event) {
-
-
         when (val e = event) {
-
-
             is ReportEvent.Open -> {
-
-
                 runCatching { context.startActivity(e.intent) }
-
-
-                    .onFailure { Toast.makeText(context, "Не нашли приложение для PDF", Toast.LENGTH_LONG).show() }
-
-
+                    .onFailure { Toast.makeText(context, "РќРµ РЅР°С€Р»Рё РїСЂРёР»РѕР¶РµРЅРёРµ РґР»СЏ PDF", Toast.LENGTH_LONG).show() }
                 reportViewModel.consumeEvent()
-
-
             }
-
-
             is ReportEvent.Share -> {
-
-
                 runCatching { context.startActivity(e.intent) }
-
-
-                    .onFailure { Toast.makeText(context, "Не удалось поделиться", Toast.LENGTH_LONG).show() }
-
-
+                    .onFailure { Toast.makeText(context, "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґРµР»РёС‚СЊСЃСЏ", Toast.LENGTH_LONG).show() }
                 reportViewModel.consumeEvent()
-
-
             }
-
-
             is ReportEvent.Print -> {
-
-
                 reportViewModel.launchPrint(context, e.file, e.jobName)
-
-
                 reportViewModel.consumeEvent()
-
-
             }
-
-
             is ReportEvent.Error -> {
-
-
                 Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
-
-
                 reportViewModel.consumeEvent()
-
-
             }
-
-
             is ReportEvent.Saved -> {
-
-
                 saveSuccessMessage = e.message
-
-
                 reportViewModel.consumeEvent()
-
-
             }
-
-
             is ReportEvent.Deleted -> {
-
-
                 Toast.makeText(
-
-
                     context,
-
-
-                    "Удалено чеков: ${e.count}",
-
-
+                    "РЈРґР°Р»РµРЅРѕ С‡РµРєРѕРІ: ${e.count}",
                     Toast.LENGTH_SHORT
-
-
                 ).show()
-
-
                 reportViewModel.consumeEvent()
-
-
             }
-
-
             null -> Unit
-
-
         }
-
-
     }
 
-
-
-
-
     var showFromPicker by remember { mutableStateOf(false) }
-
-
     var showToPicker by remember { mutableStateOf(false) }
-
-
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-
-
-
-
     val userOptions = remember(users) { users.map { UserChoice(it.id, it.fullName) } }
-
-
     val selectedUser =
-
-
         userOptions.firstOrNull { it.id == settings.userId }
-
-
             ?: userOptions.firstOrNull { it.id == currentUser?.id }
-
-
             ?: userOptions.firstOrNull()
-
-
-            ?: UserChoice(null, "—")
-
-
-
-
+            ?: UserChoice(null, "вЂ”")
 
     val totalSum = rows.sumOf { it.receipt.totalAmountTiyin }
-
-
     val totalVat = rows.sumOf { it.receipt.vatAmountTiyin }
 
 
-
-
-
-
-
-
     val scrollState = rememberScrollState()
-
-
     androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
-
-
         appViewModel.scrollToTopEvent.collect { route ->
-
-
             if (route == "main/report") {
-
-
                 scrollState.animateScrollTo(0)
-
-
             }
-
-
         }
-
-
     }
 
-
-
-
-
     Column(
-
-
         modifier = Modifier
-
-
             .fillMaxSize()
-
-
             .verticalScroll(scrollState)
-
-
             .padding(horizontal = 16.dp, vertical = 8.dp)
-
-
     ) {
 
-
-
-
-
         Card(
-
-
             shape = RoundedCornerShape(20.dp),
-
-
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-
-
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-
-
         ) {
-
-
             Column(Modifier.padding(14.dp)) {
-
-
                 if (userOptions.isNotEmpty()) {
-
-
                     SelectField(
-
-
-                        label = "Пользователь",
-
-
+                        label = "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ",
                         value = selectedUser,
-
-
                         options = userOptions,
-
-
                         optionLabel = { it.label },
-
-
                         onSelected = { reportViewModel.setUserFilter(it.id) }
-
-
                     )
-
-
                     Spacer(Modifier.height(10.dp))
-
-
                 }
 
-
-
-
-
-                // Квартал/год вЂ” основной способ задать период.
-
-
+                // РљРІР°СЂС‚Р°Р»/РіРѕРґ вЂ” РѕСЃРЅРѕРІРЅРѕР№ СЃРїРѕСЃРѕР± Р·Р°РґР°С‚СЊ РїРµСЂРёРѕРґ.
                 val years = remember(settings.year) {
-
-
                     val current = ReportSettings.currentYear()
-
-
                     val pivot = settings.year.coerceAtMost(current)
-
-
                     val from = (pivot - 5).coerceAtMost(current - 5)
-
-
                     val to = current + 1
-
-
                     (to downTo from).map { YearChoice(it) }
-
-
                 }
-
-
                 val quarters = remember { Quarter.entries.map { QuarterChoice(it) } }
-
-
                 val selectedYear = years.firstOrNull { it.year == settings.year }
-
-
                     ?: YearChoice(settings.year)
-
-
                 val selectedQuarter = quarters.firstOrNull { it.quarter == settings.quarter }
-
-
                     ?: QuarterChoice(settings.quarter)
 
-
-
-
-
-                SelectField(
-                    label = "Год",
-                    value = selectedYear,
-                    options = years,
-                    optionLabel = { it.year.toString() },
-                    onSelected = { reportViewModel.setYear(it.year) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(10.dp))
-                SelectField(
-                    label = "Квартал",
-                    value = selectedQuarter,
-                    options = quarters,
-                    optionLabel = { it.quarter.label },
-                    onSelected = { reportViewModel.setQuarter(it.quarter) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-
-                Spacer(Modifier.height(10.dp))
-
-
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-
-
+                    SelectField(
+                        label = "Р“РѕРґ",
+                        value = selectedYear,
+                        options = years,
+                        optionLabel = { it.year.toString() },
+                        onSelected = { reportViewModel.setYear(it.year) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    SelectField(
+                        label = "РљРІР°СЂС‚Р°Р»",
+                        value = selectedQuarter,
+                        options = quarters,
+                        optionLabel = { it.quarter.label },
+                        onSelected = { reportViewModel.setQuarter(it.quarter) },
+                        modifier = Modifier.weight(1.4f)
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     DateField(
-
-
-                        label = "Период с",
-
-
+                        label = "РџРµСЂРёРѕРґ СЃ",
                         valueText = DateFormat.formatDate(settings.from),
-
-
                         onClick = { showFromPicker = true },
-
-
                         modifier = Modifier.weight(1f)
-
-
                     )
-
-
                     DateField(
-
-
-                        label = "Период по",
-
-
+                        label = "РџРµСЂРёРѕРґ РїРѕ",
                         valueText = DateFormat.formatDate(settings.to),
-
-
                         onClick = { showToPicker = true },
-
-
                         modifier = Modifier.weight(1f)
-
-
                     )
-
-
                 }
-
-
                 if (settings.quarter == Quarter.Custom) {
-
-
                     Spacer(Modifier.height(6.dp))
-
-
                     Text(
-
-
-                        "Выбран произвольный период. Чтобы вернуться к кварталу — " +
-
-
-                            "просто выберите его в списке выше.",
-
-
+                        "Р’С‹Р±СЂР°РЅ РїСЂРѕРёР·РІРѕР»СЊРЅС‹Р№ РїРµСЂРёРѕРґ. Р§С‚РѕР±С‹ РІРµСЂРЅСѓС‚СЊСЃСЏ Рє РєРІР°СЂС‚Р°Р»Сѓ вЂ” " +
+                            "РїСЂРѕСЃС‚Рѕ РІС‹Р±РµСЂРёС‚Рµ РµРіРѕ РІ СЃРїРёСЃРєРµ РІС‹С€Рµ.",
                         style = MaterialTheme.typography.bodySmall,
-
-
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-
-
                     )
-
-
                 }
-
-
-
-
 
                 Spacer(Modifier.height(10.dp))
-
-
                 val createdSortActive = settings.sortField == SortField.CREATED
-
-
                 FilterChip(
-
-
                     selected = createdSortActive,
-
-
                     onClick = { reportViewModel.toggleSort(SortField.CREATED) },
-
-
-                    label = { Text("Сортировка по дате добавления") },
-
-
+                    label = { Text("РЎРѕСЂС‚РёСЂРѕРІРєР° РїРѕ РґР°С‚Рµ РґРѕР±Р°РІР»РµРЅРёСЏ") },
                     trailingIcon = if (createdSortActive) {
-
-
                         {
-
-
                             Icon(
-
-
                                 imageVector = if (settings.sortOrder == SortOrder.ASC)
-
-
                                     Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
-
-
                                 contentDescription = settings.sortOrder.label,
-
-
                                 modifier = Modifier.size(16.dp)
-
-
                             )
-
-
                         }
-
-
                     } else {
-
-
                         null
-
-
                     }
-
-
                 )
-
-
             }
-
-
         }
-
-
-
-
 
         Spacer(Modifier.height(14.dp))
 
-
-
-
-
-        // Краткая шапка: имя/должность/период/количество.
-
-
+        // РљСЂР°С‚РєР°СЏ С€Р°РїРєР°: РёРјСЏ/РґРѕР»Р¶РЅРѕСЃС‚СЊ/РїРµСЂРёРѕРґ/РєРѕР»РёС‡РµСЃС‚РІРѕ.
         ReportPreviewCard(
-
-
             userFullName = selectedUser.label,
-
-
             position = users.firstOrNull { it.id == selectedUser.id }?.position ?: "",
-
-
             initialsSurname = users.firstOrNull { it.id == selectedUser.id }?.initialsSurname ?: "",
-
-
             from = settings.from,
-
-
             to = settings.to,
-
-
             count = rows.size,
-
-
             totalSum = totalSum,
-
-
             totalVat = totalVat
-
-
         )
-
-
-
-
 
         Spacer(Modifier.height(16.dp))
 
-
-
-
-
         val savePhase by reportViewModel.savePhase.collectAsState()
 
-
-
-
-
         ExportActionGrid(
-
-
             onOpen = { reportViewModel.previewPdf(context) },
-
-
             onPrint = { reportViewModel.printPdf(context) },
-
-
             onSave = { showSaveFormatDialog = true },
-
-
             onShare = { showShareFormatDialog = true },
-
-
             isSaving = isSaving,
-
-
             saveProgress = saveProgress,
-
-
             isSaveEnabled = !isSaving && selectedUser.id != null && rows.isNotEmpty(),
-
-
             isOpenPrintEnabled = selectedUser.id != null,
-
-
-            saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "Сохранение… ${(saveProgress * 100).toInt()}%"
-
-
+            saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "РЎРѕС…СЂР°РЅРµРЅРёРµвЂ¦ ${(saveProgress * 100).toInt()}%"
         )
 
-
-
-
-
         Spacer(Modifier.height(20.dp))
-
-
         Text(
-
-
-            "«Сохранить» и «Поделиться» — выбор формата PDF или Excel (xlsx). " +
-
-
-                "«Открыть» показывает предпросмотр PDF. «Печать / PDF» — системный диалог печати.",
-
-
+            "В«РЎРѕС…СЂР°РЅРёС‚СЊВ» Рё В«РџРѕРґРµР»РёС‚СЊСЃСЏВ» вЂ” РІС‹Р±РѕСЂ С„РѕСЂРјР°С‚Р° PDF РёР»Рё Excel (xlsx). " +
+                "В«РћС‚РєСЂС‹С‚СЊВ» РїРѕРєР°Р·С‹РІР°РµС‚ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ PDF. В«РџРµС‡Р°С‚СЊ / PDFВ» вЂ” СЃРёСЃС‚РµРјРЅС‹Р№ РґРёР°Р»РѕРі РїРµС‡Р°С‚Рё.",
             style = MaterialTheme.typography.bodySmall,
-
-
             color = MaterialTheme.colorScheme.onSurfaceVariant
-
-
         )
-
-
-
-
 
         Spacer(Modifier.height(20.dp))
 
-
-
-
-
-        // Панель пакетного удаления вЂ” появляется, когда выбран хотя бы один чек.
-
-
+        // РџР°РЅРµР»СЊ РїР°РєРµС‚РЅРѕРіРѕ СѓРґР°Р»РµРЅРёСЏ вЂ” РїРѕСЏРІР»СЏРµС‚СЃСЏ, РєРѕРіРґР° РІС‹Р±СЂР°РЅ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ С‡РµРє.
         androidx.compose.foundation.layout.Column(modifier = Modifier.animateContentSize()) {
-
-
             if (selectedIds.isNotEmpty()) {
-
-
                 SelectionActionBar(
-
-
                     selectedCount = selectedIds.size,
-
-
                     onClear = { reportViewModel.clearSelection() },
-
-
                     onDelete = { showDeleteConfirm = true }
-
-
                 )
-
-
                 Spacer(Modifier.height(8.dp))
-
-
             }
-
-
         }
 
-
-
-
-
-        // Превью таблицы вЂ” то же содержимое, что попадёт в PDF/печать.
-
-
-        // Расположено в самом низу, чтобы кнопки экспорта оставались на виду
-
-
-        // независимо от того, насколько длинной стала таблица.
-
-
+        // РџСЂРµРІСЊСЋ С‚Р°Р±Р»РёС†С‹ вЂ” С‚Рѕ Р¶Рµ СЃРѕРґРµСЂР¶РёРјРѕРµ, С‡С‚Рѕ РїРѕРїР°РґС‘С‚ РІ PDF/РїРµС‡Р°С‚СЊ.
+        // Р Р°СЃРїРѕР»РѕР¶РµРЅРѕ РІ СЃР°РјРѕРј РЅРёР·Сѓ, С‡С‚РѕР±С‹ РєРЅРѕРїРєРё СЌРєСЃРїРѕСЂС‚Р° РѕСЃС‚Р°РІР°Р»РёСЃСЊ РЅР° РІРёРґСѓ
+        // РЅРµР·Р°РІРёСЃРёРјРѕ РѕС‚ С‚РѕРіРѕ, РЅР°СЃРєРѕР»СЊРєРѕ РґР»РёРЅРЅРѕР№ СЃС‚Р°Р»Р° С‚Р°Р±Р»РёС†Р°.
         ReportTablePreview(
-
-
             rows = rows,
-
-
             sortField = settings.sortField,
-
-
             sortOrder = settings.sortOrder,
-
-
             onToggleSort = { reportViewModel.toggleSort(it) },
-
-
             selectedIds = selectedIds,
-
-
             onToggleSelection = { reportViewModel.toggleSelection(it) },
-
-
             onSelectAllVisible = { reportViewModel.selectAllVisible() },
-
-
             onClearSelection = { reportViewModel.clearSelection() },
-
-
             totalSum = totalSum,
-
-
             totalVat = totalVat
-
-
         )
-
-
     }
-
-
-
-
 
     if (showFromPicker) {
-
-
         DatePickerSheet(
-
-
             initialMillis = settings.from,
-
-
             onDismiss = { showFromPicker = false },
-
-
             onPicked = { it?.let(reportViewModel::setFrom) }
-
-
         )
-
-
     }
-
-
     if (showToPicker) {
-
-
         DatePickerSheet(
-
-
             initialMillis = settings.to,
-
-
             onDismiss = { showToPicker = false },
-
-
             onPicked = { it?.let(reportViewModel::setTo) }
-
-
         )
-
-
     }
-
-
-
-
 
     if (showDeleteConfirm && selectedIds.isNotEmpty()) {
-
-
         AlertDialog(
-
-
             onDismissRequest = { showDeleteConfirm = false },
-
-
-            title = { Text("Удалить выбранные чеки?") },
-
-
+            title = { Text("РЈРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ С‡РµРєРё?") },
             text = {
-
-
                 Text(
-
-
-                    "Будет удалено ${selectedIds.size} чек(а/ов). " +
-
-
-                        "Записи и связанные с ними данные исчезнут из отчёта и со вкладки «Чеки» " +
-
-
-                        "безвозвратно."
-
-
+                    "Р‘СѓРґРµС‚ СѓРґР°Р»РµРЅРѕ ${selectedIds.size} С‡РµРє(Р°/РѕРІ). " +
+                        "Р—Р°РїРёСЃРё Рё СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ РЅРёРјРё РґР°РЅРЅС‹Рµ РёСЃС‡РµР·РЅСѓС‚ РёР· РѕС‚С‡С‘С‚Р° Рё СЃРѕ РІРєР»Р°РґРєРё В«Р§РµРєРёВ» " +
+                        "Р±РµР·РІРѕР·РІСЂР°С‚РЅРѕ."
                 )
-
-
             },
-
-
             confirmButton = {
-
-
                 Button(
-
-
                     onClick = {
-
-
                         showDeleteConfirm = false
-
-
                         reportViewModel.deleteSelected()
-
-
                     },
-
-
                     colors = ButtonDefaults.buttonColors(
-
-
                         containerColor = MaterialTheme.colorScheme.error
-
-
                     )
-
-
-                ) { Text("Удалить") }
-
-
+                ) { Text("РЈРґР°Р»РёС‚СЊ") }
             },
-
-
             dismissButton = {
-
-
-                OutlinedButton(onClick = { showDeleteConfirm = false }) { Text("Отмена") }
-
-
+                OutlinedButton(onClick = { showDeleteConfirm = false }) { Text("РћС‚РјРµРЅР°") }
             }
-
-
         )
-
-
     }
-
-
-
-
 
     if (showSaveFormatDialog) {
-
-
         FormatChoiceDialog(
-
-
-            title = "Сохранить отчёт как",
-
-
+            title = "РЎРѕС…СЂР°РЅРёС‚СЊ РѕС‚С‡С‘С‚ РєР°Рє",
             onDismiss = { showSaveFormatDialog = false },
-
-
             onChoose = { format ->
-
-
                 showSaveFormatDialog = false
-
-
                 when (format) {
-
-
                     ExportFileFormat.PDF ->
-
-
                         reportViewModel.suggestedReportPdfName()?.let { savePdfLauncher.launch(it) }
-
-
                     ExportFileFormat.XLSX ->
-
-
                         reportViewModel.suggestedReportXlsxName()?.let { saveXlsxLauncher.launch(it) }
-
-
                 }
-
-
             }
-
-
         )
-
-
     }
-
-
     if (showShareFormatDialog) {
-
-
         FormatChoiceDialog(
-
-
-            title = "Поделиться отчётом",
-
-
+            title = "РџРѕРґРµР»РёС‚СЊСЃСЏ РѕС‚С‡С‘С‚РѕРј",
             onDismiss = { showShareFormatDialog = false },
-
-
             onChoose = { format ->
-
-
                 showShareFormatDialog = false
-
-
                 when (format) {
-
-
                     ExportFileFormat.PDF -> reportViewModel.sharePdf(context)
-
-
                     ExportFileFormat.XLSX -> reportViewModel.shareXlsx(context)
-
-
                 }
-
-
             }
-
-
         )
-
-
     }
-
-
-
-
 
     saveSuccessMessage?.let { message ->
-
-
         AlertDialog(
-
-
             onDismissRequest = { saveSuccessMessage = null },
-
-
-            title = { Text("Сохранено") },
-
-
+            title = { Text("РЎРѕС…СЂР°РЅРµРЅРѕ") },
             text = { Text(message) },
-
-
             confirmButton = {
-
-
                 Button(onClick = { saveSuccessMessage = null }) { Text("OK") }
-
-
             }
-
-
         )
-
-
     }
-
-
 }
-
-
-
-
 
 @Composable
-
-
 private fun SelectionActionBar(
-
-
     selectedCount: Int,
-
-
     onClear: () -> Unit,
-
-
     onDelete: () -> Unit
-
-
 ) {
-
-
     Card(
-
-
         modifier = Modifier.fillMaxWidth(),
-
-
         shape = RoundedCornerShape(12.dp),
-
-
         colors = CardDefaults.cardColors(
-
-
             containerColor = MaterialTheme.colorScheme.errorContainer
-
-
         ),
-
-
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-
-
     ) {
-
-
         Row(
-
-
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-
-
             verticalAlignment = Alignment.CenterVertically
-
-
         ) {
-
-
             Text(
-
-
-                "Выбрано: $selectedCount",
-
-
+                "Р’С‹Р±СЂР°РЅРѕ: $selectedCount",
                 fontWeight = FontWeight.SemiBold,
-
-
                 color = MaterialTheme.colorScheme.onErrorContainer,
-
-
                 modifier = Modifier.weight(1f)
-
-
             )
-
-
             OutlinedButton(
-
-
                 onClick = onClear,
-
-
                 shape = RoundedCornerShape(10.dp)
-
-
-            ) { Text("Снять") }
-
-
+            ) { Text("РЎРЅСЏС‚СЊ") }
             Spacer(Modifier.width(8.dp))
-
-
             Button(
-
-
                 onClick = onDelete,
-
-
                 shape = RoundedCornerShape(10.dp),
-
-
                 colors = ButtonDefaults.buttonColors(
-
-
                     containerColor = MaterialTheme.colorScheme.error
-
-
                 )
-
-
             ) {
-
-
                 Icon(Icons.Outlined.DeleteForever, contentDescription = null)
-
-
                 Spacer(Modifier.width(6.dp))
-
-
-                Text("Удалить")
-
-
+                Text("РЈРґР°Р»РёС‚СЊ")
             }
-
-
         }
-
-
     }
-
-
 }
-
-
-
-
 
 /* --------------------------- Preview table --------------------------- */
 
-
-
-
-
 private val PT_CHECK = 44.dp
-
-
 private val PT_NUM = 40.dp
-
-
 private val PT_SELLER = 200.dp
-
-
 private val PT_DATE = 130.dp
-
-
 private val PT_TOTAL = 120.dp
-
-
 private val PT_VAT = 110.dp
 
-
-
-
-
 @Composable
-
-
 private fun ReportTablePreview(
-
-
     rows: List<ReceiptWithUser>,
-
-
     sortField: SortField,
-
-
     sortOrder: SortOrder,
-
-
     onToggleSort: (SortField) -> Unit,
-
-
     selectedIds: Set<Long>,
-
-
     onToggleSelection: (Long) -> Unit,
-
-
     onSelectAllVisible: () -> Unit,
-
-
     onClearSelection: () -> Unit,
-
-
     totalSum: Long,
-
-
     totalVat: Long
-
-
 ) {
-
-
     Card(
-
-
         modifier = Modifier.fillMaxWidth(),
-
-
         shape = RoundedCornerShape(20.dp),
-
-
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-
-
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-
-
     ) {
-
-
         Column(Modifier.padding(8.dp)) {
-
-
             Text(
-
-
-                "Превью таблицы. Клик по заголовку сортирует, чек-боксы слева — для пакетного удаления.",
-
-
+                "РџСЂРµРІСЊСЋ С‚Р°Р±Р»РёС†С‹. РљР»РёРє РїРѕ Р·Р°РіРѕР»РѕРІРєСѓ СЃРѕСЂС‚РёСЂСѓРµС‚, С‡РµРє-Р±РѕРєСЃС‹ СЃР»РµРІР° вЂ” РґР»СЏ РїР°РєРµС‚РЅРѕРіРѕ СѓРґР°Р»РµРЅРёСЏ.",
                 style = MaterialTheme.typography.labelMedium,
-
-
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-
-
                 modifier = Modifier.padding(start = 6.dp, top = 4.dp, bottom = 6.dp)
-
-
             )
-
-
             val hScroll = rememberScrollState()
-
-
             Column(Modifier.horizontalScroll(hScroll)) {
-
-
                 val visibleCount = rows.size
-
-
                 val selectedVisible = if (visibleCount == 0) 0
-
-
                     else rows.count { it.receipt.id in selectedIds }
-
-
                 val headerToggleState = when {
-
-
                     selectedVisible == 0 -> ToggleableState.Off
-
-
                     selectedVisible == visibleCount -> ToggleableState.On
-
-
                     else -> ToggleableState.Indeterminate
-
-
                 }
-
-
                 Row(
-
-
                     modifier = Modifier
-
-
                         .background(MaterialTheme.colorScheme.primary)
-
-
                         .padding(vertical = 4.dp, horizontal = 4.dp),
-
-
                     verticalAlignment = Alignment.CenterVertically
-
-
                 ) {
-
-
                     Box(
-
-
                         modifier = Modifier.width(PT_CHECK),
-
-
                         contentAlignment = Alignment.Center
-
-
                     ) {
-
-
                         TriStateCheckbox(
-
-
                             state = headerToggleState,
-
-
                             enabled = visibleCount > 0,
-
-
                             onClick = {
-
-
                                 if (headerToggleState == ToggleableState.On) onClearSelection()
-
-
                                 else onSelectAllVisible()
-
-
                             },
-
-
                             colors = CheckboxDefaults.colors(
-
-
                                 checkedColor = MaterialTheme.colorScheme.onPrimary,
-
-
                                 uncheckedColor = MaterialTheme.colorScheme.onPrimary,
-
-
                                 checkmarkColor = MaterialTheme.colorScheme.primary
-
-
                             )
-
-
                         )
-
-
                     }
-
-
                     SortableHeader(
-
-
-                        text = "№",
-
-
+                        text = "в„–",
                         width = PT_NUM,
-
-
                         end = true,
-
-
                         field = SortField.DATE,
-
-
                         currentField = sortField,
-
-
                         currentOrder = sortOrder,
-
-
                         onClick = onToggleSort,
-
-
                         showIndicator = false
-
-
                     )
-
-
                     SortableHeader(
-
-
-                        text = "Юр. лицо",
-
-
+                        text = "Р®СЂ. Р»РёС†Рѕ",
                         width = PT_SELLER,
-
-
                         field = SortField.SELLER,
-
-
                         currentField = sortField,
-
-
                         currentOrder = sortOrder,
-
-
                         onClick = onToggleSort
-
-
                     )
-
-
                     SortableHeader(
-
-
-                        text = "Сумма",
-
-
+                        text = "РЎСѓРјРјР°",
                         width = PT_TOTAL,
-
-
                         end = true,
-
-
                         field = SortField.TOTAL,
-
-
                         currentField = sortField,
-
-
                         currentOrder = sortOrder,
-
-
                         onClick = onToggleSort
-
-
                     )
-
-
                     SortableHeader(
-
-
-                        text = "НДС",
-
-
+                        text = "РќР”РЎ",
                         width = PT_VAT,
-
-
                         end = true,
-
-
                         field = SortField.VAT,
-
-
                         currentField = sortField,
-
-
                         currentOrder = sortOrder,
-
-
                         onClick = onToggleSort
-
-
                     )
-
-
                     SortableHeader(
-
-
-                        text = "Дата",
-
-
+                        text = "Р”Р°С‚Р°",
                         width = PT_DATE,
-
-
                         field = SortField.DATE,
-
-
                         currentField = sortField,
-
-
                         currentOrder = sortOrder,
-
-
                         onClick = onToggleSort
-
-
                     )
-
-
                 }
-
-
-
-
 
                 if (rows.isEmpty()) {
-
-
                     Box(
-
-
                         modifier = Modifier
-
-
                             .fillMaxWidth()
-
-
                             .padding(24.dp),
-
-
                         contentAlignment = Alignment.Center
-
-
                     ) {
-
-
                         Text(
-
-
-                            "Нет чеков за выбранный период",
-
-
+                            "РќРµС‚ С‡РµРєРѕРІ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
-
-
                         )
-
-
                     }
-
-
                 } else {
-
-
                     rows.forEachIndexed { idx, item ->
-
-
                         val isSelected = item.receipt.id in selectedIds
-
-
                         Row(
-
-
                             modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp),
-
-
                             verticalAlignment = Alignment.CenterVertically
-
-
                         ) {
-
-
                             Box(
-
-
                                 modifier = Modifier.width(PT_CHECK),
-
-
                                 contentAlignment = Alignment.Center
-
-
                             ) {
-
-
                                 Checkbox(
-
-
                                     checked = isSelected,
-
-
                                     onCheckedChange = { onToggleSelection(item.receipt.id) }
-
-
                                 )
-
-
                             }
-
-
                             BodyCell((idx + 1).toString(), PT_NUM, end = true, bold = true)
-
-
                             BodyCell(item.receipt.sellerName, PT_SELLER)
-
-
                             BodyCell(MoneyFormat.fromTiyin(item.receipt.totalAmountTiyin), PT_TOTAL, end = true, bold = true)
-
-
                             BodyCell(MoneyFormat.fromTiyin(item.receipt.vatAmountTiyin), PT_VAT, end = true)
-
-
                             BodyCell(DateFormat.formatDateTime(item.receipt.purchasedAt), PT_DATE)
-
-
                         }
-
-
                         HorizontalDivider(
-
-
                             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
-
-
                         )
-
-
                     }
-
-
-
-
 
                     Row(
-
-
                         modifier = Modifier
-
-
                             .background(MaterialTheme.colorScheme.primaryContainer)
-
-
                             .padding(vertical = 8.dp, horizontal = 4.dp)
-
-
                     ) {
-
-
-                        BodyCell("Итого:", PT_CHECK + PT_NUM + PT_SELLER, end = true, bold = true)
-
-
+                        BodyCell("РС‚РѕРіРѕ:", PT_CHECK + PT_NUM + PT_SELLER, end = true, bold = true)
                         BodyCell(MoneyFormat.fromTiyin(totalSum), PT_TOTAL, end = true, bold = true)
-
-
                         BodyCell(MoneyFormat.fromTiyin(totalVat), PT_VAT, end = true, bold = true)
-
-
                         BodyCell("", PT_DATE)
-
-
                     }
-
-
                 }
-
-
             }
-
-
         }
-
-
     }
-
-
 }
 
-
-
-
-
 @Composable
-
-
 private fun SortableHeader(
-
-
     text: String,
-
-
     width: Dp,
-
-
     field: SortField,
-
-
     currentField: SortField,
-
-
     currentOrder: SortOrder,
-
-
     onClick: (SortField) -> Unit,
-
-
     end: Boolean = false,
-
-
     showIndicator: Boolean = true
-
-
 ) {
-
-
     val active = field == currentField
-
-
     Row(
-
-
         modifier = Modifier
-
-
             .width(width)
-
-
             .clickable { onClick(field) }
-
-
             .padding(horizontal = 6.dp, vertical = 2.dp),
-
-
         verticalAlignment = Alignment.CenterVertically,
-
-
         horizontalArrangement = if (end) Arrangement.End else Arrangement.Start
-
-
     ) {
-
-
         Text(
-
-
             text,
-
-
             style = MaterialTheme.typography.labelLarge,
-
-
             color = MaterialTheme.colorScheme.onPrimary,
-
-
             fontWeight = FontWeight.Bold,
-
-
             textAlign = if (end) TextAlign.End else TextAlign.Start,
-
-
             maxLines = 2,
-
-
             overflow = TextOverflow.Ellipsis,
-
-
             modifier = Modifier.weight(1f, fill = false)
-
-
         )
-
-
         if (showIndicator && active) {
-
-
             Spacer(Modifier.width(2.dp))
-
-
             Icon(
-
-
                 imageVector = if (currentOrder == SortOrder.ASC)
-
-
                     Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
-
-
                 contentDescription = currentOrder.label,
-
-
                 tint = MaterialTheme.colorScheme.onPrimary,
-
-
                 modifier = Modifier.size(14.dp)
-
-
             )
-
-
         }
-
-
     }
-
-
 }
 
-
-
-
-
 @Composable
-
-
 private fun BodyCell(
-
-
     text: String,
-
-
     width: Dp,
-
-
     end: Boolean = false,
-
-
     bold: Boolean = false
-
-
 ) {
-
-
     Text(
-
-
         text = text,
-
-
         modifier = Modifier
-
-
             .width(width)
-
-
             .padding(horizontal = 6.dp),
-
-
         textAlign = if (end) TextAlign.End else TextAlign.Start,
-
-
         style = MaterialTheme.typography.bodyMedium,
-
-
         fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
-
-
         maxLines = 8,
-
-
         overflow = TextOverflow.Ellipsis
-
-
     )
-
-
 }
 
-
-
-
-
 @Composable
-
-
 private fun ReportPreviewCard(
-
-
     userFullName: String,
-
-
     position: String,
-
-
     initialsSurname: String,
-
-
     from: Long,
-
-
     to: Long,
-
-
     count: Int,
-
-
     totalSum: Long,
-
-
     totalVat: Long
-
-
 ) {
-
-
     Card(
-
-
         modifier = Modifier.fillMaxWidth(),
-
-
         shape = RoundedCornerShape(20.dp),
-
-
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-
-
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-
-
     ) {
-
-
         Column(Modifier.padding(16.dp)) {
-
-
-            Text("Шапка отчёта", fontWeight = FontWeight.SemiBold)
-
-
+            Text("РЁР°РїРєР° РѕС‚С‡С‘С‚Р°", fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(8.dp))
-
-
             Column {
-
-
-                InfoRow("Пользователь:", userFullName)
-
-
-                InfoRow("Должность:", position)
-
-
+                InfoRow("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ:", userFullName)
+                InfoRow("Р”РѕР»Р¶РЅРѕСЃС‚СЊ:", position)
                 InfoRow(
-
-
-                    "Период:",
-
-
-                    "${DateFormat.formatDate(from)} — ${DateFormat.formatDate(to)}"
-
-
+                    "РџРµСЂРёРѕРґ:",
+                    "${DateFormat.formatDate(from)} вЂ” ${DateFormat.formatDate(to)}"
                 )
-
-
-                InfoRow("Количество чеков:", count.toString())
-
-
+                InfoRow("РљРѕР»РёС‡РµСЃС‚РІРѕ С‡РµРєРѕРІ:", count.toString())
             }
-
-
             Spacer(Modifier.height(10.dp))
-
-
             HorizontalDivider()
-
-
             Spacer(Modifier.height(10.dp))
-
-
             Row {
-
-
                 Column(Modifier.weight(1f)) {
-
-
-                    Text("Итого сумма", color = MaterialTheme.colorScheme.onSurfaceVariant,
-
-
+                    Text("РС‚РѕРіРѕ СЃСѓРјРјР°", color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
-
-
                     Text(
-
-
-                        MoneyFormat.fromTiyin(totalSum) + " сум",
-
-
+                        MoneyFormat.fromTiyin(totalSum) + " СЃСѓРј",
                         style = MaterialTheme.typography.titleMedium,
-
-
                         fontWeight = FontWeight.Bold,
-
-
                         color = MaterialTheme.colorScheme.primary
-
-
                     )
-
-
                 }
-
-
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-
-
-                    Text("Итого НДС", color = MaterialTheme.colorScheme.onSurfaceVariant,
-
-
+                    Text("РС‚РѕРіРѕ РќР”РЎ", color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
-
-
                     Text(
-
-
-                        MoneyFormat.fromTiyin(totalVat) + " сум",
-
-
+                        MoneyFormat.fromTiyin(totalVat) + " СЃСѓРј",
                         style = MaterialTheme.typography.titleMedium,
-
-
                         fontWeight = FontWeight.Bold,
-
-
                         color = MaterialTheme.colorScheme.primary
-
-
                     )
-
-
                 }
-
-
             }
-
-
         }
-
-
     }
-
-
 }
-
-
-
-
 
 @Composable
-
-
 private fun InfoRow(label: String, value: String, endAlign: Boolean = false) {
-
-
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
-
-
         if (!endAlign) {
-
-
             Text(
-
-
                 label,
-
-
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-
-
                 style = MaterialTheme.typography.bodySmall,
-
-
                 modifier = Modifier.weight(0.5f)
-
-
             )
-
-
             Text(
-
-
                 value,
-
-
                 style = MaterialTheme.typography.bodyMedium,
-
-
                 fontWeight = FontWeight.Medium,
-
-
                 modifier = Modifier.weight(0.5f)
-
-
             )
-
-
         } else {
-
-
             Text(
-
-
                 "$label $value",
-
-
                 style = MaterialTheme.typography.bodyMedium,
-
-
                 fontWeight = FontWeight.Medium
-
-
             )
-
-
         }
-
-
     }
-
-
 }
-
-
-
-
-
-
-
-
 
 
 

@@ -49,7 +49,6 @@ object ReceiptsSheetPdfGenerator {
     ): File = withContext(Dispatchers.IO) {
         val file = File(ExportPaths.exportsDir(context), fileName)
         val doc = PdfDocument()
-        val printableRows = rowsInOrder.filter { !it.receipt.isManual }
         try {
             val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
@@ -65,9 +64,9 @@ object ReceiptsSheetPdfGenerator {
             }
             val pagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-                textSize = 8f
+                textSize = 9f
                 color = 0xFF6B7280.toInt()
-                textAlign = Paint.Align.RIGHT
+                textAlign = Paint.Align.CENTER
             }
 
             val manualReceiptsCount = rowsInOrder.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
@@ -102,9 +101,6 @@ object ReceiptsSheetPdfGenerator {
                 var baseline = MARGIN + titlePaint.textSize
                 for (i in titleLines.indices) {
                     canvas.drawText(titleLines[i], MARGIN, baseline, titlePaint)
-                    if (i == 0) {
-                        canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W - MARGIN, baseline, pagePaint)
-                    }
                     if (i < titleLines.lastIndex) {
                         baseline += titlePaint.textSize + TITLE_LINE_EXTRA
                     }
@@ -145,7 +141,10 @@ object ReceiptsSheetPdfGenerator {
                     )
                 }
 
-
+                canvas.drawText(
+                    "Стр. $pageNumber из $totalPages",
+                    PAGE_W / 2f, PAGE_H - 8f, pagePaint
+                )
 
                 doc.finishPage(page)
             }
@@ -185,7 +184,7 @@ object ReceiptsSheetPdfGenerator {
                         bitmap.recycle()
                     }
 
-                    canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W - MARGIN, MARGIN + titlePaint.textSize, pagePaint)
+                    canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W / 2f, PAGE_H - 8f, pagePaint)
                     doc.finishPage(page)
                     manualSeq++
                 }

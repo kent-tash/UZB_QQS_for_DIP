@@ -216,7 +216,9 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
         return ReportSettings.quarterStart(y, q) to ReportSettings.quarterEnd(y, q)
     }
 
-
+    fun refreshEmployeeStats() {
+        viewModelScope.launch { refreshEmployeeData() }
+    }
 
     private suspend fun refreshEmployeeData() {
         _employeeStats.value = loadEmployeeStats()
@@ -815,48 +817,4 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                 }
         }
     }
-
-    fun handleManualReceipt(
-        storeName: String,
-        dateMs: Long,
-        totalTiyin: Long,
-        vatTiyin: Long,
-        photoUri: Uri?
-    ) {
-        val app = getApplication<Application>()
-        val userId = selectedEmployee.value?.id ?: return
-        viewModelScope.launch {
-            _verifyResult.value = VerifyResult.Loading
-            var localPhotoPath: String? = null
-            if (photoUri != null) {
-                try {
-                    val fileName = "manual_${System.currentTimeMillis()}.jpg"
-                    val file = java.io.File(app.filesDir, fileName)
-                    app.contentResolver.openInputStream(photoUri)?.use { input ->
-                        file.outputStream().use { out -> input.copyTo(out) }
-                    }
-                    localPhotoPath = file.absolutePath
-                } catch (e: Exception) {
-                    _verifyResult.value = VerifyResult.Error("Не удалось сохранить фото: ${e.message}")
-                    return@launch
-                }
-            }
-
-            val receipt = com.example.uzb_qqs_for_dip.data.model.Receipt(
-                userId = userId,
-                fiscalSign = "MANUAL_${System.currentTimeMillis()}",
-                qrUrl = "Manual Entry",
-                createdAt = System.currentTimeMillis(),
-                purchasedAt = dateMs,
-                totalAmountTiyin = totalTiyin,
-                vatAmountTiyin = vatTiyin,
-                sellerName = storeName,
-                isManual = true,
-                manualPhotoUri = localPhotoPath
-            )
-            container.receiptRepository.insert(receipt)
-            _verifyResult.value = VerifyResult.Idle
-        }
-    }
-
 }

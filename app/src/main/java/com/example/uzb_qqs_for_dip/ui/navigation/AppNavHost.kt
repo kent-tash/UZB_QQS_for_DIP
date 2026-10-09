@@ -3,10 +3,9 @@
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.TableChart
@@ -55,11 +54,11 @@ private sealed class TopRoute(val route: String) {
 }
 
 private sealed class MainTab(val route: String, val title: String, val icon: ImageVector) {
-    data object Scan : MainTab("main/scan", "Добавить", Icons.Outlined.QrCodeScanner)
-    data object Receipts : MainTab("main/receipts", "Чеки", Icons.Outlined.TableChart)
-    data object Report : MainTab("main/report", "Отчёт", Icons.Outlined.Description)
-    data object Audit : MainTab("main/audit", "Аудит", Icons.AutoMirrored.Outlined.FactCheck)
-    data object Profile : MainTab("main/profile", "Профиль", Icons.Outlined.Person)
+    data object Scan : MainTab("main/scan", "Р”РѕР±Р°РІРёС‚СЊ", Icons.Outlined.QrCodeScanner)
+    data object Receipts : MainTab("main/receipts", "Р§РµРєРё", Icons.Outlined.TableChart)
+    data object Report : MainTab("main/report", "РћС‚С‡С‘С‚", Icons.Outlined.Description)
+    data object Audit : MainTab("main/audit", "РђСѓРґРёС‚", Icons.AutoMirrored.Outlined.FactCheck)
+    data object Profile : MainTab("main/profile", "РџСЂРѕС„РёР»СЊ", Icons.Outlined.Person)
     companion object {
         val employee = listOf(Scan, Receipts, Report, Profile)
         val auditor = listOf(Audit, Receipts, Report, Profile)
@@ -71,6 +70,7 @@ private const val ROUTE_AUDIT_SEARCH = "main/audit/search"
 private const val ARG_USER_ID = "userId"
 private const val ARG_QUARTER = "quarter"
 private const val ARG_YEAR = "year"
+private const val ARG_MANUAL = "manual"
 
 @Composable
 fun AppNavHost(appViewModel: AppViewModel = viewModel()) {
@@ -122,11 +122,7 @@ private fun MainScaffold(
     val isAuditor = currentUser?.role == UserRole.AUDITOR
     val tabs = if (isAuditor) MainTab.auditor else MainTab.employee
     val startTab = if (isAuditor) MainTab.Audit.route else MainTab.Scan.route
-    val currentTitle = when {
-        currentRoute?.startsWith(ROUTE_AUDIT_VERIFY) == true -> "Проверка чеков"
-        currentRoute?.startsWith(ROUTE_AUDIT_SEARCH) == true -> "Поиск"
-        else -> tabs.find { it.route == currentRoute }?.title ?: ""
-    }
+    val currentTitle = tabs.find { it.route == currentRoute }?.title ?: "UZB QQS"
 
     var showHelpDialog by remember { mutableStateOf(false) }
     if (showHelpDialog) {
@@ -144,17 +140,9 @@ private fun MainScaffold(
                         }
                     )
                 },
-                navigationIcon = {
-                    val isTopLevel = tabs.any { it.route == currentRoute }
-                    if (!isTopLevel) {
-                        IconButton(onClick = { tabsNav.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад")
-                        }
-                    }
-                },
                 actions = {
                     IconButton(onClick = { showHelpDialog = true }) {
-                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Помощь")
+                        Icon(Icons.Outlined.HelpOutline, contentDescription = "РџРѕРјРѕС‰СЊ")
                     }
                 }
             )
@@ -243,3 +231,5 @@ private fun MainScaffold(
         }
     }
 }
+
+

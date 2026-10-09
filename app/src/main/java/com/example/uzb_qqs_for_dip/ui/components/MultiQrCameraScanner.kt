@@ -142,7 +142,6 @@ private fun MultiQrCameraContent(
     val scope = rememberCoroutineScope()
 
     var status by remember { mutableStateOf(ValidationStatus.IDLE) }
-    var messageJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var message by remember { mutableStateOf("") }
     val alreadyScanned = remember { mutableSetOf<String>() }
     var successCount by remember { mutableStateOf(0) }
@@ -181,7 +180,7 @@ private fun MultiQrCameraContent(
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build()
                     analysis.setAnalyzer(analysisExecutor) { imageProxy ->
-                        if (status == ValidationStatus.VALIDATING) {
+                        if (status != ValidationStatus.IDLE) {
                             imageProxy.close()
                             return@setAnalyzer
                         }
@@ -212,14 +211,13 @@ private fun MultiQrCameraContent(
                                     status = ValidationStatus.VALIDATING
                                     alreadyScanned.add(raw)
 
-                                    messageJob?.cancel()
-                                    messageJob = scope.launch {
+                                    scope.launch {
                                         val (success, msg) = onQrDetected(raw)
                                         message = msg
                                         status = if (success) ValidationStatus.SUCCESS else ValidationStatus.ERROR
                                         if (success) successCount++
                                         
-                                        kotlinx.coroutines.delay(2500)
+                                        delay(2500) // Keep the snackbar visible a bit longer
                                         status = ValidationStatus.IDLE
                                         message = ""
                                     }
@@ -264,7 +262,12 @@ private fun MultiQrCameraContent(
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleMedium
                 )
-
+                Text(
+                    "Успешно: $successCount",
+                    color = Color(0xFF4CAF50),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Outlined.Close, "Закрыть", tint = Color.White)
                 }
@@ -279,16 +282,16 @@ private fun MultiQrCameraContent(
         if (status != ValidationStatus.IDLE) {
             val bgColor = when {
                 status == ValidationStatus.VALIDATING -> Color.DarkGray
-                message.contains("нулевым") -> Color(0xFFFF9800) // Orange
-                message.contains("уже отсканирован") -> Color(0xFFFF9800) // Orange
                 status == ValidationStatus.SUCCESS -> Color(0xFF4CAF50) // Green
+                message.contains("НДС") -> Color(0xFFFF9800) // Orange
+                message.contains("уже был") -> Color(0xFFFF9800) // Orange
                 else -> Color(0xFFF44336) // Red
             }
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 70.dp)
-                    .align(Alignment.TopCenter)
+                    .padding(horizontal = 16.dp, vertical = 90.dp)
+                    .align(Alignment.BottomCenter)
                     .background(bgColor, RoundedCornerShape(8.dp))
                     .padding(16.dp)
             ) {

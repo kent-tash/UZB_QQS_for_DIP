@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,7 +94,7 @@ fun ReceiptsScreen(
             is ExportEvent.Open -> {
                 runCatching { context.startActivity(e.intent) }
                     .onFailure {
-                        Toast.makeText(context, "Не нашли приложение для просмотра PDF", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "РќРµ РЅР°С€Р»Рё РїСЂРёР»РѕР¶РµРЅРёРµ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° PDF", Toast.LENGTH_LONG).show()
                     }
                 receiptsViewModel.consumeExportEvent()
             }
@@ -124,13 +123,13 @@ fun ReceiptsScreen(
 
     val effectiveUserName = users.firstOrNull { it.id == settings.userId }?.fullName
         ?: currentUser?.fullName
-        ?: "—"
+        ?: "вЂ”"
     val periodLabel = if (settings.quarter == Quarter.Custom) {
-        "Свой период"
+        "РЎРІРѕР№ РїРµСЂРёРѕРґ"
     } else {
-        "${settings.quarter.label}, ${settings.year} год"
+        "${settings.quarter.label}, ${settings.year} РіРѕРґ"
     }
-    val sortLabel = "${settings.sortField.label} • ${settings.sortOrder.label}"
+    val sortLabel = "${settings.sortField.label} вЂў ${settings.sortOrder.label}"
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
@@ -155,14 +154,14 @@ fun ReceiptsScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(Modifier.padding(14.dp)) {
-                    SettingsRow("Пользователь", effectiveUserName)
-                    SettingsRow("Период", periodLabel)
+                    SettingsRow("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ", effectiveUserName)
+                    SettingsRow("РџРµСЂРёРѕРґ", periodLabel)
                     SettingsRow(
-                        "Даты",
-                        "${DateFormat.formatDate(settings.from)} — ${DateFormat.formatDate(settings.to)}"
+                        "Р”Р°С‚С‹",
+                        "${DateFormat.formatDate(settings.from)} вЂ” ${DateFormat.formatDate(settings.to)}"
                     )
-                    SettingsRow("Сортировка", sortLabel)
-                    SettingsRow("Чеков", rows.size.toString())
+                    SettingsRow("РЎРѕСЂС‚РёСЂРѕРІРєР°", sortLabel)
+                    SettingsRow("Р§РµРєРѕРІ", rows.size.toString())
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -190,7 +189,7 @@ fun ReceiptsScreen(
                     contentAlignment = Alignment.TopCenter
                 ) {
                     Text(
-                        "Нет чеков по выбранным настройкам отчёта",
+                        "РќРµС‚ С‡РµРєРѕРІ РїРѕ РІС‹Р±СЂР°РЅРЅС‹Рј РЅР°СЃС‚СЂРѕР№РєР°Рј РѕС‚С‡С‘С‚Р°",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -216,10 +215,10 @@ fun ReceiptsScreen(
     pendingDelete?.let { item ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Удалить чек?") },
+            title = { Text("РЈРґР°Р»РёС‚СЊ С‡РµРє?") },
             text = {
                 Text(
-                    "${item.receipt.sellerName} от " +
+                    "${item.receipt.sellerName} РѕС‚ " +
                         DateFormat.formatDateTime(item.receipt.purchasedAt)
                 )
             },
@@ -227,10 +226,10 @@ fun ReceiptsScreen(
                 Button(onClick = {
                     receiptsViewModel.deleteReceipt(item.receipt.id)
                     pendingDelete = null
-                }) { Text("Удалить") }
+                }) { Text("РЈРґР°Р»РёС‚СЊ") }
             },
             dismissButton = {
-                OutlinedButton(onClick = { pendingDelete = null }) { Text("Отмена") }
+                OutlinedButton(onClick = { pendingDelete = null }) { Text("РћС‚РјРµРЅР°") }
             }
         )
     }
@@ -250,7 +249,7 @@ fun ReceiptsScreen(
 
     if (showSaveFormatDialog) {
         FormatChoiceDialog(
-            title = "Сохранить чеки как",
+            title = "РЎРѕС…СЂР°РЅРёС‚СЊ С‡РµРєРё РєР°Рє",
             onDismiss = { showSaveFormatDialog = false },
             onChoose = { format ->
                 showSaveFormatDialog = false
@@ -265,7 +264,7 @@ fun ReceiptsScreen(
     }
     if (showShareFormatDialog) {
         FormatChoiceDialog(
-            title = "Поделиться чеками",
+            title = "РџРѕРґРµР»РёС‚СЊСЃСЏ С‡РµРєР°РјРё",
             onDismiss = { showShareFormatDialog = false },
             onChoose = { format ->
                 showShareFormatDialog = false
@@ -280,7 +279,7 @@ fun ReceiptsScreen(
     saveSuccessMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { saveSuccessMessage = null },
-            title = { Text("Сохранено") },
+            title = { Text("РЎРѕС…СЂР°РЅРµРЅРѕ") },
             text = { Text(message) },
             confirmButton = {
                 Button(onClick = { saveSuccessMessage = null }) { Text("OK") }
@@ -366,7 +365,7 @@ private fun ReceiptListRow(
                     Spacer(Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "Сумма: ",
+                            "РЎСѓРјРјР°: ",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -379,7 +378,7 @@ private fun ReceiptListRow(
                     Spacer(Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "НДС: ",
+                            "РќР”РЎ: ",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -393,7 +392,7 @@ private fun ReceiptListRow(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Filled.Delete,
-                    contentDescription = "Удалить",
+                    contentDescription = "РЈРґР°Р»РёС‚СЊ",
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -411,37 +410,16 @@ private fun ReceiptPreviewDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Text("Закрыть")
-                }
-                Button(
-                    onClick = onShare,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Icon(Icons.Outlined.Share, contentDescription = null)
-                    Spacer(Modifier.size(6.dp))
-                    Text("Поделиться")
-                }
+            Button(onClick = onShare) {
+                Icon(Icons.Outlined.Share, contentDescription = null)
+                Spacer(Modifier.size(6.dp))
+                Text("РџРѕРґРµР»РёС‚СЊСЃСЏ")
             }
         },
-        title = { Text("Чек №$ordinal") },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Р—Р°РєСЂС‹С‚СЊ") }
+        },
+        title = { Text("Р§РµРє в„–$ordinal") },
         text = {
             ReceiptCardPreview(item = item, ordinal = ordinal)
         }
@@ -459,7 +437,7 @@ private fun ReceiptCardPreview(item: ReceiptWithUser, ordinal: Int) {
     }
     androidx.compose.foundation.Image(
         bitmap = bitmap.asImageBitmap(),
-        contentDescription = "Превью чека №$ordinal",
+        contentDescription = "РџСЂРµРІСЊСЋ С‡РµРєР° в„–$ordinal",
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp)

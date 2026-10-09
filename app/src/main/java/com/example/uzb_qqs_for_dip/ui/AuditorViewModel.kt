@@ -63,9 +63,6 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
     private val _filter = MutableStateFlow(AuditorFilter.ALL)
     val filter: StateFlow<AuditorFilter> = _filter.asStateFlow()
 
-    private val _selectedOrganization = MutableStateFlow<String?>(null)
-    val selectedOrganization: StateFlow<String?> = _selectedOrganization.asStateFlow()
-
     private val _summaries = MutableStateFlow<List<EmployeeSummary>>(emptyList())
     val summaries: StateFlow<List<EmployeeSummary>> = _summaries.asStateFlow()
 
@@ -88,12 +85,11 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Реактивно отфильтрованный список сотрудников по поиску и выбранному фильтру. */
     val filteredSummaries: StateFlow<List<EmployeeSummary>> = combine(
-        _summaries, _search, _filter, _selectedOrganization, _conflicts
-    ) { sums, query, f, org, conflicts ->
+        _summaries, _search, _filter, _conflicts
+    ) { sums, query, f, conflicts ->
         val q = query.trim().lowercase()
         sums.filter { s ->
             val matchesSearch = q.isEmpty() || s.fullName.lowercase().contains(q)
-            val matchesOrg = org == null || s.organization == org
             val matchesFilter = when (f) {
                 AuditorFilter.ALL -> true
                 AuditorFilter.DISCREPANCY -> {
@@ -108,7 +104,7 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                 AuditorFilter.CONFLICT -> conflicts.any { c -> c.user1Id == s.userId || c.user2Id == s.userId }
                 AuditorFilter.INCOMPLETE -> s.verifiedCount < s.receiptCount
             }
-            matchesSearch && matchesOrg && matchesFilter
+            matchesSearch && matchesFilter
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -138,7 +134,6 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
     fun setSearch(s: String) { _search.value = s }
 
     fun setFilter(f: AuditorFilter) { _filter.value = f }
-    fun setSelectedOrganization(org: String?) { _selectedOrganization.value = org }
 
     fun getDiscrepancyDetail(userId: Long): DiscrepancyDetail? {
         val summary = _summaries.value.find { it.userId == userId } ?: return null

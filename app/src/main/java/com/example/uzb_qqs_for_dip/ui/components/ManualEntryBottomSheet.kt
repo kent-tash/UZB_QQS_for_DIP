@@ -13,12 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.Button
-import androidx.compose.ui.platform.LocalContext
-import android.content.Context
-import androidx.core.content.FileProvider
-import java.io.File
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,7 +43,6 @@ fun ManualEntryBottomSheet(
     onSubmit: (storeName: String, dateMs: Long, totalTiyin: Long, vatTiyin: Long, photoUri: android.net.Uri?) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val context = LocalContext.current
     
     var storeName by remember { mutableStateOf("") }
     var dateStr by remember { mutableStateOf("") } // DD.MM.YYYY
@@ -59,11 +53,6 @@ fun ManualEntryBottomSheet(
     val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri -> if (uri != null) photoUri = uri }
-
-    var tempCameraUri by remember { mutableStateOf<android.net.Uri?>(null) }
-    val cameraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { success -> if (success) photoUri = tempCameraUri }
 
     val dateError = dateStr.isNotBlank() && parseDate(dateStr) == null
     val totalError = totalAmountStr.isNotBlank() && totalAmountStr.toDoubleOrNull() == null
@@ -128,35 +117,16 @@ fun ManualEntryBottomSheet(
                 modifier = Modifier.fillMaxWidth()
             )
             
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = {
-                        val file = File(context.cacheDir, "manual_receipt_${System.currentTimeMillis()}.jpg")
-                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                        tempCameraUri = uri
-                        cameraLauncher.launch(uri)
-                    },
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                ) {
-                    Icon(Icons.Outlined.PhotoCamera, contentDescription = null)
-                    Spacer(Modifier.size(4.dp))
-                    Text("Камера")
-                }
-                Button(
-                    onClick = {
-                        photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    },
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                ) {
-                    Icon(Icons.Outlined.PhotoLibrary, contentDescription = null)
-                    Spacer(Modifier.size(4.dp))
-                    Text("Галерея")
-                }
-            }
-            if (photoUri != null) {
-                Text("Фото прикреплено ✓", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            Button(
+                onClick = {
+                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Icon(Icons.Outlined.PhotoLibrary, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text(if (photoUri == null) "Выбрать фото" else "Фото выбрано")
             }
             
             Spacer(modifier = Modifier.height(8.dp))
