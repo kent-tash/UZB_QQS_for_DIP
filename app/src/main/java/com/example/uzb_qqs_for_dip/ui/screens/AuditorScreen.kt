@@ -580,49 +580,98 @@ private fun StatsRow(
     totalVat: Long,
     onConflictsClick: () -> Unit
 ) {
-    Row(
-        Modifier
+    Card(
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        StatChip(
-            label = "Проверено",
-            value = "$verifiedCount/$employeeCount",
-            color = if (verifiedCount == employeeCount && employeeCount > 0) Success else MaterialTheme.colorScheme.primary,
-            modifier = Modifier.weight(1f)
-        )
-        StatChip(
-            label = "Конфликты",
-            value = conflictCount.toString(),
-            color = if (conflictCount > 0) Danger else Success,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(enabled = conflictCount > 0, onClick = onConflictsClick)
-        )
-        StatChip(
-            label = "Сумма",
-            value = MoneyFormat.fromTiyin(totalSum),
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(2f)
-        )
-    }
-}
-
-@Composable
-private fun StatChip(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
-            Modifier.padding(8.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(12.dp)
         ) {
-            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = color)
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "$verifiedCount/$employeeCount",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (verifiedCount == employeeCount && employeeCount > 0) Success else MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Проверено",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(enabled = conflictCount > 0, onClick = onConflictsClick),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "$conflictCount",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (conflictCount > 0) Danger else Success
+                    )
+                    Text(
+                        text = "Конфликты",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = MoneyFormat.fromTiyin(totalSum),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Сумма",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = MoneyFormat.fromTiyin(totalVat),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "НДС",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }

@@ -125,11 +125,6 @@ fun ReceiptsScreen(
     val effectiveUserName = users.firstOrNull { it.id == settings.userId }?.fullName
         ?: currentUser?.fullName
         ?: "—"
-    val periodLabel = if (settings.quarter == Quarter.Custom) {
-        "Свой период"
-    } else {
-        "${settings.quarter.label}, ${settings.year} год"
-    }
     val sortLabel = "${settings.sortField.label} • ${settings.sortOrder.label}"
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -156,9 +151,13 @@ fun ReceiptsScreen(
             ) {
                 Column(Modifier.padding(14.dp)) {
                     SettingsRow("Пользователь", effectiveUserName)
-                    SettingsRow("Период", periodLabel)
+                    SettingsRow("Год", settings.year.toString())
                     SettingsRow(
-                        "Даты",
+                        "Квартал",
+                        if (settings.quarter == Quarter.Custom) "Свой период" else settings.quarter.label
+                    )
+                    SettingsRow(
+                        "Период",
                         "${DateFormat.formatDate(settings.from)} — ${DateFormat.formatDate(settings.to)}"
                     )
                     SettingsRow("Сортировка", sortLabel)

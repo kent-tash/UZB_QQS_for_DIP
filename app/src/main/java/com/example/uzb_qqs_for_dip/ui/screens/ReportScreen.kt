@@ -191,7 +191,8 @@ fun ReportScreen(
                         value = selectedUser,
                         options = userOptions,
                         optionLabel = { it.label },
-                        onSelected = { reportViewModel.setUserFilter(it.id) }
+                        onSelected = { reportViewModel.setUserFilter(it.id) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(10.dp))
                 }
@@ -210,24 +211,23 @@ fun ReportScreen(
                 val selectedQuarter = quarters.firstOrNull { it.quarter == settings.quarter }
                     ?: QuarterChoice(settings.quarter)
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SelectField(
-                        label = "Год",
-                        value = selectedYear,
-                        options = years,
-                        optionLabel = { it.year.toString() },
-                        onSelected = { reportViewModel.setYear(it.year) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    SelectField(
-                        label = "Квартал",
-                        value = selectedQuarter,
-                        options = quarters,
-                        optionLabel = { it.quarter.label },
-                        onSelected = { reportViewModel.setQuarter(it.quarter) },
-                        modifier = Modifier.weight(1.4f)
-                    )
-                }
+                SelectField(
+                    label = "Год",
+                    value = selectedYear,
+                    options = years,
+                    optionLabel = { it.year.toString() },
+                    onSelected = { reportViewModel.setYear(it.year) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(10.dp))
+                SelectField(
+                    label = "Квартал",
+                    value = selectedQuarter,
+                    options = quarters,
+                    optionLabel = { it.quarter.label },
+                    onSelected = { reportViewModel.setQuarter(it.quarter) },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     DateField(
