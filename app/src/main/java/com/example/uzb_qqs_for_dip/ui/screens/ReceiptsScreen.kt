@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -410,14 +411,35 @@ private fun ReceiptPreviewDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            Button(onClick = onShare) {
-                Icon(Icons.Outlined.Share, contentDescription = null)
-                Spacer(Modifier.size(6.dp))
-                Text("Поделиться")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text("Закрыть")
+                }
+                Button(
+                    onClick = onShare,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Icon(Icons.Outlined.Share, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Поделиться")
+                }
             }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Закрыть") }
         },
         title = { Text("Чек №$ordinal") },
         text = {

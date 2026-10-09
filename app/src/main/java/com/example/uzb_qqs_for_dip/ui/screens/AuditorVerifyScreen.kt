@@ -23,12 +23,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Done
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
@@ -45,16 +44,13 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -128,12 +124,13 @@ fun AuditorVerifyScreen(
     var showLinkDialog by remember { mutableStateOf(false) }
     var showManualVerifyConfirm by remember { mutableStateOf(false) }
     var showSheetSourceDialog by remember { mutableStateOf(false) }
+    var showManualDialog by remember { mutableStateOf(false) }
     var showSheetCamera by remember { mutableStateOf(false) }
 
     autoVerifyMessage?.let { msg ->
         AlertDialog(
             onDismissRequest = vm::clearAutoVerifyMessage,
-            title = { Text("Автоматическая проверка") },
+            title = { Text("РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ РїСЂРѕРІРµСЂРєР°") },
             text = { Text(msg) },
             confirmButton = {
                 TextButton(onClick = vm::clearAutoVerifyMessage) { Text("OK") }
@@ -144,7 +141,7 @@ fun AuditorVerifyScreen(
     manualVerifyMessage?.let { msg ->
         AlertDialog(
             onDismissRequest = vm::clearManualVerifyMessage,
-            title = { Text("Ручная проверка") },
+            title = { Text("Р СѓС‡РЅР°СЏ РїСЂРѕРІРµСЂРєР°") },
             text = { Text(msg) },
             confirmButton = {
                 TextButton(onClick = vm::clearManualVerifyMessage) { Text("OK") }
@@ -155,39 +152,49 @@ fun AuditorVerifyScreen(
     if (showManualVerifyConfirm) {
         AlertDialog(
             onDismissRequest = { showManualVerifyConfirm = false },
-            title = { Text("Проверено вручную") },
+            title = { Text("РџСЂРѕРІРµСЂРµРЅРѕ РІСЂСѓС‡РЅСѓСЋ") },
             text = {
                 Text(
-                    "Подтвердить, что чеки сотрудника ${selectedEmployee?.fullName ?: ""} " +
-                        "проверены вручную по бумажным документам (без занесения в приложение)?"
+                    "РџРѕРґС‚РІРµСЂРґРёС‚СЊ, С‡С‚Рѕ С‡РµРєРё СЃРѕС‚СЂСѓРґРЅРёРєР° ${selectedEmployee?.fullName ?: ""} " +
+                        "РїСЂРѕРІРµСЂРµРЅС‹ РІСЂСѓС‡РЅСѓСЋ РїРѕ Р±СѓРјР°Р¶РЅС‹Рј РґРѕРєСѓРјРµРЅС‚Р°Рј (Р±РµР· Р·Р°РЅРµСЃРµРЅРёСЏ РІ РїСЂРёР»РѕР¶РµРЅРёРµ)?"
                 )
             },
             confirmButton = {
                 Button(onClick = {
                     showManualVerifyConfirm = false
                     vm.markManuallyVerified()
-                }) { Text("Подтвердить") }
+                }) { Text("РџРѕРґС‚РІРµСЂРґРёС‚СЊ") }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showManualVerifyConfirm = false }) { Text("Отмена") }
+                OutlinedButton(onClick = { showManualVerifyConfirm = false }) { Text("РћС‚РјРµРЅР°") }
             }
         )
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
-    ) { uri -> uri?.let { vm.handleImageFromGallery(context, it) } }
+    ) { uri -> uri?.let { vm.handleImageFromGallery(context.applicationContext, it) } }
 
     val sheetGalleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
-    ) { uri -> uri?.let { vm.prepareSheetFromUri(context, it) } }
+    ) { uri -> uri?.let { vm.prepareSheetFromUri(context.applicationContext, it) } }
+
+    if (showManualDialog && selectedEmployee != null) {
+        com.example.uzb_qqs_for_dip.ui.components.ManualEntryBottomSheet(
+            onDismiss = { showManualDialog = false },
+            onSubmit = { storeName, dateMs, totalTiyin, vatTiyin, photoUri ->
+                showManualDialog = false
+                vm.handleManualReceipt(storeName, dateMs, totalTiyin, vatTiyin, photoUri)
+            }
+        )
+    }
 
     if (showSheetSourceDialog) {
         AlertDialog(
             onDismissRequest = { showSheetSourceDialog = false },
-            title = { Text("Скан листа") },
+            title = { Text("РЎРєР°РЅ Р»РёСЃС‚Р°") },
             text = {
-                Text("Отсканируйте все QR на листе камерой или выберите фото листа из галереи.")
+                Text("РћС‚СЃРєР°РЅРёСЂСѓР№С‚Рµ РІСЃРµ QR РЅР° Р»РёСЃС‚Рµ РєР°РјРµСЂРѕР№ РёР»Рё РІС‹Р±РµСЂРёС‚Рµ С„РѕС‚Рѕ Р»РёСЃС‚Р° РёР· РіР°Р»РµСЂРµРё.")
             },
             confirmButton = {
                 TextButton(
@@ -195,7 +202,7 @@ fun AuditorVerifyScreen(
                         showSheetSourceDialog = false
                         showSheetCamera = true
                     }
-                ) { Text("Камера") }
+                ) { Text("РљР°РјРµСЂР°") }
             },
             dismissButton = {
                 TextButton(
@@ -203,7 +210,7 @@ fun AuditorVerifyScreen(
                         showSheetSourceDialog = false
                         sheetGalleryLauncher.launch("image/*")
                     }
-                ) { Text("Галерея") }
+                ) { Text("Р“Р°Р»РµСЂРµСЏ") }
             }
         )
     }
@@ -220,7 +227,7 @@ fun AuditorVerifyScreen(
     sheetSummary?.let { summary ->
         AlertDialog(
             onDismissRequest = vm::clearSheetSummary,
-            title = { Text("Скан листа") },
+            title = { Text("РЎРєР°РЅ Р»РёСЃС‚Р°") },
             text = { Text(summary.message) },
             confirmButton = {
                 TextButton(onClick = vm::clearSheetSummary) { Text("OK") }
@@ -240,7 +247,7 @@ fun AuditorVerifyScreen(
                 ) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(12.dp))
-                    Text("Распознаём QR на листе...")
+                    Text("Р Р°СЃРїРѕР·РЅР°С‘Рј QR РЅР° Р»РёСЃС‚Рµ...")
                 }
             }
         }
@@ -253,8 +260,8 @@ fun AuditorVerifyScreen(
             onToggle = vm::toggleSheetItem,
             onConfirm = vm::confirmSheetSelection,
             onCancel = vm::clearSheetPreview,
-            alreadyThisLabel = "Уже у сотрудника",
-            titlePrefix = "Чеки с листа"
+            alreadyThisLabel = "РЈР¶Рµ Сѓ СЃРѕС‚СЂСѓРґРЅРёРєР°",
+            titlePrefix = "Р§РµРєРё СЃ Р»РёСЃС‚Р°"
         )
     }
 
@@ -283,37 +290,13 @@ fun AuditorVerifyScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Проверка чеков")
-                        selectedEmployee?.let {
-                            Text(
-                                "Проверяется: ${it.fullName}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
             // Employee selector
             EmployeeSelectorRow(
                 employees = employees,
@@ -339,7 +322,7 @@ fun AuditorVerifyScreen(
                         tint = VerifySuccess
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("Проверить автоматически (все чеки в базе)")
+                    Text("РџСЂРѕРІРµСЂРёС‚СЊ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё (РІСЃРµ С‡РµРєРё РІ Р±Р°Р·Рµ)")
                 }
                 OutlinedButton(
                     onClick = { showManualVerifyConfirm = true },
@@ -355,8 +338,8 @@ fun AuditorVerifyScreen(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        if (manuallyApproved) "Отмечено: проверено вручную"
-                        else "Проверено вручную"
+                        if (manuallyApproved) "РћС‚РјРµС‡РµРЅРѕ: РїСЂРѕРІРµСЂРµРЅРѕ РІСЂСѓС‡РЅСѓСЋ"
+                        else "РџСЂРѕРІРµСЂРµРЅРѕ РІСЂСѓС‡РЅСѓСЋ"
                     )
                 }
 
@@ -364,14 +347,14 @@ fun AuditorVerifyScreen(
                     value = receiptSearchQuery,
                     onValueChange = vm::setReceiptSearchQuery,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Поиск чеков сотрудника") },
+                    label = { Text("РџРѕРёСЃРє С‡РµРєРѕРІ СЃРѕС‚СЂСѓРґРЅРёРєР°") },
                     singleLine = true,
                     leadingIcon = { Icon(Icons.Outlined.Search, null) }
                 )
                 if (receiptSearchQuery.isNotBlank()) {
                     Text(
-                        if (receiptSearchResults.isEmpty()) "Ничего не найдено"
-                        else "Найдено: ${receiptSearchResults.size}",
+                        if (receiptSearchResults.isEmpty()) "РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ"
+                        else "РќР°Р№РґРµРЅРѕ: ${receiptSearchResults.size}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -386,7 +369,7 @@ fun AuditorVerifyScreen(
                                 Text(item.receipt.sellerName, fontWeight = FontWeight.Medium)
                                 if (item.receipt.source == ReceiptSource.PAPER) {
                                     Text(
-                                        "С распечатки",
+                                        "РЎ СЂР°СЃРїРµС‡Р°С‚РєРё",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.tertiary
                                     )
@@ -396,14 +379,14 @@ fun AuditorVerifyScreen(
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 Text(
-                                    "${MoneyFormat.fromTiyin(item.receipt.totalAmountTiyin)} · НДС ${MoneyFormat.fromTiyin(item.receipt.vatAmountTiyin)}",
+                                    "${MoneyFormat.fromTiyin(item.receipt.totalAmountTiyin)} В· РќР”РЎ ${MoneyFormat.fromTiyin(item.receipt.vatAmountTiyin)}",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 TextButton(
                                     onClick = { vm.markReceiptVerifiedFromSearch(item.receipt.id) },
                                     enabled = true
                                 ) {
-                                    Text("Отметить проверенным")
+                                    Text("РћС‚РјРµС‚РёС‚СЊ РїСЂРѕРІРµСЂРµРЅРЅС‹Рј")
                                 }
                             }
                         }
@@ -418,7 +401,7 @@ fun AuditorVerifyScreen(
                 // Always-visible scan buttons
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "Способ захвата QR-кода",
+                        "РЎРїРѕСЃРѕР± Р·Р°С…РІР°С‚Р° QR-РєРѕРґР°",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -428,12 +411,11 @@ fun AuditorVerifyScreen(
                     ) {
                         ScanActionButton(
                             icon = Icons.Outlined.QrCodeScanner,
-                            label = "Камера",
-                            enabled = selectedEmployee != null &&
-                                verifyResult == VerifyResult.Idle &&
-                                sheetPreviewItems.isEmpty() &&
-                                !sheetLoading,
+                            label = "РљР°РјРµСЂР°",
+                            enabled = selectedEmployee != null && verifyResult == VerifyResult.Idle && sheetPreviewItems.isEmpty() && !sheetLoading,
                             modifier = Modifier.weight(1f),
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                             onClick = {
                                 startQrScanner(
                                     context = context,
@@ -444,38 +426,49 @@ fun AuditorVerifyScreen(
                         )
                         ScanActionButton(
                             icon = Icons.Outlined.Image,
-                            label = "Галерея",
-                            enabled = selectedEmployee != null &&
-                                verifyResult == VerifyResult.Idle &&
-                                sheetPreviewItems.isEmpty() &&
-                                !sheetLoading,
+                            label = "Р“Р°Р»РµСЂРµСЏ",
+                            enabled = selectedEmployee != null && verifyResult == VerifyResult.Idle && sheetPreviewItems.isEmpty() && !sheetLoading,
                             modifier = Modifier.weight(1f),
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             onClick = { galleryLauncher.launch("image/*") }
                         )
                         ScanActionButton(
                             icon = Icons.Outlined.Link,
-                            label = "Ссылка",
-                            enabled = selectedEmployee != null &&
-                                verifyResult == VerifyResult.Idle &&
-                                sheetPreviewItems.isEmpty() &&
-                                !sheetLoading,
+                            label = "РЎСЃС‹Р»РєР°",
+                            enabled = selectedEmployee != null && verifyResult == VerifyResult.Idle && sheetPreviewItems.isEmpty() && !sheetLoading,
                             modifier = Modifier.weight(1f),
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             onClick = { showLinkDialog = true }
                         )
                     }
-                    ScanActionButton(
-                        icon = Icons.Outlined.GridView,
-                        label = "Скан листа",
-                        enabled = selectedEmployee != null &&
-                            verifyResult == VerifyResult.Idle &&
-                            sheetPreviewItems.isEmpty() &&
-                            !sheetLoading,
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { showSheetSourceDialog = true }
-                    )
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ScanActionButton(
+                            icon = Icons.Outlined.GridView,
+                            label = "РЎРєР°РЅ Р»РёСЃС‚Р°",
+                            enabled = selectedEmployee != null && verifyResult == VerifyResult.Idle && sheetPreviewItems.isEmpty() && !sheetLoading,
+                            modifier = Modifier.weight(1f),
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            onClick = { showSheetSourceDialog = true }
+                        )
+                        ScanActionButton(
+                            icon = Icons.Outlined.Edit,
+                            label = "Р’СЂСѓС‡РЅСѓСЋ",
+                            enabled = selectedEmployee != null && verifyResult == VerifyResult.Idle && sheetPreviewItems.isEmpty() && !sheetLoading,
+                            modifier = Modifier.weight(1f),
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            onClick = { showManualDialog = true }
+                        )
+                    }
                 }
 
-                // Result overlay — floats above buttons until dismissed
+                // Result overlay вЂ” floats above buttons until dismissed
                 when (val r = verifyResult) {
                     VerifyResult.Idle -> Unit
                     VerifyResult.Loading -> {
@@ -492,7 +485,7 @@ fun AuditorVerifyScreen(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 CircularProgressIndicator()
                                 Spacer(Modifier.height(8.dp))
-                                Text("Загружаем страницу чека...")
+                                Text("Р—Р°РіСЂСѓР¶Р°РµРј СЃС‚СЂР°РЅРёС†Сѓ С‡РµРєР°...")
                             }
                         }
                     }
@@ -506,7 +499,6 @@ fun AuditorVerifyScreen(
             }
         }
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -518,18 +510,17 @@ private fun EmployeeSelectorRow(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-            modifier = Modifier.weight(1f)
-        ) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth()
+    ) {
             OutlinedTextField(
                 value = selected?.fullName ?: "",
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Сотрудник") },
-                placeholder = { Text("Выберите сотрудника") },
+                label = { Text("РЎРѕС‚СЂСѓРґРЅРёРє") },
+                placeholder = { Text("Р’С‹Р±РµСЂРёС‚Рµ СЃРѕС‚СЂСѓРґРЅРёРєР°") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -539,7 +530,7 @@ private fun EmployeeSelectorRow(
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 if (employees.isEmpty()) {
                     DropdownMenuItem(
-                        text = { Text("Нет сотрудников — добавьте через «+»") },
+                        text = { Text("РќРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ вЂ” РґРѕР±Р°РІСЊС‚Рµ С‡РµСЂРµР· В«+В»") },
                         onClick = {}
                     )
                 }
@@ -562,12 +553,6 @@ private fun EmployeeSelectorRow(
                 }
             }
         }
-        Spacer(Modifier.width(8.dp))
-        IconButton(onClick = onAddEmployee) {
-            Icon(Icons.Outlined.AddCircleOutline, "Добавить сотрудника",
-                tint = MaterialTheme.colorScheme.primary)
-        }
-    }
 }
 
 @Composable
@@ -598,13 +583,13 @@ private fun VerificationProgress(stats: UserReceiptStats, manuallyApproved: Bool
                 Text(
                     when {
                         manuallyApproved && stats.totalCount == 0 ->
-                            "Проверено вручную (чеки не в приложении)"
+                            "РџСЂРѕРІРµСЂРµРЅРѕ РІСЂСѓС‡РЅСѓСЋ (С‡РµРєРё РЅРµ РІ РїСЂРёР»РѕР¶РµРЅРёРё)"
                         manuallyApproved ->
-                            "Проверено вручную · в базе: ${stats.verifiedCount}/${stats.totalCount}"
+                            "РџСЂРѕРІРµСЂРµРЅРѕ РІСЂСѓС‡РЅСѓСЋ В· РІ Р±Р°Р·Рµ: ${stats.verifiedCount}/${stats.totalCount}"
                         stats.totalCount == 0 ->
-                            "Нет чеков за выбранный период"
+                            "РќРµС‚ С‡РµРєРѕРІ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ"
                         else ->
-                            "Проверено: ${stats.verifiedCount} из ${stats.totalCount} чеков"
+                            "РџСЂРѕРІРµСЂРµРЅРѕ: ${stats.verifiedCount} РёР· ${stats.totalCount} С‡РµРєРѕРІ"
                     },
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -614,8 +599,8 @@ private fun VerificationProgress(stats: UserReceiptStats, manuallyApproved: Bool
             if (stats.verifiedCount > 0) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Сумма: ${MoneyFormat.fromTiyin(stats.verifiedTotalTiyin)} | " +
-                        "НДС: ${MoneyFormat.fromTiyin(stats.verifiedVatTiyin)}",
+                    "РЎСѓРјРјР°: ${MoneyFormat.fromTiyin(stats.verifiedTotalTiyin)} | " +
+                        "РќР”РЎ: ${MoneyFormat.fromTiyin(stats.verifiedVatTiyin)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -637,14 +622,22 @@ private fun ScanActionButton(
     label: String,
     enabled: Boolean,
     modifier: Modifier = Modifier,
+    containerColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Transparent,
+    contentColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
     onClick: () -> Unit
 ) {
-    OutlinedButton(
+    Button(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp)
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = if (containerColor == androidx.compose.ui.graphics.Color.Transparent) MaterialTheme.colorScheme.surfaceVariant else containerColor,
+            contentColor = if (contentColor == androidx.compose.ui.graphics.Color.Unspecified) MaterialTheme.colorScheme.onSurfaceVariant else contentColor,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        )
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, null, Modifier.size(20.dp))
@@ -661,22 +654,22 @@ private fun VerifySuccessCard(result: VerifyResult.Success, onDismiss: () -> Uni
     val statusColor: Color
     val statusIcon = when {
         result.owner != null && !result.alreadyForThisEmployee -> {
-            statusText = "Чек уже принадлежит: ${result.owner.fullName}"
+            statusText = "Р§РµРє СѓР¶Рµ РїСЂРёРЅР°РґР»РµР¶РёС‚: ${result.owner.fullName}"
             statusColor = VerifyDanger
             Icons.Filled.Error
         }
         result.markedVerified && result.alreadyForThisEmployee -> {
-            statusText = "Чек подтверждён (уже в базе)"
+            statusText = "Р§РµРє РїРѕРґС‚РІРµСЂР¶РґС‘РЅ (СѓР¶Рµ РІ Р±Р°Р·Рµ)"
             statusColor = VerifySuccess
             Icons.Filled.CheckCircle
         }
         result.markedVerified -> {
-            statusText = "Чек сохранён и подтверждён"
+            statusText = "Р§РµРє СЃРѕС…СЂР°РЅС‘РЅ Рё РїРѕРґС‚РІРµСЂР¶РґС‘РЅ"
             statusColor = VerifySuccess
             Icons.Filled.CheckCircle
         }
         else -> {
-            statusText = "Чек не сохранён"
+            statusText = "Р§РµРє РЅРµ СЃРѕС…СЂР°РЅС‘РЅ"
             statusColor = VerifyWarning
             Icons.Filled.Warning
         }
@@ -699,23 +692,23 @@ private fun VerifySuccessCard(result: VerifyResult.Success, onDismiss: () -> Uni
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.Warning, null, tint = VerifyWarning, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Чек вне выбранного квартала", color = VerifyWarning,
+                    Text("Р§РµРє РІРЅРµ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РєРІР°СЂС‚Р°Р»Р°", color = VerifyWarning,
                         style = MaterialTheme.typography.bodySmall)
                 }
             }
             Spacer(Modifier.height(10.dp))
             HorizontalDivider()
             Spacer(Modifier.height(10.dp))
-            ReceiptDetailRow("Дата", parsed.purchasedAt?.let { DateFormat.formatDateTime(it) })
-            ReceiptDetailRow("Продавец", parsed.sellerName)
-            ReceiptDetailRow("Итого", parsed.totalAmountTiyin?.let { MoneyFormat.fromTiyin(it) + " сум" }, bold = true)
-            ReceiptDetailRow("НДС", parsed.vatAmountTiyin?.let { MoneyFormat.fromTiyin(it) + " сум" }, bold = true)
+            ReceiptDetailRow("Р”Р°С‚Р°", parsed.purchasedAt?.let { DateFormat.formatDateTime(it) })
+            ReceiptDetailRow("РџСЂРѕРґР°РІРµС†", parsed.sellerName)
+            ReceiptDetailRow("РС‚РѕРіРѕ", parsed.totalAmountTiyin?.let { MoneyFormat.fromTiyin(it) + " СЃСѓРј" }, bold = true)
+            ReceiptDetailRow("РќР”РЎ", parsed.vatAmountTiyin?.let { MoneyFormat.fromTiyin(it) + " СЃСѓРј" }, bold = true)
             Spacer(Modifier.height(12.dp))
             OutlinedButton(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
-            ) { Text("Следующий чек") }
+            ) { Text("РЎР»РµРґСѓСЋС‰РёР№ С‡РµРє") }
         }
     }
 }
@@ -731,7 +724,7 @@ private fun VerifyErrorCard(message: String, onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Error, null, tint = VerifyDanger, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Ошибка", color = VerifyDanger, fontWeight = FontWeight.SemiBold)
+                Text("РћС€РёР±РєР°", color = VerifyDanger, fontWeight = FontWeight.SemiBold)
             }
             Spacer(Modifier.height(8.dp))
             Text(message)
@@ -740,7 +733,7 @@ private fun VerifyErrorCard(message: String, onDismiss: () -> Unit) {
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
-            ) { Text("Закрыть") }
+            ) { Text("Р—Р°РєСЂС‹С‚СЊ") }
         }
     }
 }
@@ -777,27 +770,27 @@ private fun AddEmployeeDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Добавить сотрудника") },
+        title = { Text("Р”РѕР±Р°РІРёС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР°") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    label = { Text("Фамилия Имя Отчество") },
+                    label = { Text("Р¤Р°РјРёР»РёСЏ РРјСЏ РћС‚С‡РµСЃС‚РІРѕ") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = position,
                     onValueChange = { position = it },
-                    label = { Text("Должность") },
+                    label = { Text("Р”РѕР»Р¶РЅРѕСЃС‚СЊ") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = initialsSurname,
                     onValueChange = { initialsSurname = it },
-                    label = { Text("И.О. Фамилия (для подписи)") },
+                    label = { Text("Р.Рћ. Р¤Р°РјРёР»РёСЏ (РґР»СЏ РїРѕРґРїРёСЃРё)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -807,9 +800,9 @@ private fun AddEmployeeDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onAdd(fullName, position, initialsSurname) }) { Text("Добавить") }
+            Button(onClick = { onAdd(fullName, position, initialsSurname) }) { Text("Р”РѕР±Р°РІРёС‚СЊ") }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss) { Text("Отмена") } }
+        dismissButton = { OutlinedButton(onClick = onDismiss) { Text("РћС‚РјРµРЅР°") } }
     )
 }
 
@@ -822,12 +815,12 @@ private fun AddLinkDialogVerify(onDismiss: () -> Unit, onSubmit: (String) -> Uni
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Добавить чек по ссылке") },
+        title = { Text("Р”РѕР±Р°РІРёС‚СЊ С‡РµРє РїРѕ СЃСЃС‹Р»РєРµ") },
         text = {
             OutlinedTextField(
                 value = url,
                 onValueChange = { url = it },
-                label = { Text("Ссылка на чек") },
+                label = { Text("РЎСЃС‹Р»РєР° РЅР° С‡РµРє") },
                 placeholder = { Text("https://ofd.soliq.uz/check?...") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -835,8 +828,8 @@ private fun AddLinkDialogVerify(onDismiss: () -> Unit, onSubmit: (String) -> Uni
             )
         },
         confirmButton = {
-            Button(onClick = { onSubmit(trimmed) }, enabled = looksValid) { Text("Загрузить") }
+            Button(onClick = { onSubmit(trimmed) }, enabled = looksValid) { Text("Р—Р°РіСЂСѓР·РёС‚СЊ") }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss) { Text("Отмена") } }
+        dismissButton = { OutlinedButton(onClick = onDismiss) { Text("РћС‚РјРµРЅР°") } }
     )
 }

@@ -634,58 +634,23 @@ fun ReportScreen(
 
 
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-
-
-                    SelectField(
-
-
-                        label = "Год",
-
-
-                        value = selectedYear,
-
-
-                        options = years,
-
-
-                        optionLabel = { it.year.toString() },
-
-
-                        onSelected = { reportViewModel.setYear(it.year) },
-
-
-                        modifier = Modifier.weight(1f)
-
-
-                    )
-
-
-                    SelectField(
-
-
-                        label = "Квартал",
-
-
-                        value = selectedQuarter,
-
-
-                        options = quarters,
-
-
-                        optionLabel = { it.quarter.label },
-
-
-                        onSelected = { reportViewModel.setQuarter(it.quarter) },
-
-
-                        modifier = Modifier.weight(1.4f)
-
-
-                    )
-
-
-                }
+                SelectField(
+                    label = "Год",
+                    value = selectedYear,
+                    options = years,
+                    optionLabel = { it.year.toString() },
+                    onSelected = { reportViewModel.setYear(it.year) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(10.dp))
+                SelectField(
+                    label = "Квартал",
+                    value = selectedQuarter,
+                    options = quarters,
+                    optionLabel = { it.quarter.label },
+                    onSelected = { reportViewModel.setQuarter(it.quarter) },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
 
                 Spacer(Modifier.height(10.dp))

@@ -65,9 +65,9 @@ object ReceiptsSheetPdfGenerator {
             }
             val pagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-                textSize = 9f
+                textSize = 8f
                 color = 0xFF6B7280.toInt()
-                textAlign = Paint.Align.CENTER
+                textAlign = Paint.Align.RIGHT
             }
 
             val manualReceiptsCount = rowsInOrder.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
@@ -102,6 +102,9 @@ object ReceiptsSheetPdfGenerator {
                 var baseline = MARGIN + titlePaint.textSize
                 for (i in titleLines.indices) {
                     canvas.drawText(titleLines[i], MARGIN, baseline, titlePaint)
+                    if (i == 0) {
+                        canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W - MARGIN, baseline, pagePaint)
+                    }
                     if (i < titleLines.lastIndex) {
                         baseline += titlePaint.textSize + TITLE_LINE_EXTRA
                     }
@@ -142,10 +145,7 @@ object ReceiptsSheetPdfGenerator {
                     )
                 }
 
-                canvas.drawText(
-                    "Стр. $pageNumber из $totalPages",
-                    PAGE_W / 2f, PAGE_H - 8f, pagePaint
-                )
+
 
                 doc.finishPage(page)
             }
@@ -185,7 +185,7 @@ object ReceiptsSheetPdfGenerator {
                         bitmap.recycle()
                     }
 
-                    canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W / 2f, PAGE_H - 8f, pagePaint)
+                    canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W - MARGIN, MARGIN + titlePaint.textSize, pagePaint)
                     doc.finishPage(page)
                     manualSeq++
                 }

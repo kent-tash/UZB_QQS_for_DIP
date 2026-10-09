@@ -3,9 +3,10 @@
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.TableChart
@@ -70,7 +71,6 @@ private const val ROUTE_AUDIT_SEARCH = "main/audit/search"
 private const val ARG_USER_ID = "userId"
 private const val ARG_QUARTER = "quarter"
 private const val ARG_YEAR = "year"
-private const val ARG_MANUAL = "manual"
 
 @Composable
 fun AppNavHost(appViewModel: AppViewModel = viewModel()) {
@@ -122,7 +122,11 @@ private fun MainScaffold(
     val isAuditor = currentUser?.role == UserRole.AUDITOR
     val tabs = if (isAuditor) MainTab.auditor else MainTab.employee
     val startTab = if (isAuditor) MainTab.Audit.route else MainTab.Scan.route
-    val currentTitle = tabs.find { it.route == currentRoute }?.title ?: "UZB QQS"
+    val currentTitle = when {
+        currentRoute?.startsWith(ROUTE_AUDIT_VERIFY) == true -> "Проверка чеков"
+        currentRoute?.startsWith(ROUTE_AUDIT_SEARCH) == true -> "Поиск"
+        else -> tabs.find { it.route == currentRoute }?.title ?: ""
+    }
 
     var showHelpDialog by remember { mutableStateOf(false) }
     if (showHelpDialog) {
@@ -140,9 +144,17 @@ private fun MainScaffold(
                         }
                     )
                 },
+                navigationIcon = {
+                    val isTopLevel = tabs.any { it.route == currentRoute }
+                    if (!isTopLevel) {
+                        IconButton(onClick = { tabsNav.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад")
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = { showHelpDialog = true }) {
-                        Icon(Icons.Outlined.HelpOutline, contentDescription = "Помощь")
+                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Помощь")
                     }
                 }
             )
@@ -231,5 +243,3 @@ private fun MainScaffold(
         }
     }
 }
-
-

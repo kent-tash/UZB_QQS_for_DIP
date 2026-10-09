@@ -1,58 +1,83 @@
 import os
-import re
+path = 'app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReceiptsScreen.kt'
+with open(path, 'r', encoding='utf-8') as f:
+    text = f.read()
 
-def encode_ps_cp1251(s):
-    res = bytearray()
-    for c in s:
-        try:
-            res.extend(c.encode('cp1251'))
-        except UnicodeEncodeError:
-            if ord(c) < 256:
-                res.append(ord(c))
-            else:
-                raise
-    return bytes(res)
+old = """    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = onShare) {
+                Icon(Icons.Outlined.Share, contentDescription = null)
+                Spacer(Modifier.size(6.dp))
+                Text("Поделиться")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Закрыть") }
+        },
+        title = { Text(f"Чек №$ordinal") },""" # I am using string replacement, but $ordinal is kotlin string interpolation! Wait, `text` is just a string, so `$ordinal` is literal.
 
-def fix_mojibake_in_file(filepath):
-    try:
-        with open(filepath, 'rb') as f:
-            b = f.read()
-    except Exception as e:
-        return False
-        
-    try:
-        text = b.decode('utf-8')
-    except:
-        return False
-        
-    original_text = text
-    
-    def repl(m):
-        s = m.group(0)
-        try:
-            b = encode_ps_cp1251(s)
-            fixed = b.decode('utf-8')
-            if re.search(r'[\u0400-\u04FF]', fixed):
-                return fixed
-        except:
-            pass
-        return s
+old = """    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = onShare) {
+                Icon(Icons.Outlined.Share, contentDescription = null)
+                Spacer(Modifier.size(6.dp))
+                Text("Поделиться")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Закрыть") }
+        },
+        title = { Text("Чек №$ordinal") },
+        text = {
+            ReceiptCardPreview(item = item, ordinal = ordinal)
+        }
+    )"""
 
-    # Regex matches any contiguous chunk containing characters above U+007F
-    # including \u0098 which is matched by [^\x00-\x7F]
-    text = re.sub(r'[^\x00-\x7F]+', repl, text)
-    
-    if text != original_text:
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(text)
-        return True
-    return False
+new = """    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text("Закрыть")
+                }
+                Button(
+                    onClick = onShare,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Icon(Icons.Outlined.Share, contentDescription = null)
+                    Spacer(Modifier.size(6.dp))
+                    Text("Поделиться")
+                }
+            }
+        },
+        title = { Text("Чек №$ordinal") },
+        text = {
+            ReceiptCardPreview(item = item, ordinal = ordinal)
+        }
+    )"""
 
-changed_files = []
-for r, d, files in os.walk('app/src/main/java'):
-    for f in files:
-        if f.endswith('.kt'):
-            if fix_mojibake_in_file(os.path.join(r, f)):
-                changed_files.append(os.path.join(r, f))
-
-print("Fixed files:", changed_files)
+if old in text:
+    text = text.replace(old, new)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(text)
+    print("Success")
+else:
+    print("Not found")

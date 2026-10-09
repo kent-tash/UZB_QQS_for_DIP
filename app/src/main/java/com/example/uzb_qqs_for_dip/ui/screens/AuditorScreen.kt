@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import android.net.Uri
@@ -106,6 +107,12 @@ fun AuditorScreen(
     val quarter by vm.quarter.collectAsStateWithLifecycle()
     val year by vm.year.collectAsStateWithLifecycle()
     val search by vm.search.collectAsStateWithLifecycle()
+    val allSummaries by vm.summaries.collectAsStateWithLifecycle()
+    val selectedOrg by vm.selectedOrganization.collectAsStateWithLifecycle()
+    val allOrganizations = remember(allSummaries) {
+        allSummaries.map { it.organization }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+    var orgDropdownExpanded by remember { mutableStateOf(false) }
     val filter by vm.filter.collectAsStateWithLifecycle()
     val isLoading by vm.isLoading.collectAsStateWithLifecycle()
     val errorMessage by vm.errorMessage.collectAsStateWithLifecycle()
@@ -393,6 +400,33 @@ fun AuditorScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
+            if (allOrganizations.isNotEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+                    OutlinedButton(
+                        onClick = { orgDropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(selectedOrg ?: "Все организации")
+                    }
+                    DropdownMenu(
+                        expanded = orgDropdownExpanded,
+                        onDismissRequest = { orgDropdownExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Все организации") },
+                            onClick = { vm.setSelectedOrganization(null); orgDropdownExpanded = false }
+                        )
+                        allOrganizations.forEach { org ->
+                            DropdownMenuItem(
+                                text = { Text(org) },
+                                onClick = { vm.setSelectedOrganization(org); orgDropdownExpanded = false }
+                            )
+                        }
+                    }
+                }
+            }
+
             FilterChipsRow(currentFilter = filter, onFilterChange = vm::setFilter)
         }
 
@@ -580,31 +614,36 @@ private fun StatsRow(
     totalVat: Long,
     onConflictsClick: () -> Unit
 ) {
-    Row(
+    Column(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        StatChip(
-            label = "Проверено",
-            value = "$verifiedCount/$employeeCount",
-            color = if (verifiedCount == employeeCount && employeeCount > 0) Success else MaterialTheme.colorScheme.primary,
-            modifier = Modifier.weight(1f)
-        )
-        StatChip(
-            label = "Конфликты",
-            value = conflictCount.toString(),
-            color = if (conflictCount > 0) Danger else Success,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(enabled = conflictCount > 0, onClick = onConflictsClick)
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            StatChip(
+                label = "Проверено",
+                value = "$verifiedCount/$employeeCount",
+                color = if (verifiedCount == employeeCount && employeeCount > 0) Success else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+            StatChip(
+                label = "Конфликты",
+                value = conflictCount.toString(),
+                color = if (conflictCount > 0) Danger else Success,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(enabled = conflictCount > 0, onClick = onConflictsClick)
+            )
+        }
         StatChip(
             label = "Сумма",
             value = MoneyFormat.fromTiyin(totalSum),
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -780,22 +819,32 @@ private fun EmployeeCard(
 
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
+                Button(
                     onClick = onVerify,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(6.dp)
+                    contentPadding = PaddingValues(6.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                 ) {
                     Icon(Icons.Outlined.QrCodeScanner, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
                     Text("Проверить чеки", style = MaterialTheme.typography.labelMedium)
                 }
-                OutlinedButton(
+                Button(
                     onClick = onEditDeclaration,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(6.dp)
+                    contentPadding = PaddingValues(6.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
+                    Icon(Icons.Outlined.Assignment, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
                     Text(
                         if (decl == null) "Внести итоги" else "Итоги PDF",
                         style = MaterialTheme.typography.labelMedium
@@ -1079,8 +1128,14 @@ private fun DeclarationDialog(
                         onDismissRequest = { statusExpanded = false }
                     ) {
                         AuditStatus.entries.forEach { s ->
+                            val color = when(s) {
+                                AuditStatus.PENDING -> androidx.compose.ui.graphics.Color(0xFFEAB308) // Yellow
+                                AuditStatus.APPROVED -> Success // Green
+                                AuditStatus.REVISION -> androidx.compose.ui.graphics.Color(0xFFF97316) // Orange
+                                AuditStatus.CONFLICT -> Danger // Red
+                            }
                             DropdownMenuItem(
-                                text = { Text(s.label()) },
+                                text = { Text(s.label(), color = color, fontWeight = FontWeight.SemiBold) },
                                 onClick = { selectedStatus = s; statusExpanded = false }
                             )
                         }
@@ -1089,27 +1144,52 @@ private fun DeclarationDialog(
             }
         },
         confirmButton = {
-            Button(onClick = {
-                val totalTiyin = com.example.uzb_qqs_for_dip.util.MoneyFormat.toTiyin(totalStr)
-                val vatTiyin = com.example.uzb_qqs_for_dip.util.MoneyFormat.toTiyin(vatStr)
-                val count = countStr.trim().toIntOrNull() ?: 0
-                onSave(
-                    AuditDeclaration(
-                        id = existing?.id ?: 0,
-                        userId = summary.userId,
-                        year = year,
-                        quarter = quarter,
-                        declaredTotalTiyin = totalTiyin,
-                        declaredVatTiyin = vatTiyin,
-                        declaredCount = count,
-                        status = selectedStatus,
-                        note = noteStr.trim().takeIf { it.isNotEmpty() },
-                        checkedAt = System.currentTimeMillis()
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
-                )
-            }) { Text("Сохранить") }
-        },
-        dismissButton = { OutlinedButton(onClick = onDismiss) { Text("Отмена") } }
+                ) {
+                    Text("Отмена")
+                }
+                Button(
+                    onClick = {
+                        val totalTiyin = com.example.uzb_qqs_for_dip.util.MoneyFormat.toTiyin(totalStr)
+                        val vatTiyin = com.example.uzb_qqs_for_dip.util.MoneyFormat.toTiyin(vatStr)
+                        val count = countStr.trim().toIntOrNull() ?: 0
+                        onSave(
+                            AuditDeclaration(
+                                id = existing?.id ?: 0,
+                                userId = summary.userId,
+                                year = year,
+                                quarter = quarter,
+                                declaredTotalTiyin = totalTiyin,
+                                declaredVatTiyin = vatTiyin,
+                                declaredCount = count,
+                                status = selectedStatus,
+                                note = noteStr.trim().takeIf { it.isNotEmpty() },
+                                checkedAt = System.currentTimeMillis()
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text("Сохранить")
+                }
+            }
+        }
     )
 }
 
