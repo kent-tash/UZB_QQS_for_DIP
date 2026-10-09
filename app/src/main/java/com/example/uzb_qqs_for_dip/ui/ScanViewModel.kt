@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui
+package com.example.uzb_qqs_for_dip.ui
 
 import android.app.Application
 import android.content.Context
@@ -20,8 +20,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * РћРїРёСЃС‹РІР°РµС‚ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРіРѕ РІР»Р°РґРµР»СЊС†Р° С‡РµРєР° РїСЂРё РґСѓР±Р»РёРєР°С‚Рµ QR:
- * null вЂ” С‡РµРєР° РЅРµС‚ РІ Р±Р°Р·Рµ; SameUser вЂ” Сѓ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ; OtherUser вЂ” Сѓ РґСЂСѓРіРѕРіРѕ.
+ * Описывает существующего владельца чека при дубликате QR:
+ * null — чека нет в базе; SameUser — у текущего пользователя; OtherUser — у другого.
  */
 sealed interface ExistingOwner {
     data object SameUser : ExistingOwner
@@ -37,12 +37,12 @@ sealed interface ScanState {
 
 fun Throwable.toReadableMessage(): String {
     return when (this) {
-        is java.net.UnknownHostException -> "РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ РёР»Рё СЃРµСЂРІРµСЂ РЅРµРґРѕСЃС‚СѓРїРµРЅ"
-        is java.net.SocketTimeoutException -> "РЎРµСЂРІРµСЂ РЅР°Р»РѕРіРѕРІРѕР№ РЅРµ РѕС‚РІРµС‡Р°РµС‚ (С‚Р°Р№Рј-Р°СѓС‚)"
-        is java.net.ConnectException -> "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ Рє СЃРµСЂРІРµСЂСѓ"
-        is java.net.SocketException -> "РџСЂРµСЂРІР°РЅРѕ СЃРѕРµРґРёРЅРµРЅРёРµ СЃ СЃРµСЂРІРµСЂРѕРј"
-        is org.json.JSONException -> "РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РѕС‚РІРµС‚Р° РѕС‚ СЃРµСЂРІРµСЂР°"
-        else -> this.message ?: this::class.simpleName ?: "РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°"
+        is java.net.UnknownHostException -> "Нет подключения к интернету или сервер недоступен"
+        is java.net.SocketTimeoutException -> "Сервер налоговой не отвечает (тайм-аут)"
+        is java.net.ConnectException -> "Не удалось подключиться к серверу"
+        is java.net.SocketException -> "Прервано соединение с сервером"
+        is org.json.JSONException -> "Неверный формат ответа от сервера"
+        else -> this.message ?: this::class.simpleName ?: "Неизвестная ошибка"
     }
 }
 
@@ -102,7 +102,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
             decoded.onSuccess { payload -> handleScan(payload) }
                 .onFailure { e ->
                     _state.value = ScanState.Error(
-                        e.message ?: "РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃРїРѕР·РЅР°С‚СЊ QR РЅР° РёР·РѕР±СЂР°Р¶РµРЅРёРё"
+                        e.message ?: "Не удалось распознать QR на изображении"
                     )
                 }
         }
@@ -111,12 +111,12 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
     fun handleScan(qrPayload: String?) {
         val raw = qrPayload?.trim().orEmpty()
         if (raw.isEmpty()) {
-            _state.value = ScanState.Error("РџСѓСЃС‚РѕР№ QR-РєРѕРґ")
+            _state.value = ScanState.Error("Пустой QR-код")
             return
         }
         if (!raw.startsWith("http://") && !raw.startsWith("https://")) {
             _state.value =
-                ScanState.Error("QR РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЃСЃС‹Р»РєСѓ РЅР° С‡РµРє: \"${raw.take(64)}\"")
+                ScanState.Error("QR не содержит ссылку на чек: \"${raw.take(64)}\"")
             return
         }
         viewModelScope.launch {
@@ -139,15 +139,15 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 .onFailure { e ->
                     _state.value = ScanState.Error(
-                        "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ С‡РµРє: ${e.toReadableMessage()}"
+                        "Не удалось загрузить чек: ${e.toReadableMessage()}"
                     )
                 }
         }
     }
 
     /**
-     * Р”РµРєРѕРґРёСЂСѓРµС‚ РІСЃРµ QR СЃ С„РѕС‚Рѕ, РґР»СЏ РєР°Р¶РґРѕРіРѕ URL РїР°СЂСЃРёС‚ С‡РµРє Рё РёС‰РµС‚ РІР»Р°РґРµР»СЊС†Р°
-     * Р±РµР· РІСЃС‚Р°РІРєРё РІ Р‘Р” вЂ” СЂРµР·СѓР»СЊС‚Р°С‚ РїРѕРїР°РґР°РµС‚ РІ [sheetPreviewItems].
+     * Декодирует все QR с фото, для каждого URL парсит чек и ищет владельца
+     * без вставки в БД — результат попадает в [sheetPreviewItems].
      */
     fun prepareSheetFromUri(context: Context, uri: Uri) {
         viewModelScope.launch {
@@ -160,7 +160,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                     _sheetSummary.value = SheetSummary(
                         scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
                         errors = 1, skipped = 0,
-                        message = e.message ?: "РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃРїРѕР·РЅР°С‚СЊ QR РЅР° РёР·РѕР±СЂР°Р¶РµРЅРёРё"
+                        message = e.message ?: "Не удалось распознать QR на изображении"
                     )
                     return@launch
                 }
@@ -171,24 +171,24 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
 
     suspend fun processSingleQr(rawUrl: String): Pair<Boolean, String> {
         val userId = container.sessionManager.currentUserId.value
-            ?: return false to "РЎРµСЃСЃРёСЏ РёСЃС‚РµРєР»Р°. Р’РѕР№РґРёС‚Рµ СЃРЅРѕРІР°."
+            ?: return false to "Сессия истекла. Войдите снова."
         val url = rawUrl.trim()
-        if (url.isEmpty()) return false to "РџСѓСЃС‚РѕР№ QR-РєРѕРґ"
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR-РєРѕРґ РЅРµ СЏРІР»СЏРµС‚СЃСЏ С‡РµРєРѕРј"
+        if (url.isEmpty()) return false to "Пустой QR-код"
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR-код не является чеком"
 
         val parsedResult = container.receiptParser.fetchAndParse(url)
         if (parsedResult.isFailure) {
             val e = parsedResult.exceptionOrNull()
             val msg = when (e) {
-                is java.net.UnknownHostException -> "РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє СЃРµС‚Рё"
-                is java.net.SocketTimeoutException, is java.net.ConnectException -> "РЎР°Р№С‚ РЅР°Р»РѕРіРѕРІРѕР№ РЅРµ РѕС‚РІРµС‡Р°РµС‚"
-                else -> "РћС€РёР±РєР° СЃРµС‚Рё РёР»Рё СЃРµСЂРІРµСЂР°: " + (e?.toReadableMessage() ?: "")
+                is java.net.UnknownHostException -> "Нет подключения к сети"
+                is java.net.SocketTimeoutException, is java.net.ConnectException -> "Сайт налоговой не отвечает"
+                else -> "Ошибка сети или сервера: " + (e?.toReadableMessage() ?: "")
             }
             return false to msg
         }
         val parsed = parsedResult.getOrThrow()
 
-        if (!parsed.isValid) return false to "РќРµ РІСЃРµ РїРѕР»СЏ С‡РµРєР° СЂР°СЃРїРѕР·РЅР°РЅС‹"
+        if (!parsed.isValid) return false to "Не все поля чека распознаны"
 
         val existingOwner = container.receiptRepository.findOwner(
             qrUrl = parsed.qrUrl,
@@ -198,21 +198,21 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         )
 
         if (existingOwner != null) {
-            return if (existingOwner.userId == userId) false to "Р­С‚РѕС‚ С‡РµРє СѓР¶Рµ Р±С‹Р» РґРѕР±Р°РІР»РµРЅ"
-            else false to "Р§РµРє РїСЂРёРЅР°РґР»РµР¶РёС‚: ${existingOwner.fullName}"
+            return if (existingOwner.userId == userId) false to "Этот чек уже был добавлен"
+            else false to "Чек принадлежит: ${existingOwner.fullName}"
         }
 
         val insertRes = insertParsed(parsed, userId)
         return if (insertRes.isSuccess) {
             val vat = parsed.vatAmountTiyin ?: 0L
-            if (vat == 0L) true to "Р’ С‡РµРєРµ РЅРµС‚ РќР”РЎ (0 СЃСѓРј)"
-            else true to "Р§РµРє РґРѕР±Р°РІР»РµРЅ (РќР”РЎ: ${vat / 100} СЃСѓРј)"
+            if (vat == 0L) true to "В чеке нет НДС (0 сум)"
+            else true to "Чек добавлен (НДС: ${vat / 100} сум)"
         }
-        else false to "РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ РІ Р‘Р”"
+        else false to "Ошибка сохранения в БД"
     }
 
     /**
-     * Р“РѕС‚РѕРІРёС‚ РїСЂРµРІСЊСЋ РїР°РєРµС‚РЅРѕРіРѕ СЃРєР°РЅР° РїРѕ СѓР¶Рµ СЃРѕР±СЂР°РЅРЅС‹Рј URL (РєР°РјРµСЂР° РёР»Рё РіР°Р»РµСЂРµСЏ).
+     * Готовит превью пакетного скана по уже собранным URL (камера или галерея).
      */
     fun prepareSheetFromUrls(urls: List<String>) {
         val userId = container.sessionManager.currentUserId.value
@@ -220,7 +220,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
             _sheetSummary.value = SheetSummary(
                 scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
                 errors = 1, skipped = 0,
-                message = "РЎРµСЃСЃРёСЏ РёСЃС‚РµРєР»Р°. Р’РѕР№РґРёС‚Рµ СЃРЅРѕРІР°"
+                message = "Сессия истекла. Войдите снова"
             )
             return
         }
@@ -234,7 +234,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                     _sheetSummary.value = SheetSummary(
                         scanned = 0, saved = 0, alreadyVerified = 0, conflicts = 0,
                         errors = 1, skipped = 0,
-                        message = "QR-РєРѕРґС‹ РЅРµ РЅР°Р№РґРµРЅС‹"
+                        message = "QR-коды не найдены"
                     )
                     return@launch
                 }
@@ -252,14 +252,14 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
             return SheetReceiptItem(
                 qrUrl = raw,
                 status = SheetItemStatus.ERROR,
-                errorMessage = "РџСѓСЃС‚РѕР№ QR-РєРѕРґ"
+                errorMessage = "Пустой QR-код"
             )
         }
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             return SheetReceiptItem(
                 qrUrl = url,
                 status = SheetItemStatus.ERROR,
-                errorMessage = "QR РЅРµ СЃРѕРґРµСЂР¶РёС‚ СЃСЃС‹Р»РєСѓ РЅР° С‡РµРє"
+                errorMessage = "QR не содержит ссылку на чек"
             )
         }
         return container.receiptParser.fetchAndParse(url)
@@ -285,7 +285,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                                 qrUrl = parsed.qrUrl,
                                 parsed = parsed,
                                 status = SheetItemStatus.ERROR,
-                                errorMessage = "РќРµ РІСЃРµ РїРѕР»СЏ С‡РµРєР° СЂР°СЃРїРѕР·РЅР°РЅС‹",
+                                errorMessage = "Не все поля чека распознаны",
                                 selected = false
                             )
                         existingOwner?.userId == userId ->
@@ -309,7 +309,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                     SheetReceiptItem(
                         qrUrl = url,
                         status = SheetItemStatus.ERROR,
-                        errorMessage = "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ С‡РµРє: ${e.toReadableMessage()}",
+                        errorMessage = "Не удалось загрузить чек: ${e.toReadableMessage()}",
                         selected = false
                     )
                 }
@@ -317,8 +317,8 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * РЎРѕС…СЂР°РЅСЏРµС‚ РІС‹Р±СЂР°РЅРЅС‹Рµ NEW РґР»СЏ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
-     * ALREADY_THIS СѓС‡РёС‚С‹РІР°РµС‚ РІ summary; OTHER_OWNER / ERROR / РЅРµРІС‹Р±СЂР°РЅРЅС‹Рµ вЂ” Р±РµР· insert.
+     * Сохраняет выбранные NEW для текущего пользователя.
+     * ALREADY_THIS учитывает в summary; OTHER_OWNER / ERROR / невыбранные — без insert.
      */
     fun confirmSheetSelection() {
         val userId = container.sessionManager.currentUserId.value ?: return
@@ -373,12 +373,12 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
 
             val scanned = items.size
             val message = buildString {
-                append("РЎРєР°РЅРёСЂРѕРІР°РЅРѕ: $scanned")
-                append(". РЎРѕС…СЂР°РЅРµРЅРѕ: $saved")
-                append(". РЈР¶Рµ РІ Р±Р°Р·Рµ: $alreadyInDb")
-                append(". РљРѕРЅС„Р»РёРєС‚С‹: $conflicts")
-                if (errors > 0) append(". РћС€РёР±РєРё: $errors")
-                if (skipped > 0) append(". РџСЂРѕРїСѓС‰РµРЅРѕ: $skipped")
+                append("Сканировано: $scanned")
+                append(". Сохранено: $saved")
+                append(". Уже в базе: $alreadyInDb")
+                append(". Конфликты: $conflicts")
+                if (errors > 0) append(". Ошибки: $errors")
+                if (skipped > 0) append(". Пропущено: $skipped")
             }
             _sheetSummary.value = SheetSummary(
                 scanned = scanned,
@@ -399,16 +399,16 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         if (current !is ScanState.Parsed) return
         val parsed = current.parsed
         if (!parsed.isValid) {
-            _state.value = ScanState.Error("РќРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃРїРѕР·РЅР°С‚СЊ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹Рµ РїРѕР»СЏ С‡РµРєР°")
+            _state.value = ScanState.Error("Не удалось распознать обязательные поля чека")
             return
         }
         val userId = container.sessionManager.currentUserId.value
         if (userId == null) {
-            _state.value = ScanState.Error("РЎРµСЃСЃРёСЏ РёСЃС‚РµРєР»Р°. Р’РѕР№РґРёС‚Рµ СЃРЅРѕРІР°")
+            _state.value = ScanState.Error("Сессия истекла. Войдите снова")
             return
         }
         viewModelScope.launch {
-            // РџРѕРІС‚РѕСЂРЅР°СЏ РїСЂРѕРІРµСЂРєР° РїРµСЂРµРґ Р·Р°РїРёСЃСЊСЋ (race condition guard).
+            // Повторная проверка перед записью (race condition guard).
             val owner = container.receiptRepository.findOwner(
                 qrUrl = parsed.qrUrl,
                 fiscalSign = parsed.fiscalSign,
@@ -417,12 +417,12 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
             )
             if (owner != null && owner.userId != userId) {
                 _state.value = ScanState.Error(
-                    "Р”Р°РЅРЅС‹Р№ С‡РµРє СѓР¶Рµ РµСЃС‚СЊ Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ ${owner.fullName}"
+                    "Данный чек уже есть у пользователя ${owner.fullName}"
                 )
                 return@launch
             }
             if (owner != null && owner.userId == userId) {
-                _state.value = ScanState.Error("Р­С‚РѕС‚ С‡РµРє СѓР¶Рµ СЃРѕС…СЂР°РЅС‘РЅ СЂР°РЅРµРµ")
+                _state.value = ScanState.Error("Этот чек уже сохранён ранее")
                 return@launch
             }
             insertParsed(parsed, userId)
@@ -439,11 +439,11 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                             receiptNumber = parsed.receiptNumber,
                         )
                         if (existingOwner != null && existingOwner.userId != userId) {
-                            "Р”Р°РЅРЅС‹Р№ С‡РµРє СѓР¶Рµ РµСЃС‚СЊ Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ ${existingOwner.fullName}"
+                            "Данный чек уже есть у пользователя ${existingOwner.fullName}"
                         } else {
-                            "Р­С‚РѕС‚ С‡РµРє СѓР¶Рµ СЃРѕС…СЂР°РЅС‘РЅ СЂР°РЅРµРµ"
+                            "Этот чек уже сохранён ранее"
                         }
-                    } else "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ С‡РµРє: ${e.message}"
+                    } else "Не удалось сохранить чек: ${e.message}"
                     _state.value = ScanState.Error(msg)
                 }
         }
@@ -482,7 +482,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
     ) {
         val userId = container.sessionManager.currentUserId.value
         if (userId == null) {
-            onError("РЎРµСЃСЃРёСЏ РёСЃС‚РµРєР»Р°. Р’РѕР№РґРёС‚Рµ СЃРЅРѕРІР°")
+            onError("Сессия истекла. Войдите снова")
             return
         }
         viewModelScope.launch {
@@ -498,7 +498,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                     localPhotoPath = file.absolutePath
                 } catch (e: Exception) {
                     _state.value = ScanState.Idle
-                    onError("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ С„РѕС‚Рѕ: ${e.message}")
+                    onError("Не удалось сохранить фото: ${e.message}")
                     return@launch
                 }
             }
@@ -521,21 +521,21 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 .onFailure { e ->
                     _state.value = ScanState.Idle
-                    onError(e.message ?: "РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ")
+                    onError(e.message ?: "Ошибка сохранения")
                 }
         }
     }
 
     /**
-     * РЎРѕС…СЂР°РЅСЏРµС‚ С‡РµРє РґР»СЏ СѓРєР°Р·Р°РЅРЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ Р°СѓРґРёС‚РѕСЂРѕРј РїСЂРё QR-РІРµСЂРёС„РёРєР°С†РёРё).
-     * Р’РѕР·РІСЂР°С‰Р°РµС‚ id РЅРѕРІРѕР№ Р·Р°РїРёСЃРё РёР»Рё РѕС€РёР±РєСѓ.
+     * Сохраняет чек для указанного пользователя (используется аудитором при QR-верификации).
+     * Возвращает id новой записи или ошибку.
      */
     suspend fun saveForUser(
         parsed: ParsedReceipt,
         userId: Long,
         auditorUserId: Long? = null
     ): Result<Long> {
-        if (!parsed.isValid) return Result.failure(IllegalStateException("РќРµРїРѕР»РЅС‹Рµ РґР°РЅРЅС‹Рµ С‡РµРєР°"))
+        if (!parsed.isValid) return Result.failure(IllegalStateException("Неполные данные чека"))
         val owner = container.receiptRepository.findOwner(
             qrUrl = parsed.qrUrl,
             fiscalSign = parsed.fiscalSign,
@@ -544,7 +544,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         )
         if (owner != null && owner.userId != userId) {
             return Result.failure(
-                IllegalStateException("Р”Р°РЅРЅС‹Р№ С‡РµРє СѓР¶Рµ РµСЃС‚СЊ Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ ${owner.fullName}")
+                IllegalStateException("Данный чек уже есть у пользователя ${owner.fullName}")
             )
         }
         if (owner != null && owner.userId == userId) {

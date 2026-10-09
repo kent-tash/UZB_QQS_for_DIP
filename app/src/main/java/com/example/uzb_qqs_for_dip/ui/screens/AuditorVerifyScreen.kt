@@ -429,63 +429,83 @@ fun AuditorVerifyScreen(
             // Scan section: buttons below, result card overlaid on top when active
             Box(Modifier.fillMaxWidth()) {
                 // Always-visible scan buttons
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         "Способ захвата QR-кода",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ScanActionButton(
-                            icon = Icons.Outlined.QrCodeScanner,
-                            label = "Камера",
-                            enabled = selectedEmployee != null &&
-                                verifyResult == VerifyResult.Idle &&
-                                sheetPreviewItems.isEmpty() &&
-                                !sheetLoading,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                startQrScanner(
-                                    context = context,
-                                    onScanned = { url -> vm.handleScan(url) },
-                                    onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
-                                )
-                            }
-                        )
-                        ScanActionButton(
-                            icon = Icons.Outlined.Image,
-                            label = "Галерея",
-                            enabled = selectedEmployee != null &&
-                                verifyResult == VerifyResult.Idle &&
-                                sheetPreviewItems.isEmpty() &&
-                                !sheetLoading,
-                            modifier = Modifier.weight(1f),
-                            onClick = { galleryLauncher.launch("image/*") }
-                        )
-                        ScanActionButton(
-                            icon = Icons.Outlined.Link,
-                            label = "Ссылка",
-                            enabled = selectedEmployee != null &&
-                                verifyResult == VerifyResult.Idle &&
-                                sheetPreviewItems.isEmpty() &&
-                                !sheetLoading,
-                            modifier = Modifier.weight(1f),
-                            onClick = { showLinkDialog = true }
-                        )
-                    }
-                    ScanActionButton(
-                        icon = Icons.Outlined.GridView,
-                        label = "Скан листа",
-                        enabled = selectedEmployee != null &&
+                    
+                    val buttonsEnabled = selectedEmployee != null &&
                             verifyResult == VerifyResult.Idle &&
                             sheetPreviewItems.isEmpty() &&
-                            !sheetLoading,
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { showSheetSourceDialog = true }
-                    )
+                            !sheetLoading
+
+                    Button(
+                        onClick = {
+                            startQrScanner(
+                                context = context,
+                                onScanned = { url -> vm.handleScan(url) },
+                                onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
+                            )
+                        },
+                        enabled = buttonsEnabled,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Outlined.QrCodeScanner, contentDescription = null)
+                        Spacer(Modifier.size(8.dp))
+                        Text("Камера")
+                    }
+
+                    Button(
+                        onClick = { galleryLauncher.launch("image/*") },
+                        enabled = buttonsEnabled,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Icon(Icons.Outlined.Image, contentDescription = null)
+                        Spacer(Modifier.size(8.dp))
+                        Text("Галерея")
+                    }
+
+                    Button(
+                        onClick = { showLinkDialog = true },
+                        enabled = buttonsEnabled,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+                    ) {
+                        Icon(Icons.Outlined.Link, contentDescription = null)
+                        Spacer(Modifier.size(8.dp))
+                        Text("Ссылка")
+                    }
+
+                    Button(
+                        onClick = { showSheetSourceDialog = true },
+                        enabled = buttonsEnabled,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(Icons.Outlined.GridView, contentDescription = null)
+                        Spacer(Modifier.size(8.dp))
+                        Text("Скан листа")
+                    }
+
+                    Button(
+                        onClick = { showManualDialog = true },
+                        enabled = buttonsEnabled,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary, contentColor = MaterialTheme.colorScheme.onTertiary)
+                    ) {
+                        Icon(Icons.Outlined.Create, contentDescription = null)
+                        Spacer(Modifier.size(8.dp))
+                        Text("Ручной ввод")
+                    }
                 }
 
                 // Result overlay — floats above buttons until dismissed
@@ -644,28 +664,7 @@ private fun VerificationProgress(stats: UserReceiptStats, manuallyApproved: Bool
     }
 }
 
-@Composable
-private fun ScanActionButton(
-    icon: ImageVector,
-    label: String,
-    enabled: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    OutlinedButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp)
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, null, Modifier.size(20.dp))
-            Spacer(Modifier.height(2.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall)
-        }
-    }
-}
+
 
 @Composable
 private fun VerifySuccessCard(result: VerifyResult.Success, onDismiss: () -> Unit) {

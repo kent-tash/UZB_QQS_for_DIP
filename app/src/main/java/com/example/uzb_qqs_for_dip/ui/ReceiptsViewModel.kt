@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui
+package com.example.uzb_qqs_for_dip.ui
 
 import android.app.Application
 import android.content.Context
@@ -43,10 +43,10 @@ sealed interface ExportEvent {
 }
 
 /**
- * ViewModel РІРєР»Р°РґРєРё В«Р§РµРєРёВ». РЎР°РјР° РІРєР»Р°РґРєР° Р±РѕР»СЊС€Рµ РЅРµ СѓРїСЂР°РІР»СЏРµС‚ РЅРё С„РёР»СЊС‚СЂРѕРј, РЅРё
- * СЃРѕСЂС‚РёСЂРѕРІРєРѕР№: Рё С‚РѕС‚, Рё РґСЂСѓРіРѕР№ Р±РµСЂС‘С‚ РёР· РѕР±С‰РµРіРѕ [com.example.uzb_qqs_for_dip.data.settings.ReportSettingsHolder].
- * РўР°Рє РЅСѓРјРµСЂР°С†РёСЏ С‡РµРєРѕРІ Рё РЅР°Р±РѕСЂ Р·Р°РїРёСЃРµР№ РІ С‚РѕС‡РЅРѕСЃС‚Рё СЃРѕРІРїР°РґР°СЋС‚ СЃ С‚РµРј, С‡С‚Рѕ РїРѕРєР°Р·Р°РЅРѕ
- * РІ С‚Р°Р±Р»РёС†Рµ РЅР° РІРєР»Р°РґРєРµ В«РћС‚С‡С‘С‚В» Рё РїРѕРїР°РґР°РµС‚ РІ PDF.
+ * ViewModel вкладки «Чеки». Сама вкладка больше не управляет ни фильтром, ни
+ * сортировкой: и тот, и другой берёт из общего [com.example.uzb_qqs_for_dip.data.settings.ReportSettingsHolder].
+ * Так нумерация чеков и набор записей в точности совпадают с тем, что показано
+ * в таблице на вкладке «Отчёт» и попадает в PDF.
  */
 class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -65,8 +65,8 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /**
-     * Р’РёРґРёРјС‹Рµ РЅР° РІРєР»Р°РґРєРµ С‡РµРєРё вЂ” РѕС‚С„РёР»СЊС‚СЂРѕРІР°РЅРЅС‹Рµ Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Рµ С‚РѕС‡РЅРѕ С‚Р°Рє Р¶Рµ,
-     * РєР°Рє РЅР° РІРєР»Р°РґРєРµ В«РћС‚С‡С‘С‚В». РџРѕСЂСЏРґРєРѕРІС‹Р№ в„– = РёРЅРґРµРєСЃ + 1.
+     * Видимые на вкладке чеки — отфильтрованные и отсортированные точно так же,
+     * как на вкладке «Отчёт». Порядковый № = индекс + 1.
      */
     val receipts: StateFlow<List<ReceiptWithUser>> = combine(
         container.receiptRepository.receipts,
@@ -92,9 +92,9 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     val saveProgress: StateFlow<Float> = _saveProgress.asStateFlow()
 
     init {
-        // Р›СЋР±РѕРµ РёР·РјРµРЅРµРЅРёРµ РІРёРґРёРјРѕРіРѕ РїРѕСЂСЏРґРєР° вЂ” РїРµСЂРµРіРµРЅРµСЂРёСЂСѓРµРј PNG С‡РµРєРѕРІ РЅР° РґРёСЃРєРµ,
-        // С‡С‚РѕР±С‹ в„– РІ С‡С‘СЂРЅРѕРј РєРІР°РґСЂР°С‚Рµ РЅР° РєР°Р¶РґРѕР№ РєР°СЂС‚РёРЅРєРµ СЃРѕРІРїР°РґР°Р» СЃ РЅРѕРјРµСЂРѕРј РІ С‚Р°Р±Р»РёС†Рµ
-        // (Рё РґР°Р»РµРµ РІ PDF/РїРµС‡Р°С‚Рё).
+        // Любое изменение видимого порядка — перегенерируем PNG чеков на диске,
+        // чтобы № в чёрном квадрате на каждой картинке совпадал с номером в таблице
+        // (и далее в PDF/печати).
         viewModelScope.launch {
             receipts
                 .distinctUntilChanged { a, b ->
@@ -138,7 +138,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Р”РµР»РёС‚СЃСЏ PNG РѕРґРЅРѕРіРѕ С‡РµРєР° (СЃ Р°РєС‚СѓР°Р»СЊРЅС‹Рј в„– РІ С‡С‘СЂРЅРѕРј РєРІР°РґСЂР°С‚Рµ). */
+    /** Делится PNG одного чека (с актуальным № в чёрном квадрате). */
     fun shareReceiptImage(context: Context, item: ReceiptWithUser) {
         viewModelScope.launch {
             container.receiptRepository.refresh()
@@ -146,7 +146,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val ordinal = receipts.value.indexOfFirst { it.receipt.id == item.receipt.id } + 1
                 if (ordinal <= 0) {
-                    _exportEvents.value = ExportEvent.Error("Р§РµРє Р±РѕР»СЊС€Рµ РЅРµ РІРёРґРµРЅ РІ С‚Р°Р±Р»РёС†Рµ")
+                    _exportEvents.value = ExportEvent.Error("Чек больше не виден в таблице")
                     return@launch
                 }
                 val file = ReceiptImageExporter.saveSingle(context, item.receipt, ordinal)
@@ -159,11 +159,11 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 _exportEvents.value = ExportEvent.Share(
-                    Intent.createChooser(intent, "РџРѕРґРµР»РёС‚СЊСЃСЏ С‡РµРєРѕРј в„–$ordinal")
+                    Intent.createChooser(intent, "Поделиться чеком №$ordinal")
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } catch (e: Throwable) {
-                _exportEvents.value = ExportEvent.Error("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РєР°СЂС‚РёРЅРєСѓ: ${e.message}")
+                _exportEvents.value = ExportEvent.Error("Не удалось сохранить картинку: ${e.message}")
             } finally {
                   _isSaving.value = false
                   _saveProgress.value = 0f
@@ -171,16 +171,16 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** РџРµС‡Р°С‚СЊ РІСЃРµС… С‡РµРєРѕРІ РІ С‚РµРєСѓС‰РµР№ СЃРѕСЂС‚РёСЂРѕРІРєРµ (6 РЅР° Р»РёСЃС‚, РІ РїРѕСЂСЏРґРєРµ в„– С‚Р°Р±Р»РёС†С‹). */
+    /** Печать всех чеков в текущей сортировке (6 на лист, в порядке № таблицы). */
     fun printAllAsSheets(context: Context) {
         viewModelScope.launch {
             container.receiptRepository.refresh()
             _isSaving.value = true
             try {
                 val file = generateReceiptsSheetPdf(context)
-                _exportEvents.value = ExportEvent.Print(file, "QQS С‡РµРєРё (${receipts.value.size} С€С‚.)")
+                _exportEvents.value = ExportEvent.Print(file, "QQS чеки (${receipts.value.size} шт.)")
             } catch (e: Throwable) {
-                _exportEvents.value = ExportEvent.Error("РќРµ СѓРґР°Р»РѕСЃСЊ СЃС„РѕСЂРјРёСЂРѕРІР°С‚СЊ PDF: ${e.message}")
+                _exportEvents.value = ExportEvent.Error("Не удалось сформировать PDF: ${e.message}")
             } finally {
                   _isSaving.value = false
                   _saveProgress.value = 0f
@@ -188,7 +188,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ PDF СЃ С‡РµРєР°РјРё РґР»СЏ РїРµС‡Р°С‚Рё (6 РЅР° Р»РёСЃС‚). */
+    /** Предпросмотр PDF с чеками для печати (6 на лист). */
     fun previewReceiptsPdf(context: Context) {
         viewModelScope.launch {
             container.receiptRepository.refresh()
@@ -203,11 +203,11 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 _exportEvents.value = ExportEvent.Open(
-                    Intent.createChooser(intent, "РџСЂРѕСЃРјРѕС‚СЂ С‡РµРєРѕРІ")
+                    Intent.createChooser(intent, "Просмотр чеков")
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } catch (e: Throwable) {
-                _exportEvents.value = ExportEvent.Error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ: ${e.message}")
+                _exportEvents.value = ExportEvent.Error("Не удалось открыть предпросмотр: ${e.message}")
             } finally {
                 _isSaving.value = false
                 _saveProgress.value = 0f
@@ -217,12 +217,12 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun generateReceiptsSheetPdf(context: Context): File {
         val rows = receipts.value
-        if (rows.isEmpty()) error("РќРµС‚ С‡РµРєРѕРІ РґР»СЏ РїРµС‡Р°С‚Рё")
+        if (rows.isEmpty()) error("Нет чеков для печати")
         val s = settings.value
         val periodLabel = if (s.quarter == Quarter.Custom) {
-            "${DateFormat.formatDate(s.from)} вЂ” ${DateFormat.formatDate(s.to)}"
+            "${DateFormat.formatDate(s.from)} — ${DateFormat.formatDate(s.to)}"
         } else {
-            "${s.quarter.label} ${s.year} Рі."
+            "${s.quarter.label} ${s.year} г."
         }
         val first = rows.first()
         val headerRight = "${first.userPosition} ${first.userFullName}".trim()
@@ -234,7 +234,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    /** Р—Р°РїСѓСЃРєР°РµС‚ СЃРёСЃС‚РµРјРЅС‹Р№ РґРёР°Р»РѕРі РїРµС‡Р°С‚Рё РїРѕ СѓР¶Рµ СЃС„РѕСЂРјРёСЂРѕРІР°РЅРЅРѕРјСѓ PDF. */
+    /** Запускает системный диалог печати по уже сформированному PDF. */
     fun launchPrint(context: Context, file: File, jobName: String) {
         PdfPrint.print(context, file, jobName)
     }
@@ -274,11 +274,11 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 _exportEvents.value = ExportEvent.Share(
-                    Intent.createChooser(intent, "РџРѕРґРµР»РёС‚СЊСЃСЏ PDF СЃ С‡РµРєР°РјРё")
+                    Intent.createChooser(intent, "Поделиться PDF с чеками")
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } catch (e: Throwable) {
-                _exportEvents.value = ExportEvent.Error("РћС€РёР±РєР° СЌРєСЃРїРѕСЂС‚Р° PDF: ${e.message}")
+                _exportEvents.value = ExportEvent.Error("Ошибка экспорта PDF: ${e.message}")
             } finally {
                 _isSaving.value = false
                 _saveProgress.value = 0f
@@ -290,7 +290,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         container.receiptRepository.refresh()
         val rows = receipts.value
         if (rows.isEmpty()) {
-            _exportEvents.value = ExportEvent.Error("РќРµС‚ С‡РµРєРѕРІ РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ")
+            _exportEvents.value = ExportEvent.Error("Нет чеков для сохранения")
             return
         }
         _isSaving.value = true
@@ -306,11 +306,11 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
             UriFileWriter.copyFileToUri(context, file, uri)
             _saveProgress.value = 1f
             _exportEvents.value = ExportEvent.Saved(
-                if (asPdf) "PDF СЃ С‡РµРєР°РјРё СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅС‘РЅ" else "Excel СЃ С‡РµРєР°РјРё СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅС‘РЅ"
+                if (asPdf) "PDF с чеками успешно сохранён" else "Excel с чеками успешно сохранён"
             )
         } catch (e: Throwable) {
             _exportEvents.value = ExportEvent.Error(
-                "РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ ${if (asPdf) "PDF" else "Excel"}: ${e.message}"
+                "Ошибка сохранения ${if (asPdf) "PDF" else "Excel"}: ${e.message}"
             )
         } finally {
             _isSaving.value = false
@@ -321,7 +321,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     private val _isUpdating = MutableStateFlow(false)
     val isUpdating: StateFlow<Boolean> = _isUpdating.asStateFlow()
 
-    /** РџСЂРѕРіСЂРµСЃСЃ РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С… СЃ СЃР°Р№С‚Р° РІ РґРёР°РїР°Р·РѕРЅРµ 0f..1f (РґР»СЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ РєРЅРѕРїРєРё). */
+    /** Прогресс обновления данных с сайта в диапазоне 0f..1f (для заполнения кнопки). */
     private val _updateProgress = MutableStateFlow(0f)
     val updateProgress: StateFlow<Float> = _updateProgress.asStateFlow()
 
@@ -368,7 +368,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteReceipt(id: Long) {
         viewModelScope.launch {
             container.receiptRepository.delete(id)
-            // Р¤Р°Р№Р» РєР°СЂС‚РёРЅРєРё СЃР°РјРѕСѓРґР°Р»РёС‚СЃСЏ РїСЂРё Р±Р»РёР¶Р°Р№С€РµР№ РїРµСЂРµРіРµРЅРµСЂР°С†РёРё, РёРЅРёС†РёРёСЂРѕРІР°РЅРЅРѕР№ flow.
+            // Файл картинки самоудалится при ближайшей перегенерации, инициированной flow.
             withContext(Dispatchers.IO) {
                 ReceiptImageExporter.fileForReceipt(appContext, id).delete()
             }
@@ -385,7 +385,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val rows = receipts.value
                 if (rows.isEmpty()) {
-                    _exportEvents.value = ExportEvent.Error("РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ СЌРєСЃРїРѕСЂС‚Р°")
+                    _exportEvents.value = ExportEvent.Error("Нет данных для экспорта")
                     return@launch
                 }
                 val (file, mime) = block(rows)
@@ -398,11 +398,11 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 _exportEvents.value = ExportEvent.Share(
-                    Intent.createChooser(intent, "РџРѕРґРµР»РёС‚СЊСЃСЏ С„Р°Р№Р»РѕРј")
+                    Intent.createChooser(intent, "Поделиться файлом")
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } catch (e: Throwable) {
-                _exportEvents.value = ExportEvent.Error("РћС€РёР±РєР° СЌРєСЃРїРѕСЂС‚Р°: ${e.message}")
+                _exportEvents.value = ExportEvent.Error("Ошибка экспорта: ${e.message}")
             } finally {
                 _isSaving.value = false
                 _saveProgress.value = 0f

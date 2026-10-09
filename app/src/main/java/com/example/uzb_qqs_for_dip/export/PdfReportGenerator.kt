@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.export
+package com.example.uzb_qqs_for_dip.export
 
 import android.content.Context
 import android.graphics.Paint
@@ -15,15 +15,15 @@ import java.io.File
 import java.io.FileOutputStream
 
 /**
- * РџР°СЂР°РјРµС‚СЂС‹ С„РѕСЂРјРёСЂРѕРІР°РЅРёСЏ PDF-РѕС‚С‡С‘С‚Р° РїРѕ С‡РµРєР°Рј РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
+ * Параметры формирования PDF-отчёта по чекам пользователя.
  *
- * @property user РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ, С‡СЊРё С‡РµРєРё РІС‹РіСЂСѓР¶Р°СЋС‚СЃСЏ (РµРіРѕ РґР°РЅРЅС‹Рµ РїРѕРґСЃС‚Р°РІСЏС‚СЃСЏ РІ С€Р°РїРєСѓ Рё РїРѕРґРїРёСЃСЊ).
- * @property periodStart РќР°С‡Р°Р»Рѕ РїРµСЂРёРѕРґР° (РјРёР»Р»РёСЃРµРєСѓРЅРґС‹).
- * @property periodEnd РљРѕРЅРµС† РїРµСЂРёРѕРґР° (РјРёР»Р»РёСЃРµРєСѓРЅРґС‹).
- * @property quarterLabel Р•СЃР»Рё РІС‹Р±СЂР°РЅ РєРІР°СЂС‚Р°Р» вЂ” РµРіРѕ РЅР°Р·РІР°РЅРёРµ (РЅР°РїСЂРёРјРµСЂ, В«II РєРІР°СЂС‚Р°Р» (Р°РїСЂРµР»СЊвЂ“РёСЋРЅСЊ) 2026 Рі.В»),
- * РёРЅР°С‡Рµ null Рё РІ С€Р°РїРєРµ РІС‹РІРѕРґСЏС‚СЃСЏ РґР°С‚С‹ РїРµСЂРёРѕРґР°.
- * @property rows Р§РµРєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Р·Р° СѓРєР°Р·Р°РЅРЅС‹Р№ РїРµСЂРёРѕРґ (РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Рµ РїРѕ РґР°С‚Рµ).
- * @property generatedAt Р”Р°С‚Р° С„РѕСЂРјРёСЂРѕРІР°РЅРёСЏ РѕС‚С‡С‘С‚Р°.
+ * @property user Пользователь, чьи чеки выгружаются (его данные подставятся в шапку и подпись).
+ * @property periodStart Начало периода (миллисекунды).
+ * @property periodEnd Конец периода (миллисекунды).
+ * @property quarterLabel Если выбран квартал — его название (например, «II квартал (апрель–июнь) 2026 г.»),
+ * иначе null и в шапке выводятся даты периода.
+ * @property rows Чеки пользователя за указанный период (отсортированные по дате).
+ * @property generatedAt Дата формирования отчёта.
  */
 data class ReportParams(
     val user: User,
@@ -35,24 +35,24 @@ data class ReportParams(
 )
 
 /**
- * Р¤РѕСЂРјРёСЂСѓРµС‚ PDF-РѕС‚С‡С‘С‚ РїРѕ С‡РµРєР°Рј, РіРѕС‚РѕРІС‹Р№ Рє РїРµС‡Р°С‚Рё/СЃРѕС…СЂР°РЅРµРЅРёСЋ. РљРёСЂРёР»Р»РёС†Р° РѕС‚СЂРёСЃРѕРІС‹РІР°РµС‚СЃСЏ С‡РµСЂРµР·
- * СЃРёСЃС‚РµРјРЅС‹Р№ Typeface.SANS_SERIF, РІ РєРѕС‚РѕСЂРѕРј Сѓ Android РµСЃС‚СЊ РїРѕР»РЅРѕС†РµРЅРЅС‹Р№ РЅР°Р±РѕСЂ РіР»РёС„РѕРІ.
+ * Формирует PDF-отчёт по чекам, готовый к печати/сохранению. Кириллица отрисовывается через
+ * системный Typeface.SANS_SERIF, в котором у Android есть полноценный набор глифов.
  *
- * РЎС‚СЂСѓРєС‚СѓСЂР° СЃС‚СЂР°РЅРёС†С‹:
- *   1. РЁР°РїРєР° (РїРѕ С†РµРЅС‚СЂСѓ) вЂ” Р·Р°РіРѕР»РѕРІРѕРє СЂРµРµСЃС‚СЂР°; СЃ РЅРѕРІРѕР№ СЃС‚СЂРѕРєРё РїРµСЂРёРѕРґ; СЃ РЅРѕРІРѕР№ СЃС‚СЂРѕРєРё РґРѕР»Р¶РЅРѕСЃС‚СЊ Рё Р¤РРћ.
- *   2. РўР°Р±Р»РёС†Р° вЂ” в„–, РќР°РёРјРµРЅРѕРІР°РЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРё, РЎСѓРјРјР°, РќР”РЎ, Р”Р°С‚Р°, СЃРѕ СЃС‚СЂРѕРєРѕР№ В«РС‚РѕРіРѕВ».
- *   3. РџРѕРґРїРёСЃСЊ вЂ” РґРѕР»Р¶РЅРѕСЃС‚СЊ, Р»РёРЅРёСЏ РґР»СЏ Р¶РёРІРѕР№ РїРѕРґРїРёСЃРё, Р.Рћ. Р¤Р°РјРёР»РёСЏ, РїРѕР»Рµ В«Р”Р°С‚Р°: _______В».
+ * Структура страницы:
+ *   1. Шапка (по центру) — заголовок реестра; с новой строки период; с новой строки должность и ФИО.
+ *   2. Таблица — №, Наименование организации, Сумма, НДС, Дата, со строкой «Итого».
+ *   3. Подпись — должность, линия для живой подписи, И.О. Фамилия, поле «Дата: _______».
  */
 object PdfReportGenerator {
 
-    // A4 РІ pt (1/72 РґСЋР№РјР°): 595 x 842.
+    // A4 в pt (1/72 дюйма): 595 x 842.
     private const val PAGE_WIDTH = 595
     private const val PAGE_HEIGHT = 842
     private const val MARGIN = 40f
 
-    // РљРѕР»РѕРЅРєРё: в„–, РќР°РёРјРµРЅРѕРІР°РЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРё, РЎСѓРјРјР°, РќР”РЎ, Р”Р°С‚Р°.
+    // Колонки: №, Наименование организации, Сумма, НДС, Дата.
     private val COL_WIDTHS = floatArrayOf(28f, 170f, 110f, 100f, 107f)
-    private val COL_HEADERS = arrayOf("в„–", "РќР°РёРјРµРЅРѕРІР°РЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРё", "РЎСѓРјРјР°", "РќР”РЎ", "Р”Р°С‚Р°")
+    private val COL_HEADERS = arrayOf("№", "Наименование организации", "Сумма", "НДС", "Дата")
 
     private const val COL_NUM = 0
     private const val COL_SELLER = 1
@@ -84,21 +84,21 @@ object PdfReportGenerator {
     }
 
     /**
-     * Р РµРЅРґРµСЂРёС‚ РѕС‚С‡С‘С‚ РІ [doc]. Р РµР°Р»СЊРЅРѕ РїСЂРѕС…РѕРґРѕРІ РґРІР°:
-     *   1. В«РЎСѓС…РѕР№В» РїСЂРѕРіРѕРЅ РІРѕ РІСЂРµРјРµРЅРЅС‹Р№ РґРѕРєСѓРјРµРЅС‚ вЂ” С‡С‚РѕР±С‹ СѓР·РЅР°С‚СЊ РѕР±С‰РµРµ С‡РёСЃР»Рѕ СЃС‚СЂР°РЅРёС†
-     *      (СЌС‚Рѕ РЅСѓР¶РЅРѕ РґР»СЏ РЅСѓРјРµСЂР°С†РёРё РІ РїСЂР°РІРѕРј РІРµСЂС…РЅРµРј СѓРіР»Сѓ: РїРµСЂРІСѓСЋ СЃС‚СЂР°РЅРёС†Сѓ РЅРµ РЅСѓРјРµСЂСѓРµРј,
-     *      Рё РЅСѓРјРµСЂР°С†РёСЏ РґРѕР±Р°РІР»СЏРµС‚СЃСЏ С‚РѕР»СЊРєРѕ РµСЃР»Рё СЃС‚СЂР°РЅРёС† Р±РѕР»СЊС€Рµ РѕРґРЅРѕР№).
-     *   2. РќР°СЃС‚РѕСЏС‰РёР№ РїСЂРѕРіРѕРЅ РІ РІС‹С…РѕРґРЅРѕР№ [doc] СЃ СѓР¶Рµ РёР·РІРµСЃС‚РЅС‹Рј [totalPages] вЂ” СЂРёСЃСѓСЋС‚СЃСЏ
-     *      РЅРѕРјРµСЂР° СЃС‚СЂР°РЅРёС† Рё РЅРёР¶РЅРёР№ РєРѕР»РѕРЅС‚РёС‚СѓР» (РґРѕР»Р¶РЅРѕСЃС‚СЊ + Р.Рћ. Р¤Р°РјРёР»РёСЏ).
+     * Рендерит отчёт в [doc]. Реально проходов два:
+     *   1. «Сухой» прогон во временный документ — чтобы узнать общее число страниц
+     *      (это нужно для нумерации в правом верхнем углу: первую страницу не нумеруем,
+     *      и нумерация добавляется только если страниц больше одной).
+     *   2. Настоящий прогон в выходной [doc] с уже известным [totalPages] — рисуются
+     *      номера страниц и нижний колонтитул (должность + И.О. Фамилия).
      *
-     * РћС‚РєСЂС‹С‚Рѕ, С‡С‚РѕР±С‹ С‚РѕС‚ Р¶Рµ РєРѕРЅС‚РµРЅС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РІ PrintDocumentAdapter.
+     * Открыто, чтобы тот же контент использовать в PrintDocumentAdapter.
      */
     fun renderInto(doc: PdfDocument, params: ReportParams) {
         val totalPages = countPages(params)
         renderOnce(doc, params, totalPages)
     }
 
-    /** РЎСѓС…РѕР№ РїСЂРѕРіРѕРЅ СЂР°РґРё РїРѕРґСЃС‡С‘С‚Р° СЃС‚СЂР°РЅРёС†. Р’СЂРµРјРµРЅРЅС‹Р№ РґРѕРєСѓРјРµРЅС‚ Р·Р°РєСЂС‹РІР°РµС‚СЃСЏ. */
+    /** Сухой прогон ради подсчёта страниц. Временный документ закрывается. */
     private fun countPages(params: ReportParams): Int {
         val tmp = PdfDocument()
         return try {
@@ -110,8 +110,8 @@ object PdfReportGenerator {
     }
 
     /**
-     * РћРґРёРЅ РїСЂРѕС…РѕРґ СЂРµРЅРґРµСЂР°. РџСЂРё [totalPages] > 1 СЂРёСЃСѓРµС‚ РЅРѕРјРµСЂР° СЃС‚СЂР°РЅРёС† (СЃРѕ 2-Р№ РІРєР»СЋС‡РёС‚РµР»СЊРЅРѕ),
-     * РЅР° РєР°Р¶РґРѕР№ СЃС‚СЂР°РЅРёС†Рµ РґРѕР±Р°РІР»СЏРµС‚ РІ РїСЂР°РІС‹Р№ РЅРёР¶РЅРёР№ СѓРіРѕР» РґРѕР»Р¶РЅРѕСЃС‚СЊ Рё РїРѕРґРїРёСЃСЊ РёР· РїСЂРѕС„РёР»СЏ.
+     * Один проход рендера. При [totalPages] > 1 рисует номера страниц (со 2-й включительно),
+     * на каждой странице добавляет в правый нижний угол должность и подпись из профиля.
      */
     private fun renderOnce(doc: PdfDocument, params: ReportParams, totalPages: Int) {
         val typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
@@ -177,16 +177,16 @@ object PdfReportGenerator {
             textAlign = Paint.Align.CENTER
         }
 
-        // РљРѕР»РѕРЅС‚РёС‚СѓР»: РІ РїСЂР°РІРѕРј РЅРёР¶РЅРµРј СѓРіР»Сѓ РєР°Р¶РґРѕР№ СЃС‚СЂР°РЅРёС†С‹ вЂ” РґРѕР»Р¶РЅРѕСЃС‚СЊ Рё Р.Рћ. Р¤Р°РјРёР»РёСЏ
-        // РёР· РїСЂРѕС„РёР»СЏ (9 РїС‚, РїРѕ С‚СЂРµР±РѕРІР°РЅРёСЋ Р·Р°РґР°РЅРёСЏ).
+        // Колонтитул: в правом нижнем углу каждой страницы — должность и И.О. Фамилия
+        // из профиля (9 пт, по требованию задания).
         val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
             textSize = 9f
             color = 0xFF374151.toInt()
             textAlign = Paint.Align.RIGHT
         }
-        // РќРѕРјРµСЂ СЃС‚СЂР°РЅРёС†С‹ вЂ” РІ РїСЂР°РІРѕРј РІРµСЂС…РЅРµРј СѓРіР»Сѓ, РЅР°С‡РёРЅР°СЏ СЃРѕ 2-Р№; РїРµСЂРІСѓСЋ РЅРµ РЅСѓРјРµСЂСѓРµРј
-        // (Рё РЅРµ РЅСѓРјРµСЂСѓРµРј РІРѕРІСЃРµ, РµСЃР»Рё СЃС‚СЂР°РЅРёС† РІСЃРµРіРѕ РѕРґРЅР°).
+        // Номер страницы — в правом верхнем углу, начиная со 2-й; первую не нумеруем
+        // (и не нумеруем вовсе, если страниц всего одна).
         val pageNumberPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
             textSize = 9.5f
@@ -203,11 +203,11 @@ object PdfReportGenerator {
         var y = MARGIN
 
         /**
-         * Р”РѕСЂРёСЃРѕРІС‹РІР°РµС‚ РЅР° С‚РµРєСѓС‰РµР№ СЃС‚СЂР°РЅРёС†Рµ РЅРѕРјРµСЂ (РµСЃР»Рё РЅСѓР¶РµРЅ) Рё РєРѕР»РѕРЅС‚РёС‚СѓР»,
-         * Р·Р°С‚РµРј Р·Р°РєСЂС‹РІР°РµС‚ РµС‘ С‡РµСЂРµР· [PdfDocument.finishPage].
+         * Дорисовывает на текущей странице номер (если нужен) и колонтитул,
+         * затем закрывает её через [PdfDocument.finishPage].
          */
         fun finalizeAndFinishPage() {
-            // РљРѕР»РѕРЅС‚РёС‚СѓР» РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РЅР° РєР°Р¶РґРѕР№ СЃС‚СЂР°РЅРёС†Рµ.
+            // Колонтитул присутствует на каждой странице.
             val rightX = PAGE_WIDTH - MARGIN
             val positionLines = wrapText(params.user.position, footerPaint, PAGE_WIDTH / 2f, 3)
             var fy = PAGE_HEIGHT - 10f - (positionLines.size - 1) * 12f
@@ -217,17 +217,17 @@ object PdfReportGenerator {
             }
             val lastLine = positionLines.lastOrNull() ?: ""
             canvas.drawText("$lastLine   ${params.user.initialsSurname}", rightX, fy, footerPaint)
-            // РќРѕРјРµСЂ СЃС‚СЂР°РЅРёС†С‹ РґРѕР±Р°РІР»СЏРµРј СЃРѕ РІС‚РѕСЂРѕР№ СЃС‚СЂР°РЅРёС†С‹ Рё С‚РѕР»СЊРєРѕ РµСЃР»Рё СЃС‚СЂР°РЅРёС† > 1.
+            // Номер страницы добавляем со второй страницы и только если страниц > 1.
             if (totalPages > 1 && pageNumber > 1) {
                 canvas.drawText(pageNumber.toString(), rightX, MARGIN - 4f, pageNumberPaint)
             }
             doc.finishPage(page)
         }
 
-        // ----- РЁР°РїРєР°: С‚СЂРё Р±Р»РѕРєР° РїРѕ С†РµРЅС‚СЂСѓ ---------------------------------
-        // 1) Р·Р°РіРѕР»РѕРІРѕРє; 2) РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ; 3) РґРѕР»Р¶РЅРѕСЃС‚СЊ Рё Р¤РРћ РїРѕР»РЅРѕСЃС‚СЊСЋ.
+        // ----- Шапка: три блока по центру ---------------------------------
+        // 1) заголовок; 2) выбранный период; 3) должность и ФИО полностью.
         val periodText = params.quarterLabel
-            ?: "${DateFormat.formatDate(params.periodStart)} вЂ” ${DateFormat.formatDate(params.periodEnd)}"
+            ?: "${DateFormat.formatDate(params.periodStart)} — ${DateFormat.formatDate(params.periodEnd)}"
         val titleMaxWidth = PAGE_WIDTH - 2f * MARGIN
         val titleLineHeight = titlePaint.textSize + 4f
         val centerX = PAGE_WIDTH / 2f
@@ -239,16 +239,16 @@ object PdfReportGenerator {
             }
         }
 
-        drawCenteredTitleBlock("Р РµРµСЃС‚СЂ РїСЂРµРґСЉСЏРІР»СЏРµРјС‹С… Рє РІРѕР·РјРµС‰РµРЅРёСЋ РїР»Р°С‚РµР¶РЅС‹С… РґРѕРєСѓРјРµРЅС‚РѕРІ")
+        drawCenteredTitleBlock("Реестр предъявляемых к возмещению платежных документов")
         drawCenteredTitleBlock(periodText)
         drawCenteredTitleBlock("${params.user.position} ${params.user.fullName}".trim())
         y += 10f
 
-        // ----- РўР°Р±Р»РёС†Р° -----
+        // ----- Таблица -----
         val tableLeft = MARGIN
         val tableWidth = COL_WIDTHS.sum()
 
-        // Р›РѕРєР°Р»СЊРЅР°СЏ С„СѓРЅРєС†РёСЏ: РѕС‚СЂРёСЃРѕРІР°С‚СЊ С€Р°РїРєСѓ С‚Р°Р±Р»РёС†С‹ СЃ РїРµСЂРµРЅРѕСЃРѕРј РґР»РёРЅРЅС‹С… Р·Р°РіРѕР»РѕРІРєРѕРІ.
+        // Локальная функция: отрисовать шапку таблицы с переносом длинных заголовков.
         fun drawTableHeader(yTop: Float): Float {
             canvas.drawRect(tableLeft, yTop, tableLeft + tableWidth, yTop + HEADER_ROW_HEIGHT, tableHeaderFill)
             var hx = tableLeft
@@ -271,16 +271,16 @@ object PdfReportGenerator {
 
         y = drawTableHeader(y)
 
-        // РњРёРЅРёРјСѓРј РјРµСЃС‚Р° РґР»СЏ СЃС‚СЂРѕРєРё СЃ РёС‚РѕРіР°РјРё + РїРѕРґРїРёСЃРё + СѓРІРµР»РёС‡РµРЅРЅС‹Р№ РѕС‚СЃС‚СѓРї
+        // Минимум места для строки с итогами + подписи + увеличенный отступ
         val signatureBlockHeight = 110f
         val bottomLimit = PAGE_HEIGHT - 5.67f - signatureBlockHeight
 
-        // РЎС‚СЂРѕРєРё РґР°РЅРЅС‹С…
+        // Строки данных
         params.rows.forEachIndexed { idx, item ->
-            // Р’С‹СЃРѕС‚Р° СЃС‚СЂРѕРєРё Р·Р°РІРёСЃРёС‚ РѕС‚ РєРѕР»РёС‡РµСЃС‚РІР° СЃС‚СЂРѕРє РІ РЅР°Р·РІР°РЅРёРё РѕСЂРіР°РЅРёР·Р°С†РёРё.
+            // Высота строки зависит от количества строк в названии организации.
             val sellerMaxWidth = COL_WIDTHS[COL_SELLER] - CELL_PADDING_H * 2f
             val sellerLines = wrapText(
-                item.receipt.sellerName.ifBlank { "вЂ”" },
+                item.receipt.sellerName.ifBlank { "—" },
                 cellPaint,
                 sellerMaxWidth,
                 MAX_SELLER_LINES
@@ -290,7 +290,7 @@ object PdfReportGenerator {
                 CELL_PADDING_V * 2f + sellerLines.size * LINE_HEIGHT
             )
 
-            // РџСЂРѕРІРµСЂСЏРµРј, РІР»РµР·РµС‚ Р»Рё СЌС‚Р° СЃС‚СЂРѕРєР° РїРѕР»РЅРѕСЃС‚СЊСЋ, РЅРµ РїРµСЂРµРєСЂС‹РІР°СЏ bottomLimit. Р•СЃР»Рё РЅРµС‚ вЂ” РЅРѕРІР°СЏ СЃС‚СЂР°РЅРёС†Р°.
+            // Проверяем, влезет ли эта строка полностью, не перекрывая bottomLimit. Если нет — новая страница.
             if (y + rowHeight > bottomLimit) {
                 finalizeAndFinishPage()
                 pageNumber++
@@ -307,12 +307,12 @@ object PdfReportGenerator {
             val centerY = y + rowHeight / 2f + cellPaint.textSize / 3f
             var x = tableLeft
 
-            // в„–
+            // №
             canvas.drawText((idx + 1).toString(), x + COL_WIDTHS[COL_NUM] / 2f, centerY, cellCenterPaint)
             canvas.drawRect(x, y, x + COL_WIDTHS[COL_NUM], y + rowHeight, borderPaint)
             x += COL_WIDTHS[COL_NUM]
 
-            // РќР°РёРјРµРЅРѕРІР°РЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРё (РјРЅРѕРіРѕСЃС‚СЂРѕС‡РЅРѕРµ, РІС‹СЂРѕРІРЅРµРЅРѕ РїРѕ Р»РµРІРѕРјСѓ РєСЂР°СЋ)
+            // Наименование организации (многострочное, выровнено по левому краю)
             run {
                 val totalH = sellerLines.size * LINE_HEIGHT
                 var ly = y + (rowHeight - totalH) / 2f + cellPaint.textSize
@@ -324,7 +324,7 @@ object PdfReportGenerator {
             }
             x += COL_WIDTHS[COL_SELLER]
 
-            // РЎСѓРјРјР°
+            // Сумма
             canvas.drawText(
                 MoneyFormat.fromTiyin(item.receipt.totalAmountTiyin),
                 x + COL_WIDTHS[COL_TOTAL] - CELL_PADDING_H, centerY, cellNumberPaint
@@ -332,7 +332,7 @@ object PdfReportGenerator {
             canvas.drawRect(x, y, x + COL_WIDTHS[COL_TOTAL], y + rowHeight, borderPaint)
             x += COL_WIDTHS[COL_TOTAL]
 
-            // РќР”РЎ
+            // НДС
             canvas.drawText(
                 MoneyFormat.fromTiyin(item.receipt.vatAmountTiyin),
                 x + COL_WIDTHS[COL_VAT] - CELL_PADDING_H, centerY, cellNumberPaint
@@ -340,7 +340,7 @@ object PdfReportGenerator {
             canvas.drawRect(x, y, x + COL_WIDTHS[COL_VAT], y + rowHeight, borderPaint)
             x += COL_WIDTHS[COL_VAT]
 
-            // Р”Р°С‚Р°
+            // Дата
             canvas.drawText(
                 DateFormat.formatDateTime(item.receipt.purchasedAt),
                 x + CELL_PADDING_H, centerY, cellPaint
@@ -350,19 +350,19 @@ object PdfReportGenerator {
             y += rowHeight
         }
 
-        // Р•СЃР»Рё СЃС‚СЂРѕРє РЅРµС‚ вЂ” РїСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР°-Р·Р°РіР»СѓС€РєР°
+        // Если строк нет — пустая строка-заглушка
         if (params.rows.isEmpty()) {
             val baseline = y + ROW_HEIGHT_MIN / 2f + cellPaint.textSize / 3f
             canvas.drawRect(tableLeft, y, tableLeft + tableWidth, y + ROW_HEIGHT_MIN, zebraFill)
             canvas.drawText(
-                "РќРµС‚ С‡РµРєРѕРІ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ",
+                "Нет чеков за выбранный период",
                 tableLeft + tableWidth / 2f, baseline, cellCenterPaint
             )
             canvas.drawRect(tableLeft, y, tableLeft + tableWidth, y + ROW_HEIGHT_MIN, borderPaint)
             y += ROW_HEIGHT_MIN
         }
 
-        // РЎС‚СЂРѕРєР° В«РС‚РѕРіРѕ:В» вЂ” РѕР±СЉРµРґРёРЅСЏРµС‚ РґРІРµ РїРµСЂРІС‹Рµ СЏС‡РµР№РєРё (в„– Рё РЅР°РёРјРµРЅРѕРІР°РЅРёРµ)
+        // Строка «Итого:» — объединяет две первые ячейки (№ и наименование)
         if (y + ROW_HEIGHT_MIN > bottomLimit) {
             finalizeAndFinishPage()
             pageNumber++
@@ -375,7 +375,7 @@ object PdfReportGenerator {
         var tx = tableLeft
         val labelSpan = COL_WIDTHS[COL_NUM] + COL_WIDTHS[COL_SELLER]
         canvas.drawText(
-            "РС‚РѕРіРѕ:",
+            "Итого:",
             tx + labelSpan - CELL_PADDING_H,
             tBaseline,
             totalsLabelPaint
@@ -397,13 +397,13 @@ object PdfReportGenerator {
         canvas.drawRect(tx, y, tx + COL_WIDTHS[COL_DATE], y + ROW_HEIGHT_MIN, borderPaint)
         y += ROW_HEIGHT_MIN
 
-        // ----- Р‘Р»РѕРє РїРѕРґРїРёСЃРё (РІС‹СЂРѕРІРЅРµРЅ Рє РЅРёР¶РЅРµР№ С‡Р°СЃС‚Рё СЃС‚СЂР°РЅРёС†С‹) -----
+        // ----- Блок подписи (выровнен к нижней части страницы) -----
         val signatureTop = (PAGE_HEIGHT - 5.67f - signatureBlockHeight).coerceAtLeast(y + 30f)
 
-        // РћРґРЅРѕР№ СЃС‚СЂРѕРєРѕР№:  [Р”РѕР»Р¶РЅРѕСЃС‚СЊ]   ____РїРѕРґРїРёСЃСЊ____   [Р.Рћ. Р¤Р°РјРёР»РёСЏ]
-        // Р”РѕР»Р¶РЅРѕСЃС‚СЊ Рё РїРѕРґРїРёСЃСЊ (Р.Рћ. Р¤Р°РјРёР»РёСЏ) РІС‹СЂРѕРІРЅРµРЅС‹ РїРѕ РѕРґРЅРѕР№ Р±Р°Р·РѕРІРѕР№ Р»РёРЅРёРё,
-        // Р»РёРЅРёСЏ РґР»СЏ Р¶РёРІРѕР№ РїРѕРґРїРёСЃРё РїСЂРѕС…РѕРґРёС‚ РїРѕ С‚РѕРјСѓ Р¶Рµ СѓСЂРѕРІРЅСЋ РјРµР¶РґСѓ РЅРёРјРё. РџРѕРґРїРёСЃСЊ
-        // В«(РїРѕРґРїРёСЃСЊ)В» вЂ” РјРµР»РєРёРј С€СЂРёС„С‚РѕРј СЃС‚СЂРѕРіРѕ РїРѕРґ Р»РёРЅРёРµР№.
+        // Одной строкой:  [Должность]   ____подпись____   [И.О. Фамилия]
+        // Должность и подпись (И.О. Фамилия) выровнены по одной базовой линии,
+        // линия для живой подписи проходит по тому же уровню между ними. Подпись
+        // «(подпись)» — мелким шрифтом строго под линией.
         val initials = params.user.initialsSurname
         val initialsWidth = signatureTextPaint.measureText(initials)
         
@@ -431,21 +431,21 @@ object PdfReportGenerator {
         canvas.drawText(initials, lineEnd + 16f, lastBaseline, signatureTextPaint)
 
         canvas.drawText(
-            "(РїРѕРґРїРёСЃСЊ)",
+            "(подпись)",
             (lineStart + lineEnd) / 2f,
             lastBaseline + 11f,
             signatureSmallPaint
         )
 
-        // РџРѕР»Рµ В«Р”Р°С‚Р°: ____В» вЂ” РЅРёР¶Рµ РїРѕРґРїРёСЃРё.
+        // Поле «Дата: ____» — ниже подписи.
         val dateY = lastBaseline + 36f
-        canvas.drawText("Р”Р°С‚Р°:", MARGIN, dateY, signatureTextPaint)
-        val dateLineStart = MARGIN + signatureTextPaint.measureText("Р”Р°С‚Р°: ") + 4f
+        canvas.drawText("Дата:", MARGIN, dateY, signatureTextPaint)
+        val dateLineStart = MARGIN + signatureTextPaint.measureText("Дата: ") + 4f
         canvas.drawLine(dateLineStart, dateY + 1f, dateLineStart + 180f, dateY + 1f, signatureLinePaint)
 
         finalizeAndFinishPage()
 
-        // --- Р”РѕР±Р°РІР»РµРЅРёРµ СЃС‚СЂР°РЅРёС† СЃ С„РѕС‚Рѕ РґР»СЏ С‡РµРєРѕРІ, РґРѕР±Р°РІР»РµРЅРЅС‹С… РІСЂСѓС‡РЅСѓСЋ ---
+        // --- Добавление страниц с фото для чеков, добавленных вручную ---
         val manualReceipts = params.rows.mapIndexedNotNull { index, row ->
             if (row.receipt.isManual && row.receipt.manualPhotoUri != null) {
                 index + 1 to row.receipt
@@ -460,10 +460,10 @@ object PdfReportGenerator {
                 page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
                 canvas = page.canvas
 
-                val attachTitle = "РџСЂРёР»РѕР¶РµРЅРёРµ в„– $manualSeq Рє Р РµРµСЃС‚СЂСѓ (С‡РµРє в„– $tableIdx)"
+                val attachTitle = "Приложение № $manualSeq к Реестру (чек № $tableIdx)"
                 canvas.drawText(attachTitle, PAGE_WIDTH / 2f, MARGIN + titlePaint.textSize, titlePaint)
 
-                if (totalPages > 0) { // РќРµ РґРµРєРѕРґРёСЂРѕРІР°С‚СЊ РєР°СЂС‚РёРЅРєСѓ РІРѕ РІСЂРµРјСЏ СЃСѓС…РѕРіРѕ РїСЂРѕРіРѕРЅР°
+                if (totalPages > 0) { // Не декодировать картинку во время сухого прогона
                     val bitmap = android.graphics.BitmapFactory.decodeFile(receipt.manualPhotoUri)
                     if (bitmap != null) {
                         val imgMaxWidth = PAGE_WIDTH - 2f * MARGIN
@@ -492,9 +492,9 @@ object PdfReportGenerator {
     }
 
     /**
-     * РџРµСЂРµРЅРѕСЃРёС‚ С‚РµРєСЃС‚ РїРѕ СЃР»РѕРІР°Рј РІ РїСЂРµРґРµР»Р°С… maxWidth, РЅРµ Р±РѕР»РµРµ maxLines СЃС‚СЂРѕРє.
-     * Р•СЃР»Рё РѕСЂРёРіРёРЅР°Р» РЅРµ РїРѕРјРµС‰Р°РµС‚СЃСЏ РїРѕР»РЅРѕСЃС‚СЊСЋ вЂ” РїРѕСЃР»РµРґРЅСЏСЏ СЃС‚СЂРѕРєР° СѓСЃРµРєР°РµС‚СЃСЏ СЃ В«вЂ¦В».
-     * РЎР»РѕРІР° РґР»РёРЅРЅРµРµ maxWidth СЂР°Р·СЂС‹РІР°СЋС‚СЃСЏ РїРѕ СЃРёРјРІРѕР»Р°Рј.
+     * Переносит текст по словам в пределах maxWidth, не более maxLines строк.
+     * Если оригинал не помещается полностью — последняя строка усекается с «…».
+     * Слова длиннее maxWidth разрываются по символам.
      */
     private fun wrapText(
         text: String,
@@ -506,8 +506,8 @@ object PdfReportGenerator {
         if (maxLines <= 0) return emptyList()
         if (paint.measureText(text) <= maxWidth) return listOf(text)
 
-        // РћС‡РµСЂРµРґСЊ С‚РѕРєРµРЅРѕРІ: РґР»РёРЅРЅС‹Рµ СЃР»РѕРІР° РІ РїСЂРѕС†РµСЃСЃРµ РѕР±СЂР°Р±РѕС‚РєРё РјРѕРіСѓС‚ Р±С‹С‚СЊ СЂР°Р·СЂРµР·Р°РЅС‹
-        // Рё В«РґРѕС…РІРѕСЃС‚В» РІРѕР·РІСЂР°С‰С‘РЅ РІ РЅР°С‡Р°Р»Рѕ РѕС‡РµСЂРµРґРё.
+        // Очередь токенов: длинные слова в процессе обработки могут быть разрезаны
+        // и «дохвост» возвращён в начало очереди.
         val queue = ArrayDeque<String>().apply {
             text.split(Regex("\\s+")).filter { it.isNotEmpty() }.forEach { addLast(it) }
         }
@@ -522,9 +522,9 @@ object PdfReportGenerator {
             } else if (current.isNotEmpty()) {
                 lines += current
                 current = ""
-                queue.addFirst(w) // РїРѕРїС‹С‚Р°РµРјСЃСЏ РІРјРµСЃС‚РёС‚СЊ СЃ РЅРѕРІРѕР№ СЃС‚СЂРѕРєРё
+                queue.addFirst(w) // попытаемся вместить с новой строки
             } else {
-                // РЎР»РѕРІРѕ РґР»РёРЅРЅРµРµ, С‡РµРј С€РёСЂРёРЅР° СЏС‡РµР№РєРё вЂ” СЂРµР¶РµРј РїРѕ СЃРёРјРІРѕР»Р°Рј.
+                // Слово длиннее, чем ширина ячейки — режем по символам.
                 val cut = forceFit(w, paint, maxWidth)
                 lines += cut
                 val rest = w.substring(cut.length)
@@ -533,7 +533,7 @@ object PdfReportGenerator {
         }
         if (current.isNotEmpty() && lines.size < maxLines) lines += current
 
-        // РќРµ РІСЃС‘ СѓР»РѕР¶РёР»РѕСЃСЊ РІ maxLines вЂ” РґРѕР±Р°РІР»СЏРµРј РјРЅРѕРіРѕС‚РѕС‡РёРµ РІ РїРѕСЃР»РµРґРЅСЋСЋ СЃС‚СЂРѕРєСѓ.
+        // Не всё уложилось в maxLines — добавляем многоточие в последнюю строку.
         if (queue.isNotEmpty()) {
             val last = lines.lastOrNull().orEmpty()
             val lastIdx = if (lines.isEmpty()) {
@@ -545,7 +545,7 @@ object PdfReportGenerator {
         return lines.ifEmpty { listOf(ellipsize(text, paint, maxWidth, addEllipsis = true)) }
     }
 
-    /** РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РїРѕРґРіРѕРЅСЏРµС‚ РѕРґРЅРѕ СЃР»РѕРІРѕ, С‡С‚РѕР±С‹ РїСЂРµС„РёРєСЃ РїРѕРјРµСЃС‚РёР»СЃСЏ РІ maxWidth. */
+    /** Принудительно подгоняет одно слово, чтобы префикс поместился в maxWidth. */
     private fun forceFit(word: String, paint: Paint, maxWidth: Float): String {
         if (paint.measureText(word) <= maxWidth) return word
         var lo = 1
@@ -557,7 +557,7 @@ object PdfReportGenerator {
         return word.substring(0, lo)
     }
 
-    /** РћР±СЂРµР·Р°РµС‚ СЃС‚СЂРѕРєСѓ СЃ РєРѕРЅС†Р°. РЎ addEllipsis=true РіР°СЂР°РЅС‚РёСЂСѓРµС‚ В«вЂ¦В» РІ РєРѕРЅС†Рµ СЂРµР·СѓР»СЊС‚Р°С‚Р°. */
+    /** Обрезает строку с конца. С addEllipsis=true гарантирует «…» в конце результата. */
     private fun ellipsize(s: String, paint: Paint, maxWidth: Float, addEllipsis: Boolean = true): String {
         val target = if (addEllipsis) s + "..." else s
         if (paint.measureText(target) <= maxWidth) return target

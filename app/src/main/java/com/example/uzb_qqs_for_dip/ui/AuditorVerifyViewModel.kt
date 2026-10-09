@@ -829,8 +829,10 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                 try {
                     val fileName = "manual_${System.currentTimeMillis()}.jpg"
                     val file = java.io.File(context.filesDir, fileName)
-                    context.contentResolver.openInputStream(photoUri)?.use { input ->
-                        file.outputStream().use { out -> input.copyTo(out) }
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        context.contentResolver.openInputStream(photoUri)?.use { input ->
+                            file.outputStream().use { out -> input.copyTo(out) }
+                        }
                     }
                     localPhotoPath = file.absolutePath
                 } catch (e: Exception) {

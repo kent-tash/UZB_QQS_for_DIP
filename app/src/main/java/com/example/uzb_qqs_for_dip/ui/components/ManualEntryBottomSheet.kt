@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui.components
+package com.example.uzb_qqs_for_dip.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,7 +34,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.PickVisualMediaRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,8 +54,8 @@ fun ManualEntryBottomSheet(
     ) { uri -> if (uri != null) photoUri = uri }
 
     val dateError = dateStr.isNotBlank() && parseDate(dateStr) == null
-    val totalError = totalAmountStr.isNotBlank() && totalAmountStr.toDoubleOrNull() == null
-    val vatError = vatAmountStr.isNotBlank() && vatAmountStr.toDoubleOrNull() == null
+    val totalError = totalAmountStr.isNotBlank() && totalAmountStr.replace(',', '.').toDoubleOrNull() == null
+    val vatError = vatAmountStr.isNotBlank() && vatAmountStr.replace(',', '.').toDoubleOrNull() == null
     
     val isValid = storeName.isNotBlank() && 
                   dateStr.isNotBlank() && !dateError &&
@@ -142,10 +141,10 @@ fun ManualEntryBottomSheet(
                 }
                 Button(
                     onClick = {
-                        val dateMs = parseDate(dateStr) ?: return@Button
-                        val totalTiyin = ((totalAmountStr.toDoubleOrNull() ?: 0.0) * 100).toLong()
-                        val vatTiyin = ((vatAmountStr.toDoubleOrNull() ?: 0.0) * 100).toLong()
-                        onSubmit(storeName, dateMs, totalTiyin, vatTiyin, photoUri)
+                    val dateMs = parseDate(dateStr) ?: return@Button
+                    val totalTiyin = ((totalAmountStr.replace(',', '.').toDoubleOrNull() ?: 0.0) * 100).toLong()
+                    val vatTiyin = ((vatAmountStr.replace(',', '.').toDoubleOrNull() ?: 0.0) * 100).toLong()
+                    onSubmit(storeName, dateMs, totalTiyin, vatTiyin, photoUri)
                     },
                     enabled = isValid,
                     modifier = Modifier.weight(1f).height(48.dp)

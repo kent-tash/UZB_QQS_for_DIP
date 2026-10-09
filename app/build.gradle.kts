@@ -15,8 +15,8 @@ android {
         applicationId = "com.example.uzb_qqs_for_dip"
         minSdk = 24
         targetSdk = 36
-        versionCode = 21
-        versionName = "1.9.1"
+        versionCode = 22
+        versionName = "1.9.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -104,4 +104,14 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        freeCompilerArgs.add("-Xencoding=UTF-8")
+    }
 }

@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui.screens
+package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -105,7 +105,7 @@ fun ScanScreen(
     val sheetSummary by scanViewModel.sheetSummary.collectAsStateWithLifecycle()
     val scannedCount by scanViewModel.scannedCount.collectAsStateWithLifecycle()
 
-    // РЎРёСЃС‚РµРјРЅС‹Р№ PhotoPicker вЂ” РЅРµ С‚СЂРµР±СѓРµС‚ РЅРёРєР°РєРёС… runtime-СЂР°Р·СЂРµС€РµРЅРёР№.
+    // Системный PhotoPicker — не требует никаких runtime-разрешений.
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -118,7 +118,7 @@ fun ScanScreen(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let { scanViewModel.prepareSheetFromUri(context, it) } }
 
-    // Р”РёР°Р»РѕРі РІРІРѕРґР° СЃСЃС‹Р»РєРё РЅР° СЌР»РµРєС‚СЂРѕРЅРЅС‹Р№ С‡РµРє (РЅР°РїСЂРёРјРµСЂ, СЃРєРѕРїРёСЂРѕРІР°РЅРЅРѕР№ РёР· SMS/Telegram).
+    // Диалог ввода ссылки на электронный чек (например, скопированной из SMS/Telegram).
     var showLinkDialog by remember { mutableStateOf(false) }
     var showManualDialog by remember { mutableStateOf(false) }
     var showSheetSourceDialog by remember { mutableStateOf(false) }
@@ -174,15 +174,15 @@ fun ScanScreen(
                 }
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    "Р”РѕР±Р°РІРёС‚СЊ С‡РµРє",
+                    "Добавить чек",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "РњРѕР¶РЅРѕ РѕС‚СЃРєР°РЅРёСЂРѕРІР°С‚СЊ QR-РєРѕРґ, РІС‹Р±СЂР°С‚СЊ СЃРЅРёРјРѕРє С‡РµРєР° РёР· РіР°Р»РµСЂРµРё " +
-                        "РёР»Рё РІСЃС‚Р°РІРёС‚СЊ СЃСЃС‹Р»РєСѓ РЅР° СЌР»РµРєС‚СЂРѕРЅРЅС‹Р№ С‡РµРє. РџСЂРёР»РѕР¶РµРЅРёРµ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё " +
-                        "Р·Р°РіСЂСѓР·РёС‚ РґР°РЅРЅС‹Рµ СЃ РїРѕСЂС‚Р°Р»Р° soliq.uz.",
+                    "Можно отсканировать QR-код, выбрать снимок чека из галереи " +
+                        "или вставить ссылку на электронный чек. Приложение автоматически " +
+                        "загрузит данные с портала soliq.uz.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -207,7 +207,7 @@ fun ScanScreen(
                 ) {
                     Icon(Icons.Outlined.QrCodeScanner, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text(if (state is ScanState.Loading) "Р—Р°РіСЂСѓР·РєР° С‡РµРєР°..." else "РЎРєР°РЅРёСЂРѕРІР°С‚СЊ QR-РєРѕРґ")
+                    Text(if (state is ScanState.Loading) "Загрузка чека..." else "Сканировать QR-код")
                 }
                 Spacer(Modifier.height(10.dp))
                 Button(
@@ -227,7 +227,7 @@ fun ScanScreen(
                 ) {
                     Icon(Icons.Outlined.PhotoLibrary, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text("Р—Р°РіСЂСѓР·РёС‚СЊ С„РѕС‚Рѕ С‡РµРєР°")
+                    Text("Загрузить фото чека")
                 }
                 Spacer(Modifier.height(10.dp))
                 Button(
@@ -239,7 +239,7 @@ fun ScanScreen(
                 ) {
                     Icon(Icons.Outlined.Link, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text("Р”РѕР±Р°РІРёС‚СЊ РїРѕ СЃСЃС‹Р»РєРµ")
+                    Text("Добавить по ссылке")
                 }
                 Spacer(Modifier.height(10.dp))
                 Button(
@@ -251,7 +251,7 @@ fun ScanScreen(
                 ) {
                     Icon(Icons.Outlined.GridView, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text("РЎРєР°РЅ РІСЃРµС… С‡РµРєРѕРІ")
+                    Text("Скан всех чеков")
                 }
                 Spacer(Modifier.height(10.dp))
                 Button(
@@ -263,14 +263,14 @@ fun ScanScreen(
                 ) {
                     Icon(Icons.Outlined.SaveAlt, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text("Р”РѕР±Р°РІРёС‚СЊ РІСЂСѓС‡РЅСѓСЋ")
+                    Text("Добавить вручную")
                 }
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    "РњРѕР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ РіРѕС‚РѕРІС‹Р№ СЃРЅРёРјРѕРє С‡РµРєР° РёР· РїР°РјСЏС‚Рё СѓСЃС‚СЂРѕР№СЃС‚РІР° РёР»Рё РІСЃС‚Р°РІРёС‚СЊ " +
-                        "СЃСЃС‹Р»РєСѓ СЃ РїРѕСЂС‚Р°Р»РѕРІ soliq.uz / multicard.uz вЂ” РїСЂРёР»РѕР¶РµРЅРёРµ СЃР°РјРѕ " +
-                        "Р·Р°РіСЂСѓР·РёС‚ Рё СЂР°СЃРїРѕР·РЅР°РµС‚ РґР°РЅРЅС‹Рµ С‡РµРєР°. В«РЎРєР°РЅ РІСЃРµС… С‡РµРєРѕРІВ» С‡РёС‚Р°РµС‚ " +
-                        "СЃСЂР°Р·Сѓ РЅРµСЃРєРѕР»СЊРєРѕ QR РєР°РјРµСЂРѕР№ РёР»Рё СЃ РѕРґРЅРѕРіРѕ С„РѕС‚Рѕ.",
+                    "Можно выбрать готовый снимок чека из памяти устройства или вставить " +
+                        "ссылку с порталов soliq.uz / multicard.uz — приложение само " +
+                        "загрузит и распознает данные чека. «Скан всех чеков» читает " +
+                        "сразу несколько QR камерой или с одного фото.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -280,7 +280,7 @@ fun ScanScreen(
         when (val s = state) {
             ScanState.Idle -> { /* nothing */ }
             ScanState.Loading -> LoadingCard()
-            is ScanState.Parsed -> { /* РґРёР°Р»РѕРі СЃРј. РЅРёР¶Рµ */ }
+            is ScanState.Parsed -> { /* диалог см. ниже */ }
             is ScanState.Error -> { /* SnackBar is handling this now */ }
         }
     }
@@ -304,7 +304,7 @@ fun ScanScreen(
                 existingOwner = parsedState.existingOwner,
                 onSave = {
                     scanViewModel.saveCurrent {
-                        Toast.makeText(context, "Р§РµРє СЃРѕС…СЂР°РЅС‘РЅ", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Чек сохранён", Toast.LENGTH_SHORT).show()
                     }
                 },
                 onCancel = { scanViewModel.reset() }
@@ -324,7 +324,7 @@ fun ScanScreen(
                     totalAmountTiyin = totalTiyin,
                     vatAmountTiyin = vatTiyin,
                     photoUri = photoUri,
-                    onSaved = { Toast.makeText(context, "Р§РµРє РґРѕР±Р°РІР»РµРЅ РІСЂСѓС‡РЅСѓСЋ", Toast.LENGTH_SHORT).show() },
+                    onSaved = { Toast.makeText(context, "Чек добавлен вручную", Toast.LENGTH_SHORT).show() },
                     onError = { err -> Toast.makeText(context, err, Toast.LENGTH_LONG).show() }
                 )
             }
@@ -344,10 +344,10 @@ fun ScanScreen(
     if (showSheetSourceDialog) {
         AlertDialog(
             onDismissRequest = { showSheetSourceDialog = false },
-            title = { Text("РЎРєР°РЅ РІСЃРµС… С‡РµРєРѕРІ") },
+            title = { Text("Скан всех чеков") },
             text = {
                 Text(
-                    "РћС‚СЃРєР°РЅРёСЂСѓР№С‚Рµ РІСЃРµ QR РєР°РјРµСЂРѕР№ РёР»Рё РІС‹Р±РµСЂРёС‚Рµ С„РѕС‚Рѕ СЃ РЅРµСЃРєРѕР»СЊРєРёРјРё QR РёР· РіР°Р»РµСЂРµРё."
+                    "Отсканируйте все QR камерой или выберите фото с несколькими QR из галереи."
                 )
             },
             confirmButton = {
@@ -356,7 +356,7 @@ fun ScanScreen(
                         showSheetSourceDialog = false
                         showSheetCamera = true
                     }
-                ) { Text("РљР°РјРµСЂР°") }
+                ) { Text("Камера") }
             },
             dismissButton = {
                 TextButton(
@@ -364,7 +364,7 @@ fun ScanScreen(
                         showSheetSourceDialog = false
                         sheetGalleryLauncher.launch("image/*")
                     }
-                ) { Text("Р“Р°Р»РµСЂРµСЏ") }
+                ) { Text("Галерея") }
             }
         )
     }
@@ -381,7 +381,7 @@ fun ScanScreen(
     sheetSummary?.let { summary ->
         AlertDialog(
             onDismissRequest = scanViewModel::clearSheetSummary,
-            title = { Text("РЎРєР°РЅ РІСЃРµС… С‡РµРєРѕРІ") },
+            title = { Text("Скан всех чеков") },
             text = { Text(summary.message) },
             confirmButton = {
                 TextButton(onClick = scanViewModel::clearSheetSummary) { Text("OK") }
@@ -401,7 +401,7 @@ fun ScanScreen(
                 ) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(12.dp))
-                    Text("Р Р°СЃРїРѕР·РЅР°С‘Рј QR...")
+                    Text("Распознаём QR...")
                 }
             }
         }
@@ -414,16 +414,16 @@ fun ScanScreen(
             onToggle = scanViewModel::toggleSheetItem,
             onConfirm = scanViewModel::confirmSheetSelection,
             onCancel = scanViewModel::clearSheetPreview,
-            alreadyThisLabel = "РЈР¶Рµ СЃРѕС…СЂР°РЅС‘РЅ",
-            titlePrefix = "Р§РµРєРё",
+            alreadyThisLabel = "Уже сохранён",
+            titlePrefix = "Чеки",
             confirmableStatuses = setOf(SheetItemStatus.NEW)
         )
     }
 }
 
 /**
- * Р”РёР°Р»РѕРі РІРІРѕРґР° СЃСЃС‹Р»РєРё РЅР° СЌР»РµРєС‚СЂРѕРЅРЅС‹Р№ С‡РµРє. РџСЂРёРЅРёРјР°СЋС‚СЃСЏ URL ofd.soliq.uz, ofd.multicard.uz
- * Рё С‚.Рї. вЂ” РґР°Р»РµРµ РёС… РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚ С‚Р° Р¶Рµ Р»РѕРіРёРєР°, С‡С‚Рѕ Рё QR-РєРѕРґ, РѕС‚СЃРєР°РЅРёСЂРѕРІР°РЅРЅС‹Р№ РєР°РјРµСЂРѕР№.
+ * Диалог ввода ссылки на электронный чек. Принимаются URL ofd.soliq.uz, ofd.multicard.uz
+ * и т.п. — далее их обрабатывает та же логика, что и QR-код, отсканированный камерой.
  */
 @Composable
 private fun AddLinkDialog(
@@ -437,13 +437,13 @@ private fun AddLinkDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Р”РѕР±Р°РІРёС‚СЊ С‡РµРє РїРѕ СЃСЃС‹Р»РєРµ") },
+        title = { Text("Добавить чек по ссылке") },
         text = {
             Column {
                 Text(
-                    "Р’СЃС‚Р°РІСЊС‚Рµ СЃСЃС‹Р»РєСѓ РЅР° СЌР»РµРєС‚СЂРѕРЅРЅС‹Р№ С‡РµРє (РЅР°РїСЂРёРјРµСЂ, СЃ soliq.uz РёР»Рё " +
-                        "multicard.uz). РџСЂРёР»РѕР¶РµРЅРёРµ СЃР°РјРѕ Р·Р°РіСЂСѓР·РёС‚ СЃС‚СЂР°РЅРёС†Сѓ С‡РµРєР° Рё " +
-                        "СЂР°СЃРїРѕР·РЅР°РµС‚ РїРѕР»СЏ.",
+                    "Вставьте ссылку на электронный чек (например, с soliq.uz или " +
+                        "multicard.uz). Приложение само загрузит страницу чека и " +
+                        "распознает поля.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -451,7 +451,7 @@ private fun AddLinkDialog(
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("РЎСЃС‹Р»РєР° РЅР° С‡РµРє") },
+                    label = { Text("Ссылка на чек") },
                     placeholder = { Text("https://ofd.soliq.uz/check?...") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -461,7 +461,7 @@ private fun AddLinkDialog(
                 if (trimmed.isNotEmpty() && !looksValid) {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "РЎСЃС‹Р»РєР° РґРѕР»Р¶РЅР° РЅР°С‡РёРЅР°С‚СЊСЃСЏ СЃ http:// РёР»Рё https://",
+                        "Ссылка должна начинаться с http:// или https://",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -472,10 +472,10 @@ private fun AddLinkDialog(
             Button(
                 onClick = { onSubmit(trimmed) },
                 enabled = looksValid
-            ) { Text("Р—Р°РіСЂСѓР·РёС‚СЊ") }
+            ) { Text("Загрузить") }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("РћС‚РјРµРЅР°") }
+            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
         }
     )
 }
@@ -485,12 +485,12 @@ private fun Header(userName: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(
-                "Р—РґСЂР°РІСЃС‚РІСѓР№С‚Рµ,",
+                "Здравствуйте,",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                userName.ifEmpty { "вЂ”" },
+                userName.ifEmpty { "—" },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -514,7 +514,7 @@ private fun LoadingCard() {
                 strokeWidth = 2.dp
             )
             Spacer(Modifier.size(12.dp))
-            Text("Р—Р°РіСЂСѓР¶Р°РµРј СЃС‚СЂР°РЅРёС†Сѓ С‡РµРєР° Рё СЂР°СЃРїРѕР·РЅР°С‘Рј РґР°РЅРЅС‹Рµ...")
+            Text("Загружаем страницу чека и распознаём данные...")
         }
     }
 }
@@ -551,7 +551,7 @@ private fun ParsedCard(
                     StatusBadge(
                         icon = if (isValid) Icons.Filled.CheckCircle else Icons.Filled.Error,
                         color = if (isValid) Success else Danger,
-                        text = if (isValid) "Р§РµРє СЂР°СЃРїРѕР·РЅР°РЅ" else "РќРµ РІСЃРµ РїРѕР»СЏ СЂР°СЃРїРѕР·РЅР°РЅС‹"
+                        text = if (isValid) "Чек распознан" else "Не все поля распознаны"
                     )
                     Spacer(Modifier.weight(1f))
                 }
@@ -561,7 +561,7 @@ private fun ParsedCard(
                         StatusBadge(
                             icon = Icons.Filled.Error,
                             color = Warning,
-                            text = "Р­С‚РѕС‚ С‡РµРє СѓР¶Рµ СЃРѕС…СЂР°РЅС‘РЅ Сѓ РІР°СЃ"
+                            text = "Этот чек уже сохранён у вас"
                         )
                     }
                     is ExistingOwner.OtherUser -> {
@@ -569,7 +569,7 @@ private fun ParsedCard(
                         StatusBadge(
                             icon = Icons.Filled.Error,
                             color = Danger,
-                            text = "Р”Р°РЅРЅС‹Р№ С‡РµРє СѓР¶Рµ РµСЃС‚СЊ Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ ${existingOwner.fullName}"
+                            text = "Данный чек уже есть у пользователя ${existingOwner.fullName}"
                         )
                     }
                     null -> Unit
@@ -578,17 +578,17 @@ private fun ParsedCard(
                 HorizontalDivider()
                 Spacer(Modifier.height(14.dp))
 
-                ReceiptField("Р”Р°С‚Р° РїРѕРєСѓРїРєРё", parsed.purchasedAt?.let { DateFormat.formatDateTime(it) })
-                ReceiptField("Р®СЂ. Р»РёС†Рѕ", parsed.sellerName)
-                ReceiptField("РђРґСЂРµСЃ", parsed.address)
-                ReceiptField("РРќРќ (STIR)", parsed.tin)
+                ReceiptField("Дата покупки", parsed.purchasedAt?.let { DateFormat.formatDateTime(it) })
+                ReceiptField("Юр. лицо", parsed.sellerName)
+                ReceiptField("Адрес", parsed.address)
+                ReceiptField("ИНН (STIR)", parsed.tin)
                 ReceiptField(
-                    "РС‚РѕРіРѕРІР°СЏ СЃСѓРјРјР°, СЃСѓРј",
+                    "Итоговая сумма, сум",
                     parsed.totalAmountTiyin?.let { MoneyFormat.fromTiyin(it) },
                     bold = true
                 )
                 ReceiptField(
-                    "РќР”РЎ (QQS), СЃСѓРј",
+                    "НДС (QQS), сум",
                     parsed.vatAmountTiyin?.let { MoneyFormat.fromTiyin(it) },
                     bold = true
                 )
@@ -602,13 +602,13 @@ private fun ParsedCard(
                 Spacer(Modifier.height(16.dp))
             }
 
-            // Р¤РёРєСЃРёСЂРѕРІР°РЅРЅС‹Рµ РєРЅРѕРїРєРё РІРЅРёР·Сѓ РєР°СЂС‚РѕС‡РєРё
+            // Фиксированные кнопки внизу карточки
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                     onClick = onCancel,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
-                ) { Text("РћС‚РјРµРЅР°") }
+                ) { Text("Отмена") }
                 Button(
                     onClick = onSave,
                     enabled = canSave,
@@ -617,7 +617,7 @@ private fun ParsedCard(
                 ) {
                     Icon(Icons.Outlined.SaveAlt, contentDescription = null)
                     Spacer(Modifier.size(6.dp))
-                    Text("РЎРѕС…СЂР°РЅРёС‚СЊ")
+                    Text("Сохранить")
                 }
             }
         }
@@ -637,7 +637,7 @@ private fun ErrorCard(message: String, onDismiss: () -> Unit) {
             StatusBadge(
                 icon = Icons.Filled.Error,
                 color = Danger,
-                text = "РћС€РёР±РєР°"
+                text = "Ошибка"
             )
             Spacer(Modifier.height(8.dp))
             Text(message)
@@ -646,7 +646,7 @@ private fun ErrorCard(message: String, onDismiss: () -> Unit) {
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp)
-            ) { Text("Р—Р°РєСЂС‹С‚СЊ") }
+            ) { Text("Закрыть") }
         }
     }
 }
@@ -681,7 +681,7 @@ private fun ReceiptField(label: String, value: String?, bold: Boolean = false) {
             modifier = Modifier.weight(0.45f)
         )
         Text(
-            value?.takeIf { it.isNotBlank() } ?: "вЂ”",
+            value?.takeIf { it.isNotBlank() } ?: "—",
             style = if (bold) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
             fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.weight(0.55f)
