@@ -11,14 +11,14 @@ Android-приложение для сканирования QR-кодов фи�
 - Экспорт в ZIP
 - Улучшенный дизайн
 
-## Скачать готовую сборку
+## Release list (Список последних сборок)
 
 | Файл | Описание |
 |------|----------|
-| [**UZB_QQS_for_DIP-v1.9.0-release.apk**](release/UZB_QQS_for_DIP-v1.9.0-release.apk) | Актуальная подписанная release-сборка |
+| [**UZB_QQS_v1.9.0.apk**](release/UZB_QQS_v1.9.0.apk) | Версия 1.9.0: Актуальная подписанная release-сборка |
 
 Прямая ссылка (удобно с телефона):  
-`https://github.com/kent-tash/UZB_QQS_for_DIP/raw/main/release/UZB_QQS_for_DIP-v1.9.0-release.apk`
+`https://github.com/kent-tash/UZB_QQS_for_DIP/raw/main/release/UZB_QQS_v1.9.0.apk`
 
 Также доступно в [Releases](https://github.com/kent-tash/UZB_QQS_for_DIP/releases) на GitHub.
 
