@@ -1,4 +1,4 @@
-﻿package com.example.uzb_qqs_for_dip.ui.components
+package com.example.uzb_qqs_for_dip.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -63,7 +63,7 @@ fun HelpBottomSheet(
                 val uriHandler = LocalUriHandler.current
                 Column {
                     Text(
-                        text = "Написать в Telegram: t.me/dis_night",
+                        text = "Связь в Telegram: t.me/dis_night",
                         color = MaterialTheme.colorScheme.primary,
                         textDecoration = TextDecoration.Underline,
                         modifier = Modifier
@@ -82,9 +82,9 @@ fun HelpBottomSheet(
             }
             HorizontalDivider()
             
-            AccordionItem(title = "Сканер") {
+            AccordionItem(title = "Что нужно печатать") {
                 Text(
-                    text = "Отсканируй QR-код с чека. Если код не читается, выбери фото из галереи или введи данные вручную (сумма, магазин, дата).",
+                    text = "Для предоставления в бухгалтерию и налоговые органы необходимо распечатать следующие документы:\n\n1. Реестр чеков (содержит сводный перечень всех отсканированных и внесенных вручную чеков).\n2. Отчет (сводные данные и аналитика за выбранный период).\n\nОба документа генерируются в соответствующих вкладках и могут быть экспортированы в формате PDF для последующей печати.",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -93,16 +93,34 @@ fun HelpBottomSheet(
             
             AccordionItem(title = "Чеки") {
                 Text(
-                    text = "Список всех чеков, привязанных к текущему профилю. Тут их можно открыть как картинку, поделиться в PDF или удалить. Синхронизация обновляет данные с серверов.",
+                    text = "Сканируйте QR-коды с чеков. Если чек не читается, выберите ручной ввод и введите данные (сумма, НДС, дата) самостоятельно.",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
             HorizontalDivider()
             
-            AccordionItem(title = "Отчёт") {
+            AccordionItem(title = "Генерация реестра чеков") {
                 Text(
-                    text = "Формируй отчёты из чеков, выбирая нужный период. Отчёт можно сохранить в PDF/Excel, распечатать или поделиться.",
+                    text = "Для создания реестра чеков перейдите во вкладку «Чеки» и нажмите кнопку экспорта. Будет сформирован PDF-файл, содержащий полный перечень всех чеков за выбранный период, готовый к отправке или печати.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            HorizontalDivider()
+            
+            AccordionItem(title = "Генерация отчета (PDF/Excel)") {
+                Text(
+                    text = "Сформируйте итоговый отчет, выбрав нужный период во вкладке «Отчет». Вы можете сохранить его в PDF или Excel для бухгалтерии.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            HorizontalDivider()
+            
+            AccordionItem(title = "Управление профилями") {
+                Text(
+                    text = "В данном разделе вы можете управлять своими профилями, редактировать личные данные, должность и организацию, а также удалять профили, если они больше не требуются.",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -111,16 +129,7 @@ fun HelpBottomSheet(
             
             AccordionItem(title = "Аудит") {
                 Text(
-                    text = "Режим для проверяющих (доступен если переключить роль в профиле). Позволяет проверять отчёты других сотрудников.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            HorizontalDivider()
-            
-            AccordionItem(title = "Профиль") {
-                Text(
-                    text = "Управляй личными данными для печати в отчётах, переключай роли и создавай резервные копии баз данных.",
+                    text = "Функции проверки чеков и мониторинга конфликтов. Вы можете верифицировать чеки, присваивать статусы («Принято», «На доработку» и др.) и контролировать корректность введенных сумм.",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -153,7 +162,7 @@ fun AccordionItem(
             )
             Icon(
                 imageVector = Icons.Default.ExpandMore,
-                contentDescription = "Развернуть",
+                contentDescription = "Раскрыть",
                 modifier = Modifier.rotate(rotation)
             )
         }
@@ -164,4 +173,3 @@ fun AccordionItem(
         }
     }
 }
-

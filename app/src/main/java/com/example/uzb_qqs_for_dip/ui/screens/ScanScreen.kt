@@ -145,8 +145,8 @@ fun ScanScreen(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { Box(modifier = Modifier.clip(RoundedCornerShape(percent = 50)).background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 16.dp, vertical = 6.dp), contentAlignment = Alignment.Center) { Text(text = "Отсканировано: $scannedCount", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer) } }
         Header(userName = currentUser?.fullName.orEmpty())
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { Box(modifier = Modifier.clip(RoundedCornerShape(percent = 50)).background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 16.dp, vertical = 6.dp), contentAlignment = Alignment.Center) { Text(text = "Отсканировано: $scannedCount", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer) } }
 
         Card(
             modifier = Modifier.fillMaxWidth(),
