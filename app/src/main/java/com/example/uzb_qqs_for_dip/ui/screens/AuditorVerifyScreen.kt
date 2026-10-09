@@ -133,26 +133,6 @@ fun AuditorVerifyScreen(
     var showSheetCamera by remember { mutableStateOf(false) }
     var showManualDialog by remember { mutableStateOf(false) }
 
-    var pendingCameraAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            pendingCameraAction?.invoke()
-        }
-        pendingCameraAction = null
-    }
-
-    fun runWithCameraPermission(action: () -> Unit) {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            action()
-        } else {
-            pendingCameraAction = action
-            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-        }
-    }
-
-
     autoVerifyMessage?.let { msg ->
         AlertDialog(
             onDismissRequest = vm::clearAutoVerifyMessage,
@@ -216,9 +196,7 @@ fun AuditorVerifyScreen(
                 TextButton(
                     onClick = {
                         showSheetSourceDialog = false
-                        runWithCameraPermission {
-                            showSheetCamera = true
-                        }
+                        showSheetCamera = true
                     }
                 ) { Text("Камера") }
             },
@@ -465,13 +443,11 @@ fun AuditorVerifyScreen(
 
                     Button(
                         onClick = {
-                            runWithCameraPermission {
-                                startQrScanner(
-                                    context = context,
-                                    onScanned = { url -> vm.handleScan(url) },
-                                    onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
-                                )
-                            }
+                            startQrScanner(
+                                context = context,
+                                onScanned = { url -> vm.handleScan(url) },
+                                onError = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
+                            )
                         },
                         enabled = buttonsEnabled,
                         modifier = Modifier.fillMaxWidth().height(48.dp),

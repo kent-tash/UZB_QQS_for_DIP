@@ -124,25 +124,6 @@ fun ScanScreen(
     var showSheetSourceDialog by remember { mutableStateOf(false) }
     var showSheetCamera by remember { mutableStateOf(false) }
 
-    var pendingCameraAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            pendingCameraAction?.invoke()
-        }
-        pendingCameraAction = null
-    }
-
-    fun runWithCameraPermission(action: () -> Unit) {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            action()
-        } else {
-            pendingCameraAction = action
-            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-        }
-    }
-
     val scrollState = rememberScrollState()
     androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
         appViewModel.scrollToTopEvent.collect { route ->
@@ -210,15 +191,13 @@ fun ScanScreen(
                 Button(
                     onClick = {
                         if (!isBusy) {
-                            runWithCameraPermission {
-                                startQrScanner(
-                                    context = context,
-                                    onScanned = { scanViewModel.handleScan(it) },
-                                    onError = { msg ->
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                    }
-                                )
-                            }
+                            startQrScanner(
+                                context = context,
+                                onScanned = { scanViewModel.handleScan(it) },
+                                onError = { msg ->
+                                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                }
+                            )
                         }
 
                     },
@@ -376,9 +355,7 @@ fun ScanScreen(
                 TextButton(
                     onClick = {
                         showSheetSourceDialog = false
-                        runWithCameraPermission {
-                            showSheetCamera = true
-                        }
+                        showSheetCamera = true
                     }
                 ) { Text("Камера") }
             },
