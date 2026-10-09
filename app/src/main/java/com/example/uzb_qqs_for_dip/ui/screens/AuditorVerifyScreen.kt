@@ -214,6 +214,8 @@ fun AuditorVerifyScreen(
     if (showSheetCamera) {
         MultiQrCameraScannerDialog(
             onDismiss = { showSheetCamera = false },
+            isAuditor = true,
+            employeeName = selectedEmployee?.fullName,
             onQrDetected = { url ->
                 vm.processSingleQr(url)
             }

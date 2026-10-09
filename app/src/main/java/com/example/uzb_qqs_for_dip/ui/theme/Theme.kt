@@ -5,6 +5,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+
+object ScannerDimensions {
+    val padding = 16.dp
+    val gap = 8.dp
+    val indicator = 24.dp
+    val touchTarget = 48.dp
+}
 
 private val LightColors = lightColorScheme(
     primary = Primary,

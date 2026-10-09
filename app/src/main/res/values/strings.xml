@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">QQS Сканер</string>
+    <string name="scanner_title">Сканирование чеков</string>
+    <string name="scanner_close">Закрыть сканер</string>
+    <string name="scanner_finish">Завершить сканирование</string>
+    <string name="scanner_added_count">Добавлено за сеанс: %1$d</string>
+    <string name="scanner_verified_count">Подтверждено за сеанс: %1$d</string>
+    <string name="scanner_employee">Сотрудник: %1$s</string>
+    <string name="scanner_hint">Наведите камеру на QR-код чека. После сохранения можно сканировать следующий.</string>
+    <string name="scanner_auditor_hint">Наведите камеру на QR-код чека выбранного сотрудника. После подтверждения можно сканировать следующий.</string>
+    <string name="scanner_checking">Проверяем чек…</string>
+    <string name="scanner_camera_error">Не удалось запустить камеру. Повторите запуск.</string>
+    <string name="scanner_restart">Повторить запуск</string>
+    <string name="scanner_retry">Повторить проверку</string>
+    <string name="scanner_permission">Для сканирования нужен доступ к камере. Разрешите его в настройках приложения.</string>
+    <string name="scanner_settings">Открыть настройки</string>
+    <string name="scanner_added">Чек добавлен</string>
+    <string name="scanner_verified">Чек подтверждён</string>
+    <string name="scanner_added_zero">Чек добавлен. НДС — 0</string>
+    <string name="scanner_verified_zero">Чек подтверждён. НДС — 0</string>
+    <string name="scanner_duplicate">Чек уже добавлен</string>
+    <string name="scanner_verified_duplicate">Чек уже подтверждён за этот сеанс</string>
+    <string name="scanner_error">Не удалось проверить чек. Проверьте подключение и повторите.</string>
+    <string name="scanner_save_error">Не удалось сохранить чек. Повторите проверку.</string>
+    <string name="scanner_partial">Чек сохранён, но не подтверждён. Повторите проверку.</string>
+    <string name="scanner_session_expired">Сессия истекла. Войдите снова.</string>
+    <string name="scanner_select_employee">Сначала выберите сотрудника</string>
+    <string name="scanner_invalid">QR-код не содержит корректный чек</string>
+    <string name="scanner_owner">Чек принадлежит: %1$s</string>
+    <string name="scanner_out_of_period">Чек вне выбранного квартала</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.example.uzb_qqs_for_dip.ui
 
+import com.example.uzb_qqs_for_dip.R
+import kotlinx.coroutines.CancellationException
 import android.app.Application
 import android.content.Context
 import android.net.Uri
@@ -169,46 +171,40 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    suspend fun processSingleQr(rawUrl: String): Pair<Boolean, String> {
+    suspend fun processSingleQr(rawUrl: String): CameraScanResult {
+        try {
         val userId = container.sessionManager.currentUserId.value
-            ?: return false to "Сессия истекла. Войдите снова."
+            ?: return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_session_expired)
         val url = rawUrl.trim()
-        if (url.isEmpty()) return false to "Пустой QR-код"
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR-код не является чеком"
-
-        val parsedResult = container.receiptParser.fetchAndParse(url)
-        if (parsedResult.isFailure) {
-            val e = parsedResult.exceptionOrNull()
-            val msg = when (e) {
-                is java.net.UnknownHostException -> "Нет подключения к сети"
-                is java.net.SocketTimeoutException, is java.net.ConnectException -> "Сайт налоговой не отвечает"
-                else -> "Ошибка сети или сервера: " + (e?.toReadableMessage() ?: "")
-            }
-            return false to msg
-        }
-        val parsed = parsedResult.getOrThrow()
-
-        if (!parsed.isValid) return false to "Не все поля чека распознаны"
-
-        val existingOwner = container.receiptRepository.findOwner(
-            qrUrl = parsed.qrUrl,
-            fiscalSign = parsed.fiscalSign,
-            terminalId = parsed.terminalId,
-            receiptNumber = parsed.receiptNumber,
+        if (!url.startsWith("http://", true) && !url.startsWith("https://", true))
+            return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
+        val parsed = container.receiptParser.fetchAndParse(url).getOrThrow()
+        if (!parsed.isValid) return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
+        val owner = container.receiptRepository.findOwner(
+            qrUrl = parsed.qrUrl, fiscalSign = parsed.fiscalSign,
+            terminalId = parsed.terminalId, receiptNumber = parsed.receiptNumber,
         )
-
-        if (existingOwner != null) {
-            return if (existingOwner.userId == userId) false to "Этот чек уже был добавлен"
-            else false to "Чек принадлежит: ${existingOwner.fullName}"
+        if (owner != null) {
+            return if (owner.userId == userId)
+                CameraScanResult(CameraScanStatus.DUPLICATE, R.string.scanner_duplicate)
+            else CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_owner, listOf(owner.fullName))
         }
-
-        val insertRes = insertParsed(parsed, userId)
-        return if (insertRes.isSuccess) {
-            val vat = parsed.vatAmountTiyin ?: 0L
-            if (vat == 0L) true to "В чеке нет НДС (0 сум)"
-            else true to "Чек добавлен (НДС: ${vat / 100} сум)"
+        val inserted = insertParsed(parsed, userId)
+        (inserted.exceptionOrNull() as? CancellationException)?.let { throw it }
+        val id = inserted.getOrNull()
+        if (id == null || id <= 0L) return CameraScanResult(
+            CameraScanStatus.ERROR, R.string.scanner_save_error, retryable = true)
+        val zeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
+        return CameraScanResult(
+            if (zeroVat) CameraScanStatus.WARNING else CameraScanStatus.SUCCESS,
+            if (zeroVat) R.string.scanner_added_zero else R.string.scanner_added,
+            completedReceiptId = id,
+        )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_error, retryable = true)
         }
-        else false to "Ошибка сохранения в БД"
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.example.uzb_qqs_for_dip.ui
 
+import com.example.uzb_qqs_for_dip.R
+import kotlinx.coroutines.CancellationException
 import android.app.Application
 import android.content.Context
 import android.net.Uri
@@ -363,42 +365,26 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
         _sheetPreviewItems.value = list
     }
 
-    suspend fun processSingleQr(rawUrl: String): Pair<Boolean, String> {
-        val employee = _selectedEmployee.value ?: return false to "Сотрудник не выбран"
-        val auditorId = container.sessionManager.currentUserId.value ?: return false to "Сессия истекла"
-        
+    suspend fun processSingleQr(rawUrl: String): CameraScanResult {
+        try {
+        val employee = _selectedEmployee.value
+            ?: return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_select_employee)
+        val auditorId = container.sessionManager.currentUserId.value
+            ?: return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_session_expired)
         val url = rawUrl.trim()
-        if (url.isEmpty()) return false to "Пустой QR-код"
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return false to "QR не содержит ссылку на чек"
-
-        val parsedResult = container.receiptParser.fetchAndParse(url)
-        if (parsedResult.isFailure) return false to "Ошибка сети или сервера: " + (parsedResult.exceptionOrNull()?.toReadableMessage() ?: "")
-        val parsed = parsedResult.getOrThrow()
-
-        if (!parsed.isValid) return false to "Не все поля чека распознаны"
-
+        if (!url.startsWith("http://", true) && !url.startsWith("https://", true))
+            return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
+        val parsed = container.receiptParser.fetchAndParse(url).getOrThrow()
+        if (!parsed.isValid) return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
         val owner = container.receiptRepository.findOwner(
-            qrUrl = parsed.qrUrl,
-            fiscalSign = parsed.fiscalSign,
-            terminalId = parsed.terminalId,
-            receiptNumber = parsed.receiptNumber,
+            qrUrl = parsed.qrUrl, fiscalSign = parsed.fiscalSign,
+            terminalId = parsed.terminalId, receiptNumber = parsed.receiptNumber,
         )
-
+        if (owner != null && owner.userId != employee.id)
+            return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_owner, listOf(owner.fullName))
         val (fromMs, toMs) = periodBounds()
-        val pMs = parsed.purchasedAt ?: 0L
-        val outOfPeriod = pMs < fromMs || pMs > toMs
-        val periodMsg = if (outOfPeriod) " (Вне периода)" else ""
-
-        when {
-            owner != null && owner.userId != employee.id -> {
-                return false to "Чек принадлежит: ${owner.fullName}"
-            }
-            owner != null && owner.userId == employee.id -> {
-                container.receiptRepository.markVerified(owner.receiptId, auditorId)
-                refreshEmployeeData()
-                return true to "Чек подтверждён (уже в базе)!$periodMsg"
-            }
-            else -> {
+        val outOfPeriod = (parsed.purchasedAt ?: 0L) !in fromMs..toMs
+        val receiptId = if (owner != null) owner.receiptId else {
                 val r = Receipt(
                     userId = employee.id,
                     qrUrl = parsed.qrUrl,
@@ -413,13 +399,28 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                     purchasedAt = parsed.purchasedAt ?: System.currentTimeMillis(),
                     source = com.example.uzb_qqs_for_dip.data.model.ReceiptSource.APP
                 )
-                val insertedId = container.receiptRepository.insert(r).getOrNull() ?: -1L
-                if (insertedId > 0L) {
-                    container.receiptRepository.markVerified(insertedId, auditorId)
-                }
-                refreshEmployeeData()
-                return true to "Сохранено и подтверждено!$periodMsg"
-            }
+            val inserted = container.receiptRepository.insert(r)
+            (inserted.exceptionOrNull() as? CancellationException)?.let { throw it }
+            val id = inserted.getOrNull()
+            if (id == null || id <= 0L) return CameraScanResult(
+                CameraScanStatus.ERROR, R.string.scanner_save_error, retryable = true)
+            id
+        }
+        val verified = container.receiptRepository.markVerified(receiptId, auditorId)
+        (verified.exceptionOrNull() as? CancellationException)?.let { throw it }
+        if (verified.isFailure) return CameraScanResult(
+            CameraScanStatus.ERROR, R.string.scanner_partial, retryable = true)
+        refreshEmployeeData()
+        val zeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
+        return CameraScanResult(
+            if (zeroVat || outOfPeriod) CameraScanStatus.WARNING else CameraScanStatus.SUCCESS,
+            if (zeroVat) R.string.scanner_verified_zero else R.string.scanner_verified,
+            completedReceiptId = receiptId, outOfPeriod = outOfPeriod,
+        )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_error, retryable = true)
         }
     }
 

@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ML Kit and Firebase ComponentDiscovery instantiate ComponentRegistrar classes via reflection (getDeclaredConstructor().newInstance()).
+# Consumer rules keep class names, but R8 in full mode strips unreferenced no-arg constructors.
+-keepclassmembers class * implements com.google.firebase.components.ComponentRegistrar {
+    public <init>();
+}
