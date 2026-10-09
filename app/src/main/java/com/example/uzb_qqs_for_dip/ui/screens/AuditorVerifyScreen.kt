@@ -2,6 +2,7 @@ package com.example.uzb_qqs_for_dip.ui.screens
 
 import android.widget.Toast
 import com.example.uzb_qqs_for_dip.ui.components.MultiQrCameraScannerDialog
+import com.example.uzb_qqs_for_dip.ui.components.ManualEntryBottomSheet
 import com.example.uzb_qqs_for_dip.ui.components.SheetPreviewDialog
 import com.example.uzb_qqs_for_dip.util.startQrScanner
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -129,6 +131,7 @@ fun AuditorVerifyScreen(
     var showManualVerifyConfirm by remember { mutableStateOf(false) }
     var showSheetSourceDialog by remember { mutableStateOf(false) }
     var showSheetCamera by remember { mutableStateOf(false) }
+    var showManualDialog by remember { mutableStateOf(false) }
 
     autoVerifyMessage?.let { msg ->
         AlertDialog(
@@ -271,6 +274,16 @@ fun AuditorVerifyScreen(
         if (addEmployeeError == null && selectedEmployee != null) {
             showAddEmployeeDialog = false
         }
+    }
+
+    if (showManualDialog) {
+        ManualEntryBottomSheet(
+            onDismiss = { showManualDialog = false },
+            onSubmit = { storeName, dateMs, totalTiyin, vatTiyin, photoUri ->
+                showManualDialog = false
+                vm.submitManualEntry(context.applicationContext, storeName, dateMs, totalTiyin, vatTiyin, photoUri)
+            }
+        )
     }
 
     if (showLinkDialog) {

@@ -51,7 +51,7 @@ fun ManualEntryBottomSheet(
     var photoUri by remember { mutableStateOf<android.net.Uri?>(null) }
     
     val photoPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
+        ActivityResultContracts.GetContent()
     ) { uri -> if (uri != null) photoUri = uri }
 
     val dateError = dateStr.isNotBlank() && parseDate(dateStr) == null
@@ -119,7 +119,7 @@ fun ManualEntryBottomSheet(
             
             Button(
                 onClick = {
-                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    try { photoPicker.launch("image/*") } catch (e: Exception) { e.printStackTrace() }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)

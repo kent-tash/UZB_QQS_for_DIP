@@ -817,4 +817,79 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                 }
         }
     }
+
+    fun submitManualEntry(context: android.content.Context, storeName: String, dateMs: Long, totalTiyin: Long, vatTiyin: Long, photoUri: android.net.Uri?) {
+        val employee = _selectedEmployee.value ?: return
+        val auditorId = container.sessionManager.currentUserId.value
+        viewModelScope.launch {
+            _verifyResult.value = VerifyResult.Loading
+            val (from, to) = periodBounds()
+            var localPhotoPath: String? = null
+            if (photoUri != null) {
+                try {
+                    val fileName = "manual_${System.currentTimeMillis()}.jpg"
+                    val file = java.io.File(context.filesDir, fileName)
+                    context.contentResolver.openInputStream(photoUri)?.use { input ->
+                        file.outputStream().use { out -> input.copyTo(out) }
+                    }
+                    localPhotoPath = file.absolutePath
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            val outOfPeriod = dateMs !in from..to
+            val qrUrl = "manual_${System.currentTimeMillis()}_${(1000..9999).random()}"
+            val parsed = com.example.uzb_qqs_for_dip.network.ParsedReceipt(
+                qrUrl = qrUrl,
+                purchasedAt = dateMs,
+                sellerName = storeName,
+                totalAmountTiyin = totalTiyin,
+                vatAmountTiyin = vatTiyin,
+                paymentType = com.example.uzb_qqs_for_dip.data.model.PaymentType.CASH,
+                fiscalSign = null,
+                rawSnippet = null
+            )
+            
+            val receipt = com.example.uzb_qqs_for_dip.data.model.Receipt(
+                userId = employee.id,
+                purchasedAt = dateMs,
+                sellerName = storeName,
+                totalAmountTiyin = totalTiyin,
+                vatAmountTiyin = vatTiyin,
+                qrUrl = qrUrl,
+                paymentType = com.example.uzb_qqs_for_dip.data.model.PaymentType.CASH,
+                fiscalSign = null,
+                address = null,
+                tin = null,
+                terminalId = null,
+                receiptNumber = null,
+                nkmName = null,
+                sn = null,
+                rawText = null,
+                isManual = true,
+                manualPhotoUri = localPhotoPath
+            )
+            
+            val insertResult = container.receiptRepository.insert(receipt)
+            if (insertResult.isFailure) {
+                val err = insertResult.exceptionOrNull()
+                _verifyResult.value = VerifyResult.Error(err?.message ?: "Ошибка сохранения")
+                return@launch
+            }
+            if (auditorId != null) {
+                insertResult.getOrNull()?.let { id ->
+                    container.receiptRepository.markVerified(id, auditorId)
+                }
+            }
+            _verifyResult.value = VerifyResult.Success(
+                parsed = parsed,
+                owner = null,
+                alreadyForThisEmployee = false,
+                outOfPeriod = outOfPeriod,
+                markedVerified = auditorId != null
+            )
+            refreshEmployeeData()
+        }
+    }
 }
