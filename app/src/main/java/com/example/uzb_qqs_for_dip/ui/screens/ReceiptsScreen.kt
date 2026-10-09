@@ -71,6 +71,7 @@ fun ReceiptsScreen(
     val exportEvent by receiptsViewModel.exportEvents.collectAsStateWithLifecycle()
     val isSaving by receiptsViewModel.isSaving.collectAsStateWithLifecycle()
     val saveProgress by receiptsViewModel.saveProgress.collectAsStateWithLifecycle()
+    val savePhase by receiptsViewModel.savePhase.collectAsStateWithLifecycle()
 
     var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
     var showSaveFormatDialog by remember { mutableStateOf(false) }
@@ -174,7 +175,8 @@ fun ReceiptsScreen(
                 isSaving = isSaving,
                 saveProgress = saveProgress,
                 isSaveEnabled = !isSaving && rows.isNotEmpty(),
-                isOpenPrintEnabled = rows.isNotEmpty()
+                isOpenPrintEnabled = rows.isNotEmpty(),
+                saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "Сохранение… ${(saveProgress * 100).toInt()}%"
             )
 
             Spacer(Modifier.height(12.dp))

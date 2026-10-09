@@ -298,44 +298,28 @@ fun AuditorVerifyScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Проверка чеков")
-                        selectedEmployee?.let {
-                            Text(
-                                "Проверяется: ${it.fullName}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад")
-                    }
-                }
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        selectedEmployee?.let {
+            Text(
+                "Проверяется: ${it.fullName}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Employee selector
-            EmployeeSelectorRow(
-                employees = employees,
-                selected = selectedEmployee,
-                onSelect = vm::selectEmployee,
-                onAddEmployee = { showAddEmployeeDialog = true }
-            )
+
+        // Employee selector
+        EmployeeSelectorRow(
+            employees = employees,
+            selected = selectedEmployee,
+            onSelect = vm::selectEmployee
+        )
 
             // Progress counter + auto-verify (if employee selected)
             selectedEmployee?.let {
@@ -541,7 +525,6 @@ fun AuditorVerifyScreen(
             }
         }
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -549,58 +532,51 @@ private fun EmployeeSelectorRow(
     employees: List<User>,
     selected: User?,
     onSelect: (User) -> Unit,
-    onAddEmployee: () -> Unit
+    onAddEmployee: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-            modifier = Modifier.weight(1f)
-        ) {
-            OutlinedTextField(
-                value = selected?.fullName ?: "",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Сотрудник") },
-                placeholder = { Text("Выберите сотрудника") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
-                shape = RoundedCornerShape(12.dp)
-            )
-            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                if (employees.isEmpty()) {
-                    DropdownMenuItem(
-                        text = { Text("Нет сотрудников — добавьте через «+»") },
-                        onClick = {}
-                    )
-                }
-                employees.forEach { emp ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(emp.fullName)
-                                if (emp.position.isNotBlank()) {
-                                    Text(
-                                        emp.position,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        },
-                        onClick = { onSelect(emp); expanded = false }
-                    )
-                }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selected?.fullName ?: "",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Сотрудник") },
+            placeholder = { Text("Выберите сотрудника") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
+            shape = RoundedCornerShape(12.dp)
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            if (employees.isEmpty()) {
+                DropdownMenuItem(
+                    text = { Text("Нет сотрудников") },
+                    onClick = {}
+                )
             }
-        }
-        Spacer(Modifier.width(8.dp))
-        IconButton(onClick = onAddEmployee) {
-            Icon(Icons.Outlined.AddCircleOutline, "Добавить сотрудника",
-                tint = MaterialTheme.colorScheme.primary)
+            employees.forEach { emp ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(emp.fullName)
+                            if (emp.position.isNotBlank()) {
+                                Text(
+                                    emp.position,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    onClick = { onSelect(emp); expanded = false }
+                )
+            }
         }
     }
 }

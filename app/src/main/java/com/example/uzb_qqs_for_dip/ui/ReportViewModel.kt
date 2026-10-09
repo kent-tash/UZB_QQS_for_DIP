@@ -237,18 +237,19 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             _saveProgress.value = 0f
             try {
                 syncWithOfd { current, total ->
-                    _savePhase.value = "Синхронизация... Обработано $current из $total"
-                    _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
+                    _savePhase.value = "Обновлено $current/$total"
+                    _saveProgress.value = current.toFloat() / total.toFloat()
                 }
                 _savePhase.value = "Формирование файла..."
 
                 val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+                val refreshedRows = rows.value
                 val file = if (asPdf) {
                     val params = ReportParams(
                         user = user,
                         periodStart = s.from,
                         periodEnd = s.to,
-                        rows = rows.value,
+                        rows = refreshedRows,
                         quarterLabel = if (s.quarter == Quarter.Custom) null
                         else "${s.quarter.label} ${s.year} г."
                     )
@@ -260,7 +261,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                         user = user,
                         periodStart = s.from,
                         periodEnd = s.to,
-                        rows = rows.value,
+                        rows = refreshedRows,
                         quarterLabel = if (s.quarter == Quarter.Custom) null
                         else "${s.quarter.label} ${s.year} г."
                     )
@@ -291,11 +292,35 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun syncWithOfd(onProgress: (Int, Int) -> Unit) {
-        val total = 10
-        for (i in 1..total) {
-            kotlinx.coroutines.delay(100) // stub delay
-            onProgress(i, total)
+        val list = rows.value
+        val total = list.size
+        if (total == 0) return
+        list.forEachIndexed { index, item ->
+            val r = item.receipt
+            if (r.qrUrl.isNotBlank()) {
+                val result = container.receiptParser.fetchAndParse(r.qrUrl)
+                result.onSuccess { parsed ->
+                    val updated = r.copy(
+                        purchasedAt = parsed.purchasedAt ?: r.purchasedAt,
+                        sellerName = parsed.sellerName ?: r.sellerName,
+                        totalAmountTiyin = parsed.totalAmountTiyin ?: r.totalAmountTiyin,
+                        vatAmountTiyin = parsed.vatAmountTiyin ?: r.vatAmountTiyin,
+                        paymentType = parsed.paymentType,
+                        fiscalSign = parsed.fiscalSign ?: r.fiscalSign,
+                        address = parsed.address ?: r.address,
+                        tin = parsed.tin ?: r.tin,
+                        terminalId = parsed.terminalId ?: r.terminalId,
+                        receiptNumber = parsed.receiptNumber ?: r.receiptNumber,
+                        nkmName = parsed.nkmName ?: r.nkmName,
+                        sn = parsed.sn ?: r.sn,
+                        rawText = parsed.rawSnippet ?: r.rawText
+                    )
+                    container.receiptRepository.update(updated)
+                }
+            }
+            onProgress(index + 1, total)
         }
+        container.receiptRepository.refresh()
     }
 
     private suspend fun saveReportFile(context: Context, uri: Uri, asPdf: Boolean) {
@@ -311,20 +336,21 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             // Фаза 1: Синхронизация с базой (ОФД)
             _saveProgress.value = 0f
             syncWithOfd { current, total ->
-                _savePhase.value = "Синхронизация... Обновлено $current из $total"
-                _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
+                _savePhase.value = "Обновлено $current/$total"
+                _saveProgress.value = current.toFloat() / total.toFloat()
             }
 
             // Фаза 2: Формирование отчёта
             _savePhase.value = "Формирование ${if (asPdf) "PDF" else "Excel"}..."
             val safeName = user.fullName.replace(Regex("[^A-Za-zА-Яа-я0-9_-]"), "_").take(40)
+            val refreshedRows = rows.value
             
             val file = if (asPdf) {
                 val params = ReportParams(
                     user = user,
                     periodStart = s.from,
                     periodEnd = s.to,
-                    rows = rows.value,
+                    rows = refreshedRows,
                     quarterLabel = if (s.quarter == Quarter.Custom) null
                     else "${s.quarter.label} ${s.year} г."
                 )
@@ -336,7 +362,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                     user = user,
                     periodStart = s.from,
                     periodEnd = s.to,
-                    rows = rows.value,
+                    rows = refreshedRows,
                     quarterLabel = if (s.quarter == Quarter.Custom) null
                     else "${s.quarter.label} ${s.year} г."
                 )
@@ -344,7 +370,7 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                     context, params, "report_${safeName}_${System.currentTimeMillis()}.xlsx"
                 )
             }
-            _saveProgress.value = 0.75f
+            _saveProgress.value = 0.85f
             _savePhase.value = "Сохранение файла..."
             UriFileWriter.copyFileToUri(context, file, uri)
             _saveProgress.value = 1f
@@ -377,16 +403,17 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             _saveProgress.value = 0f
             try {
                 syncWithOfd { current, total ->
-                    _savePhase.value = "Синхронизация... Обработано $current из $total"
-                    _saveProgress.value = 0.5f * (current.toFloat() / total.toFloat())
+                    _savePhase.value = "Обновлено $current/$total"
+                    _saveProgress.value = current.toFloat() / total.toFloat()
                 }
                 _savePhase.value = "Формирование PDF..."
 
+                val refreshedRows = rows.value
                 val params = ReportParams(
                     user = user,
                     periodStart = s.from,
                     periodEnd = s.to,
-                    rows = rows.value,
+                    rows = refreshedRows,
                     quarterLabel = if (s.quarter == Quarter.Custom) null
                         else "${s.quarter.label} ${s.year} г."
                 )

@@ -50,24 +50,11 @@ fun AuditorReceiptSearchScreen(
     val results by vm.results.collectAsStateWithLifecycle()
     val isSearching by vm.isSearching.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Поиск чека") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
-        ) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
             OutlinedTextField(
                 value = query,
                 onValueChange = vm::setQuery,
@@ -98,7 +85,6 @@ fun AuditorReceiptSearchScreen(
             }
         }
     }
-}
 
 @Composable
 fun ReceiptSearchCard(item: ReceiptWithUser, onClick: () -> Unit) {

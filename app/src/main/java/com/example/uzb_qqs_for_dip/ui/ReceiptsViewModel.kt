@@ -91,6 +91,9 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     private val _saveProgress = MutableStateFlow(0f)
     val saveProgress: StateFlow<Float> = _saveProgress.asStateFlow()
 
+    private val _savePhase = MutableStateFlow("")
+    val savePhase: StateFlow<String> = _savePhase.asStateFlow()
+
     init {
         // Любое изменение видимого порядка — перегенерируем PNG чеков на диске,
         // чтобы № в чёрном квадрате на каждой картинке совпадал с номером в таблице
@@ -174,26 +177,47 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
     /** Печать всех чеков в текущей сортировке (6 на лист, в порядке № таблицы). */
     fun printAllAsSheets(context: Context) {
         viewModelScope.launch {
-            container.receiptRepository.refresh()
+            val rows = receipts.value
+            if (rows.isEmpty()) {
+                _exportEvents.value = ExportEvent.Error("Нет чеков для печати")
+                return@launch
+            }
             _isSaving.value = true
+            _saveProgress.value = 0f
             try {
+                syncWithOfd { current, total ->
+                    _savePhase.value = "Обновлено $current/$total"
+                    _saveProgress.value = current.toFloat() / total.toFloat()
+                }
+                _savePhase.value = "Формирование PDF..."
                 val file = generateReceiptsSheetPdf(context)
                 _exportEvents.value = ExportEvent.Print(file, "QQS чеки (${receipts.value.size} шт.)")
             } catch (e: Throwable) {
                 _exportEvents.value = ExportEvent.Error("Не удалось сформировать PDF: ${e.message}")
             } finally {
-                  _isSaving.value = false
-                  _saveProgress.value = 0f
-              }
+                _isSaving.value = false
+                _saveProgress.value = 0f
+                _savePhase.value = ""
+            }
         }
     }
 
     /** Предпросмотр PDF с чеками для печати (6 на лист). */
     fun previewReceiptsPdf(context: Context) {
         viewModelScope.launch {
-            container.receiptRepository.refresh()
+            val rows = receipts.value
+            if (rows.isEmpty()) {
+                _exportEvents.value = ExportEvent.Error("Нет чеков для просмотра")
+                return@launch
+            }
             _isSaving.value = true
+            _saveProgress.value = 0f
             try {
+                syncWithOfd { current, total ->
+                    _savePhase.value = "Обновлено $current/$total"
+                    _saveProgress.value = current.toFloat() / total.toFloat()
+                }
+                _savePhase.value = "Формирование PDF..."
                 val file = generateReceiptsSheetPdf(context)
                 val uri = FileProvider.getUriForFile(
                     context, "${context.packageName}.fileprovider", file
@@ -211,6 +235,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
             } finally {
                 _isSaving.value = false
                 _saveProgress.value = 0f
+                _savePhase.value = ""
             }
         }
     }
@@ -261,9 +286,19 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun shareReceiptsPdf(context: Context) {
         viewModelScope.launch {
-            container.receiptRepository.refresh()
+            val rows = receipts.value
+            if (rows.isEmpty()) {
+                _exportEvents.value = ExportEvent.Error("Нет чеков для экспорта")
+                return@launch
+            }
             _isSaving.value = true
+            _saveProgress.value = 0f
             try {
+                syncWithOfd { current, total ->
+                    _savePhase.value = "Обновлено $current/$total"
+                    _saveProgress.value = current.toFloat() / total.toFloat()
+                }
+                _savePhase.value = "Формирование PDF..."
                 val file = generateReceiptsSheetPdf(context)
                 val uri = FileProvider.getUriForFile(
                     context, "${context.packageName}.fileprovider", file
@@ -282,29 +317,68 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
             } finally {
                 _isSaving.value = false
                 _saveProgress.value = 0f
+                _savePhase.value = ""
             }
         }
     }
 
-    private suspend fun saveReceiptsFile(context: Context, uri: Uri, asPdf: Boolean) {
+    private suspend fun syncWithOfd(onProgress: (Int, Int) -> Unit) {
+        val list = receipts.value
+        val total = list.size
+        if (total == 0) return
+        list.forEachIndexed { index, item ->
+            val r = item.receipt
+            if (r.qrUrl.isNotBlank()) {
+                val result = container.receiptParser.fetchAndParse(r.qrUrl)
+                result.onSuccess { parsed ->
+                    val updated = r.copy(
+                        purchasedAt = parsed.purchasedAt ?: r.purchasedAt,
+                        sellerName = parsed.sellerName ?: r.sellerName,
+                        totalAmountTiyin = parsed.totalAmountTiyin ?: r.totalAmountTiyin,
+                        vatAmountTiyin = parsed.vatAmountTiyin ?: r.vatAmountTiyin,
+                        paymentType = parsed.paymentType,
+                        fiscalSign = parsed.fiscalSign ?: r.fiscalSign,
+                        address = parsed.address ?: r.address,
+                        tin = parsed.tin ?: r.tin,
+                        terminalId = parsed.terminalId ?: r.terminalId,
+                        receiptNumber = parsed.receiptNumber ?: r.receiptNumber,
+                        nkmName = parsed.nkmName ?: r.nkmName,
+                        sn = parsed.sn ?: r.sn,
+                        rawText = parsed.rawSnippet ?: r.rawText
+                    )
+                    container.receiptRepository.update(updated)
+                }
+            }
+            onProgress(index + 1, total)
+        }
         container.receiptRepository.refresh()
+    }
+
+    private suspend fun saveReceiptsFile(context: Context, uri: Uri, asPdf: Boolean) {
         val rows = receipts.value
         if (rows.isEmpty()) {
             _exportEvents.value = ExportEvent.Error("Нет чеков для сохранения")
             return
         }
         _isSaving.value = true
-        _saveProgress.value = 0.05f
+        _saveProgress.value = 0f
         try {
-            _saveProgress.value = 0.15f
+            syncWithOfd { current, total ->
+                _savePhase.value = "Обновлено $current/$total"
+                _saveProgress.value = current.toFloat() / total.toFloat()
+            }
+            _savePhase.value = "Формирование ${if (asPdf) "PDF" else "Excel"}..."
+            val refreshedRows = receipts.value
             val file = if (asPdf) {
                 generateReceiptsSheetPdf(context)
             } else {
-                XlsxExporter.export(context, rows, suggestedReceiptsXlsxName())
+                XlsxExporter.export(context, refreshedRows, suggestedReceiptsXlsxName())
             }
-            _saveProgress.value = 0.75f
+            _saveProgress.value = 0.85f
+            _savePhase.value = "Сохранение файла..."
             UriFileWriter.copyFileToUri(context, file, uri)
             _saveProgress.value = 1f
+            _savePhase.value = "Готово!"
             _exportEvents.value = ExportEvent.Saved(
                 if (asPdf) "PDF с чеками успешно сохранён" else "Excel с чеками успешно сохранён"
             )
@@ -315,6 +389,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         } finally {
             _isSaving.value = false
             _saveProgress.value = 0f
+            _savePhase.value = ""
         }
     }
 
@@ -332,35 +407,13 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _isUpdating.value = true
             _updateProgress.value = 0f
-            val total = list.size
             try {
-                list.forEachIndexed { index, item ->
-                    val r = item.receipt
-                    val result = container.receiptParser.fetchAndParse(r.qrUrl)
-                    result.onSuccess { parsed ->
-                        val updated = r.copy(
-                            purchasedAt = parsed.purchasedAt ?: r.purchasedAt,
-                            sellerName = parsed.sellerName ?: r.sellerName,
-                            totalAmountTiyin = parsed.totalAmountTiyin ?: r.totalAmountTiyin,
-                            vatAmountTiyin = parsed.vatAmountTiyin ?: r.vatAmountTiyin,
-                            paymentType = parsed.paymentType,
-                            fiscalSign = parsed.fiscalSign ?: r.fiscalSign,
-                            address = parsed.address ?: r.address,
-                            tin = parsed.tin ?: r.tin,
-                            terminalId = parsed.terminalId ?: r.terminalId,
-                            receiptNumber = parsed.receiptNumber ?: r.receiptNumber,
-                            nkmName = parsed.nkmName ?: r.nkmName,
-                            sn = parsed.sn ?: r.sn,
-                            rawText = parsed.rawSnippet ?: r.rawText
-                        )
-                        container.receiptRepository.update(updated)
-                    }
-                    _updateProgress.value = (index + 1).toFloat() / total
+                syncWithOfd { current, total ->
+                    _updateProgress.value = current.toFloat() / total.toFloat()
                 }
             } finally {
                 _isUpdating.value = false
                 _updateProgress.value = 0f
-                container.receiptRepository.refresh()
             }
         }
     }
@@ -380,15 +433,21 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
         block: suspend (List<ReceiptWithUser>) -> Pair<File, String>
     ) {
         viewModelScope.launch {
-            container.receiptRepository.refresh()
+            val rows = receipts.value
+            if (rows.isEmpty()) {
+                _exportEvents.value = ExportEvent.Error("Нет данных для экспорта")
+                return@launch
+            }
             _isSaving.value = true
+            _saveProgress.value = 0f
             try {
-                val rows = receipts.value
-                if (rows.isEmpty()) {
-                    _exportEvents.value = ExportEvent.Error("Нет данных для экспорта")
-                    return@launch
+                syncWithOfd { current, total ->
+                    _savePhase.value = "Обновлено $current/$total"
+                    _saveProgress.value = current.toFloat() / total.toFloat()
                 }
-                val (file, mime) = block(rows)
+                _savePhase.value = "Формирование файла..."
+                val refreshedRows = receipts.value
+                val (file, mime) = block(refreshedRows)
                 val uri = FileProvider.getUriForFile(
                     context, "${context.packageName}.fileprovider", file
                 )
@@ -406,6 +465,7 @@ class ReceiptsViewModel(app: Application) : AndroidViewModel(app) {
             } finally {
                 _isSaving.value = false
                 _saveProgress.value = 0f
+                _savePhase.value = ""
             }
         }
     }

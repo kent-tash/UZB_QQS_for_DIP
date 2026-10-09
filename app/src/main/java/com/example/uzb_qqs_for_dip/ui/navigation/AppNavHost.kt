@@ -3,6 +3,7 @@ package com.example.uzb_qqs_for_dip.ui.navigation
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.HelpOutline
@@ -122,7 +123,15 @@ private fun MainScaffold(
     val isAuditor = currentUser?.role == UserRole.AUDITOR
     val tabs = if (isAuditor) MainTab.auditor else MainTab.employee
     val startTab = if (isAuditor) MainTab.Audit.route else MainTab.Scan.route
-    val currentTitle = tabs.find { it.route == currentRoute }?.title ?: "UZB QQS"
+    val isAuditVerify = currentRoute?.startsWith(ROUTE_AUDIT_VERIFY) == true
+    val isAuditSearch = currentRoute?.startsWith(ROUTE_AUDIT_SEARCH) == true
+    val isSubScreen = isAuditVerify || isAuditSearch
+
+    val currentTitle = when {
+        isAuditVerify -> "Проверка чеков"
+        isAuditSearch -> "Поиск чека"
+        else -> tabs.find { it.route == currentRoute }?.title ?: "UZB QQS"
+    }
 
     var showHelpDialog by remember { mutableStateOf(false) }
     if (showHelpDialog) {
@@ -139,6 +148,16 @@ private fun MainScaffold(
                             currentRoute?.let { appViewModel.requestScrollToTop(it) }
                         }
                     )
+                },
+                navigationIcon = {
+                    if (isSubScreen) {
+                        IconButton(onClick = { tabsNav.popBackStack() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Назад"
+                            )
+                        }
+                    }
                 },
                 actions = {
                     IconButton(onClick = { showHelpDialog = true }) {

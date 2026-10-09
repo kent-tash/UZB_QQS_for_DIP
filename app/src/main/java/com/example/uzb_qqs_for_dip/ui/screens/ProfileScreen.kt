@@ -146,12 +146,7 @@ fun ProfileScreen(
 
                 ProfileRow("Имя", user?.fullName ?: "—")
                 ProfileRow("Должность", user?.position ?: "—")
-                ProfileRow("И.О. Фамилия для подписи", user?.initialsSurname ?: "—")
                 ProfileRow("Организация", user?.organization?.ifBlank { "—" } ?: "—")
-                ProfileRow(
-                    "Роль",
-                    if (user?.role == UserRole.AUDITOR) "Аудитор" else "Сотрудник"
-                )
             }
         }
 

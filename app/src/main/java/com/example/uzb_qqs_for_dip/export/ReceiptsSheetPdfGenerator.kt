@@ -7,6 +7,7 @@ import android.graphics.pdf.PdfDocument
 import android.text.TextPaint
 import com.example.uzb_qqs_for_dip.data.model.ReceiptWithUser
 import com.example.uzb_qqs_for_dip.render.ReceiptCardRenderer
+import com.example.uzb_qqs_for_dip.util.DateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -64,10 +65,17 @@ object ReceiptsSheetPdfGenerator {
             }
             val pagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-                textSize = 9f
+                textSize = 8.5f
                 color = 0xFF6B7280.toInt()
-                textAlign = Paint.Align.CENTER
+                textAlign = Paint.Align.RIGHT
             }
+            val footerDatePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+                textSize = 8.5f
+                color = 0xFF6B7280.toInt()
+                textAlign = Paint.Align.RIGHT
+            }
+            val generatedAtText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(System.currentTimeMillis())}"
 
             val manualReceiptsCount = rowsInOrder.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
             val gridPages = if (rowsInOrder.isEmpty()) 1 else (rowsInOrder.size + PER_PAGE - 1) / PER_PAGE
@@ -85,7 +93,7 @@ object ReceiptsSheetPdfGenerator {
             // Размер ячейки
             val gridLeft = MARGIN
             val gridW = PAGE_W - MARGIN * 2
-            val gridH = PAGE_H - gridTop - 5.67f
+            val gridH = PAGE_H - gridTop - 24f
             val cellW = (gridW - GAP * (COLS - 1)) / COLS
             val cellH = (gridH - GAP * (ROWS - 1)) / ROWS
 
@@ -142,8 +150,12 @@ object ReceiptsSheetPdfGenerator {
                 }
 
                 canvas.drawText(
-                    "Стр. $pageNumber из $totalPages",
-                    PAGE_W / 2f, PAGE_H - 8f, pagePaint
+                    "стр. $pageNumber из $totalPages",
+                    PAGE_W - MARGIN, MARGIN - 6f, pagePaint
+                )
+                canvas.drawText(
+                    generatedAtText,
+                    PAGE_W - MARGIN, PAGE_H - 10f, footerDatePaint
                 )
 
                 doc.finishPage(page)
@@ -184,7 +196,14 @@ object ReceiptsSheetPdfGenerator {
                         bitmap.recycle()
                     }
 
-                    canvas.drawText("Стр. $pageNumber из $totalPages", PAGE_W / 2f, PAGE_H - 8f, pagePaint)
+                    canvas.drawText(
+                        "стр. $pageNumber из $totalPages",
+                        PAGE_W - MARGIN, MARGIN - 6f, pagePaint
+                    )
+                    canvas.drawText(
+                        generatedAtText,
+                        PAGE_W - MARGIN, PAGE_H - 10f, footerDatePaint
+                    )
                     doc.finishPage(page)
                     manualSeq++
                 }

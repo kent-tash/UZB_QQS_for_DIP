@@ -1,10 +1,11 @@
-﻿package com.example.uzb_qqs_for_dip.ui.components
+package com.example.uzb_qqs_for_dip.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,7 +19,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun ExportActionGrid(
@@ -89,24 +96,38 @@ fun ExportActionGrid(
     }
 
     if (isSaving) {
-        androidx.compose.ui.window.Dialog(
+        Dialog(
             onDismissRequest = {},
-            properties = androidx.compose.ui.window.DialogProperties(
+            properties = DialogProperties(
                 dismissOnBackPress = false,
                 dismissOnClickOutside = false
             )
         ) {
-            androidx.compose.material3.Surface(
+            Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = androidx.compose.material3.MaterialTheme.colorScheme.surface
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .widthIn(min = 240.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    androidx.compose.material3.CircularProgressIndicator()
+                    if (saveProgress > 0f) {
+                        LinearProgressIndicator(
+                            progress = { saveProgress.coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                        )
+                    } else {
+                        CircularProgressIndicator()
+                    }
                     Spacer(modifier = Modifier.size(16.dp))
-                    Text(text = saveProgressLabel)
+                    Text(
+                        text = saveProgressLabel,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }

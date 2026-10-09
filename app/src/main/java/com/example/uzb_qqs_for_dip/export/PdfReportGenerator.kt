@@ -209,14 +209,19 @@ object PdfReportGenerator {
         fun finalizeAndFinishPage() {
             // Колонтитул присутствует на каждой странице.
             val rightX = PAGE_WIDTH - MARGIN
+            val generatedDateText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(params.generatedAt)}"
             val positionLines = wrapText(params.user.position, footerPaint, PAGE_WIDTH / 2f, 3)
-            var fy = PAGE_HEIGHT - 10f - (positionLines.size - 1) * 12f
+            var fy = PAGE_HEIGHT - 22f - (positionLines.size - 1) * 12f
             for (i in 0 until positionLines.size - 1) {
                 canvas.drawText(positionLines[i], rightX, fy, footerPaint)
                 fy += 12f
             }
             val lastLine = positionLines.lastOrNull() ?: ""
-            canvas.drawText("$lastLine   ${params.user.initialsSurname}", rightX, fy, footerPaint)
+            if (lastLine.isNotBlank() || params.user.initialsSurname.isNotBlank()) {
+                canvas.drawText("$lastLine   ${params.user.initialsSurname}".trim(), rightX, fy, footerPaint)
+            }
+            canvas.drawText(generatedDateText, rightX, PAGE_HEIGHT - 10f, footerPaint)
+
             // Номер страницы добавляем со второй страницы и только если страниц > 1.
             if (totalPages > 1 && pageNumber > 1) {
                 canvas.drawText(pageNumber.toString(), rightX, MARGIN - 4f, pageNumberPaint)
@@ -484,6 +489,8 @@ object PdfReportGenerator {
                 if (totalPages > 1 || manualReceipts.isNotEmpty()) {
                     canvas.drawText(pageNumber.toString(), PAGE_WIDTH - MARGIN, MARGIN - 4f, pageNumberPaint)
                 }
+                val generatedDateText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(params.generatedAt)}"
+                canvas.drawText(generatedDateText, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 10f, footerPaint)
 
                 doc.finishPage(page)
                 manualSeq++

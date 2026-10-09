@@ -12,6 +12,9 @@ object DateFormat {
     private val ruDateTime = SimpleDateFormat("dd.MM.yyyy HH:mm", ruLocale).apply {
         timeZone = TimeZone.getTimeZone("Asia/Tashkent")
     }
+    private val ruDateTimeSeconds = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", ruLocale).apply {
+        timeZone = TimeZone.getTimeZone("Asia/Tashkent")
+    }
     private val ruDate = SimpleDateFormat("dd.MM.yyyy", ruLocale).apply {
         timeZone = TimeZone.getTimeZone("Asia/Tashkent")
     }
@@ -20,6 +23,7 @@ object DateFormat {
     }
 
     fun formatDateTime(timestampMs: Long): String = ruDateTime.format(Date(timestampMs))
+    fun formatDateTimeWithSeconds(timestampMs: Long): String = ruDateTimeSeconds.format(Date(timestampMs))
     fun formatDate(timestampMs: Long): String = ruDate.format(Date(timestampMs))
     fun formatIso(timestampMs: Long): String = isoDateTime.format(Date(timestampMs))
 
