@@ -63,6 +63,25 @@ fun ManualEntryBottomSheet(
         ActivityResultContracts.TakePicture()
     ) { success -> if (success && tempCameraUri != null) photoUri = tempCameraUri }
 
+    var pendingCameraAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            pendingCameraAction?.invoke()
+        }
+        pendingCameraAction = null
+    }
+
+    fun runWithCameraPermission(action: () -> Unit) {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            action()
+        } else {
+            pendingCameraAction = action
+            permissionLauncher.launch(android.Manifest.permission.CAMERA)
+        }
+    }
+
     val dateError = dateStr.isNotBlank() && parseDate(dateStr) == null
     val totalError = totalAmountStr.isNotBlank() && totalAmountStr.replace(',', '.').toDoubleOrNull() == null
     val vatError = vatAmountStr.isNotBlank() && vatAmountStr.replace(',', '.').toDoubleOrNull() == null
@@ -129,17 +148,20 @@ fun ManualEntryBottomSheet(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
-                        try {
-                            val imagesDir = File(context.cacheDir, "images")
-                            if (!imagesDir.exists()) imagesDir.mkdirs()
-                            val file = File(imagesDir, "manual_receipt_${System.currentTimeMillis()}.jpg")
-                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                            tempCameraUri = uri
-                            cameraLauncher.launch(uri)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                        runWithCameraPermission {
+                            try {
+                                val imagesDir = File(context.cacheDir, "images")
+                                if (!imagesDir.exists()) imagesDir.mkdirs()
+                                val file = File(imagesDir, "manual_receipt_${System.currentTimeMillis()}.jpg")
+                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                tempCameraUri = uri
+                                cameraLauncher.launch(uri)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         }
                     },
+
                     modifier = Modifier.weight(1f).height(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
