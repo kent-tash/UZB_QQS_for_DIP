@@ -2,11 +2,15 @@ package com.example.uzb_qqs_for_dip.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Print
@@ -14,16 +18,28 @@ import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
@@ -39,59 +55,121 @@ fun ExportActionGrid(
     isOpenPrintEnabled: Boolean = true,
     saveProgressLabel: String = "Сохранение %"
 ) {
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Кнопка 1: Сохранить
         Button(
             onClick = onSave,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(62.dp),
             shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
             enabled = isSaveEnabled
         ) {
-            Icon(Icons.Outlined.SaveAlt, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text("Сохранить")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.SaveAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.height(3.dp))
+                AutoScalingText(text = "Сохранить")
+            }
         }
+
+        // Кнопка 2: Поделиться
         Button(
             onClick = onShare,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(62.dp),
             shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
             enabled = isSaveEnabled,
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.secondary
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
             )
         ) {
-            Icon(Icons.Outlined.Share, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text("Поделиться")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Share,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.height(3.dp))
+                AutoScalingText(text = "Поделиться")
+            }
         }
+
+        // Кнопка 3: Открыть (цвет как у "добавить по ссылке")
         Button(
             onClick = onOpen,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(62.dp),
             shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
             enabled = isOpenPrintEnabled,
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.tertiary
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
         ) {
-            Icon(Icons.Outlined.Visibility, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text("Открыть")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Visibility,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.height(3.dp))
+                AutoScalingText(text = "Открыть")
+            }
         }
+
+        // Кнопка 4: Печать
         Button(
             onClick = onPrint,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(62.dp),
             shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
             enabled = isOpenPrintEnabled,
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
-                contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         ) {
-            Icon(Icons.Outlined.Print, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text("Печать")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Print,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.height(3.dp))
+                AutoScalingText(text = "Печать")
+            }
         }
     }
 
@@ -105,7 +183,7 @@ fun ExportActionGrid(
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = androidx.compose.material3.MaterialTheme.colorScheme.surface
+                color = MaterialTheme.colorScheme.surface
             ) {
                 Column(
                     modifier = Modifier
@@ -126,10 +204,58 @@ fun ExportActionGrid(
                     Spacer(modifier = Modifier.size(16.dp))
                     Text(
                         text = saveProgressLabel,
-                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
         }
     }
+}
+
+/**
+ * Текст под иконкой кнопки, автоматически адаптирующий размер шрифта
+ * в зависимости от разрешения экрана и ширины кнопки, чтобы не обрезаться и не переноситься.
+ */
+@Composable
+private fun AutoScalingText(
+    text: String,
+    modifier: Modifier = Modifier,
+    minFontSize: TextUnit = 7.sp
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    val initialFontSize = when {
+        screenWidth < 350 -> 9.5f
+        screenWidth < 390 -> 10.5f
+        screenWidth < 600 -> 11f
+        else -> 12f
+    }
+    var fontSizeValue by remember(text, screenWidth) { mutableFloatStateOf(initialFontSize) }
+    var readyToDraw by remember(text, screenWidth) { mutableStateOf(false) }
+
+    Text(
+        text = text,
+        modifier = modifier.drawWithContent {
+            if (readyToDraw) drawContent()
+        },
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Clip,
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontSize = fontSizeValue.sp,
+            lineHeight = fontSizeValue.sp,
+            textAlign = TextAlign.Center
+        ),
+        onTextLayout = { textLayoutResult ->
+            if (textLayoutResult.didOverflowWidth || textLayoutResult.didOverflowHeight) {
+                if (fontSizeValue > minFontSize.value) {
+                    fontSizeValue = (fontSizeValue - 0.5f).coerceAtLeast(minFontSize.value)
+                } else {
+                    readyToDraw = true
+                }
+            } else {
+                readyToDraw = true
+            }
+        }
+    )
 }

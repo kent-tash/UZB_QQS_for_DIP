@@ -7,4 +7,8 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="primary_qqs">#1F4E79</color>
+    <color name="secondary_qqs">#146C94</color>
+    <color name="primary_container_qqs">#D3E2F2</color>
+    <color name="secondary_container_qqs">#C9E5F2</color>
 </resources>

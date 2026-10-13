@@ -41,4 +41,9 @@
     <string name="zero_vat_auditor_chip">⚠️ Нулевой НДС: %1$d шт.</string>
     <string name="zero_vat_verify_warning">Обнаружено %1$d чеков с нулевым НДС (исключены из возмещения)</string>
     <string name="zero_vat_deleted_count">Удалено чеков с нулевым НДС: %1$d</string>
+
+    <!-- Виджет быстрого сканирования чека -->
+    <string name="widget_quick_scan_title">Скан QR чека</string>
+    <string name="widget_quick_scan_subtitle">Быстро добавить чек</string>
+    <string name="widget_quick_scan_description">Виджет для быстрого сканирования и добавления чека по QR-коду</string>
 </resources>

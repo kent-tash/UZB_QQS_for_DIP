@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,28 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun requestScrollToTop(route: String) {
         _scrollToTopEvent.tryEmit(route)
+    }
+
+    private val _quickScanRequested = MutableStateFlow(false)
+    val quickScanRequested: StateFlow<Boolean> = _quickScanRequested.asStateFlow()
+
+    fun requestQuickScan() {
+        _quickScanRequested.value = true
+    }
+
+    fun consumeQuickScan(): Boolean {
+        return _quickScanRequested.compareAndSet(expect = true, update = false)
+    }
+
+    private val _pendingReceiptUrl = MutableStateFlow<String?>(null)
+    val pendingReceiptUrl: StateFlow<String?> = _pendingReceiptUrl.asStateFlow()
+
+    fun handleIncomingReceiptUrl(url: String) {
+        _pendingReceiptUrl.value = url
+    }
+
+    fun consumePendingReceiptUrl(): String? {
+        return _pendingReceiptUrl.getAndUpdate { null }
     }
 
     private val container: AppContainer = (app as QqsApp).container

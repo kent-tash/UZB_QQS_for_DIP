@@ -138,6 +138,31 @@ fun ScanScreen(
         sheetLoading ||
         sheetPreviewItems.isNotEmpty()
 
+    val quickScanRequested by appViewModel.quickScanRequested.collectAsStateWithLifecycle()
+    LaunchedEffect(quickScanRequested, isBusy) {
+        if (quickScanRequested && !isBusy) {
+            if (appViewModel.consumeQuickScan()) {
+                startQrScanner(
+                    context = context,
+                    onScanned = { scanViewModel.handleScan(it) },
+                    onError = { msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    }
+                )
+            }
+        }
+    }
+
+    val pendingReceiptUrl by appViewModel.pendingReceiptUrl.collectAsStateWithLifecycle()
+    LaunchedEffect(pendingReceiptUrl, isBusy) {
+        if (pendingReceiptUrl != null && !isBusy) {
+            val url = appViewModel.consumePendingReceiptUrl()
+            if (url != null) {
+                scanViewModel.handleScan(url)
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
