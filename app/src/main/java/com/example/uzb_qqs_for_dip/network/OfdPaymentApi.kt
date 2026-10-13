@@ -85,7 +85,23 @@ internal object OfdPaymentApi {
         val cashTotal = data.optDouble("cashTotal", 0.0)
         val cardTotal = data.optDouble("cardTotal", 0.0)
         val totalSoum = cashTotal + cardTotal
-        val vatSoum = data.optDouble("vatTotal", 0.0)
+
+        val vatAmountTiyin = if (data.has("vatTotal") && !data.isNull("vatTotal")) {
+            val vatSoum = data.optDouble("vatTotal")
+            when {
+                vatSoum == 0.0 -> 0L
+                vatSoum > 0.0 -> (vatSoum * 100.0).roundToLong()
+                else -> null
+            }
+        } else {
+            null
+        }
+
+        val totalAmountTiyin = if (data.has("cashTotal") || data.has("cardTotal")) {
+            if (totalSoum > 0.0) (totalSoum * 100.0).roundToLong() else null
+        } else {
+            null
+        }
 
         val tin = data.opt("tin")?.let { value ->
             when (value) {
@@ -116,8 +132,8 @@ internal object OfdPaymentApi {
             qrUrl = qrUrl,
             purchasedAt = purchasedAt,
             sellerName = sellerName,
-            totalAmountTiyin = soumToTiyin(totalSoum),
-            vatAmountTiyin = soumToTiyin(vatSoum),
+            totalAmountTiyin = totalAmountTiyin,
+            vatAmountTiyin = vatAmountTiyin,
             paymentType = paymentType,
             fiscalSign = fiscalSign,
             address = address,
@@ -137,8 +153,10 @@ internal object OfdPaymentApi {
             data.optString("paymentDate").takeIf { it.isNotBlank() }?.let { add(it) }
             val total = data.optDouble("cashTotal", 0.0) + data.optDouble("cardTotal", 0.0)
             if (total > 0) add("Jami to`lov: $total")
-            val vat = data.optDouble("vatTotal", 0.0)
-            if (vat > 0) add("Umumiy QQS qiymati: $vat")
+            if (data.has("vatTotal") && !data.isNull("vatTotal")) {
+                val vat = data.optDouble("vatTotal", 0.0)
+                if (vat >= 0) add("Umumiy QQS qiymati: $vat")
+            }
         }
         return parts.joinToString(" ").take(2000)
     }

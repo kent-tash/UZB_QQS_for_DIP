@@ -29,7 +29,8 @@ data class EmployeeSummary(
     val vatTiyin: Long,
     val receiptCount: Int,
     val verifiedCount: Int,
-    val declaration: AuditDeclaration?
+    val declaration: AuditDeclaration?,
+    val zeroVatCount: Int = 0
 )
 
 /** Как именно совпали два чека при поиске пересечений. */
@@ -89,10 +90,11 @@ class AuditorRepository(private val dbHelper: DbHelper) {
         // — их чеки тоже должны попадать в сводную таблицу квартала.
         val sql = """
             SELECT u.id, u.full_name, u.initials_surname, u.position, u.organization,
-                   COALESCE(SUM(r.total_amount_tiyin), 0),
-                   COALESCE(SUM(r.vat_amount_tiyin), 0),
-                   COUNT(r.id),
-                   COUNT(CASE WHEN r.verified_at IS NOT NULL THEN 1 END)
+                   COALESCE(SUM(CASE WHEN r.vat_amount_tiyin > 0 THEN r.total_amount_tiyin ELSE 0 END), 0),
+                   COALESCE(SUM(CASE WHEN r.vat_amount_tiyin > 0 THEN r.vat_amount_tiyin ELSE 0 END), 0),
+                   COUNT(CASE WHEN r.vat_amount_tiyin > 0 THEN 1 END),
+                   COUNT(CASE WHEN r.vat_amount_tiyin > 0 AND r.verified_at IS NOT NULL THEN 1 END),
+                   COUNT(CASE WHEN r.vat_amount_tiyin <= 0 THEN 1 END)
             FROM users u
             LEFT JOIN receipts r ON r.user_id = u.id
                 AND r.purchased_at >= ? AND r.purchased_at <= ?
@@ -116,7 +118,8 @@ class AuditorRepository(private val dbHelper: DbHelper) {
                         vatTiyin = c.getLong(6),
                         receiptCount = c.getInt(7),
                         verifiedCount = c.getInt(8),
-                        declaration = decl
+                        declaration = decl,
+                        zeroVatCount = c.getInt(9)
                     )
                 )
             }

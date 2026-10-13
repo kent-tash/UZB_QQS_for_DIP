@@ -398,6 +398,15 @@ fun AuditorVerifyScreen(
                                     "${MoneyFormat.fromTiyin(item.receipt.totalAmountTiyin)} · НДС ${MoneyFormat.fromTiyin(item.receipt.vatAmountTiyin)}",
                                     style = MaterialTheme.typography.bodySmall
                                 )
+                                if (item.receipt.vatAmountTiyin <= 0L) {
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        "НДС: 0 сум (без возмещения)",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
                                 TextButton(
                                     onClick = { vm.markReceiptVerifiedFromSearch(item.receipt.id) },
                                     enabled = true
@@ -629,6 +638,18 @@ private fun VerificationProgress(stats: UserReceiptStats, manuallyApproved: Bool
                         "НДС: ${MoneyFormat.fromTiyin(stats.verifiedVatTiyin)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (stats.zeroVatCount > 0) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    androidx.compose.ui.res.stringResource(
+                        com.example.uzb_qqs_for_dip.R.string.zero_vat_verify_warning,
+                        stats.zeroVatCount
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
             if (stats.totalCount > 0 && !allVerifiedInDb && !manuallyApproved) {

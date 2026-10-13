@@ -41,6 +41,7 @@ sealed interface ReportEvent {
     data class Error(val message: String) : ReportEvent
     data class Saved(val message: String) : ReportEvent
     data class Deleted(val count: Int) : ReportEvent
+    data class ZeroVatDetected(val list: List<com.example.uzb_qqs_for_dip.data.model.ZeroVatReceiptInfo>) : ReportEvent
 }
 
 class ReportViewModel(app: Application) : AndroidViewModel(app) {
@@ -62,8 +63,8 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Чеки выбранного пользователя за выбранный период, отсортированные согласно
-     * текущему [SortField]/[SortOrder]. На основе этого списка строится PDF-отчёт
-     * и подсвечивается № в карточке чека на вкладке «Чеки».
+     * текущему [SortField]/[SortOrder]. Включают ТОЛЬКО чеки с vatAmountTiyin > 0.
+     * На основе этого списка строится PDF-отчёт и таблица.
      */
     val rows: StateFlow<List<ReceiptWithUser>> = combine(
         container.receiptRepository.receipts,
@@ -74,7 +75,25 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
         val start = DateFormat.startOfDay(s.from)
         val end = DateFormat.endOfDay(s.to)
         val filtered = all.filter {
-            it.receipt.userId == userId && it.receipt.purchasedAt in start..end
+            it.receipt.userId == userId && it.receipt.purchasedAt in start..end && it.receipt.vatAmountTiyin > 0L
+        }
+        sortRows(filtered, s.sortField, s.sortOrder)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /**
+     * Чеки выбранного пользователя за выбранный период с нулевым НДС (vatAmountTiyin <= 0).
+     * Исключены из официального отчёта, показываются в специальном сворачиваемом блоке.
+     */
+    val zeroVatRows: StateFlow<List<ReceiptWithUser>> = combine(
+        container.receiptRepository.receipts,
+        settings,
+        currentUser
+    ) { all, s, currUser ->
+        val userId = s.userId ?: currUser?.id
+        val start = DateFormat.startOfDay(s.from)
+        val end = DateFormat.endOfDay(s.to)
+        val filtered = all.filter {
+            it.receipt.userId == userId && it.receipt.purchasedAt in start..end && it.receipt.vatAmountTiyin <= 0L
         }
         sortRows(filtered, s.sortField, s.sortOrder)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -295,11 +314,25 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
         val list = rows.value
         val total = list.size
         if (total == 0) return
+        val zeroed = mutableListOf<com.example.uzb_qqs_for_dip.data.model.ZeroVatReceiptInfo>()
         list.forEachIndexed { index, item ->
             val r = item.receipt
             if (r.qrUrl.isNotBlank()) {
                 val result = container.receiptParser.fetchAndParse(r.qrUrl)
                 result.onSuccess { parsed ->
+                    val oldVat = r.vatAmountTiyin
+                    val newVat = parsed.vatAmountTiyin ?: r.vatAmountTiyin
+                    if (oldVat > 0L && newVat == 0L) {
+                        zeroed.add(
+                            com.example.uzb_qqs_for_dip.data.model.ZeroVatReceiptInfo(
+                                receiptId = r.id,
+                                sellerName = parsed.sellerName ?: r.sellerName,
+                                purchasedAt = parsed.purchasedAt ?: r.purchasedAt,
+                                previousVatTiyin = oldVat,
+                                currentVatTiyin = 0L
+                            )
+                        )
+                    }
                     val updated = r.copy(
                         purchasedAt = parsed.purchasedAt ?: r.purchasedAt,
                         sellerName = parsed.sellerName ?: r.sellerName,
@@ -321,6 +354,34 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
             onProgress(index + 1, total)
         }
         container.receiptRepository.refresh()
+        if (zeroed.isNotEmpty()) {
+            _event.value = ReportEvent.ZeroVatDetected(zeroed)
+        }
+    }
+
+    fun deleteReceipt(id: Long) {
+        viewModelScope.launch {
+            container.receiptRepository.delete(id)
+            withContext(Dispatchers.IO) {
+                ReceiptImageExporter.fileForReceipt(appContext, id).delete()
+            }
+            container.receiptRepository.refresh()
+            _event.value = ReportEvent.Deleted(1)
+        }
+    }
+
+    fun deleteZeroVatReceipts(ids: List<Long>) {
+        if (ids.isEmpty()) return
+        viewModelScope.launch {
+            ids.forEach { id ->
+                container.receiptRepository.delete(id)
+                withContext(Dispatchers.IO) {
+                    ReceiptImageExporter.fileForReceipt(appContext, id).delete()
+                }
+            }
+            container.receiptRepository.refresh()
+            _event.value = ReportEvent.Deleted(ids.size)
+        }
     }
 
     private suspend fun saveReportFile(context: Context, uri: Uri, asPdf: Boolean) {

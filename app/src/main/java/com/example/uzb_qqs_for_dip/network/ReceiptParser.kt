@@ -626,6 +626,27 @@ class ReceiptParser(
         return null
     }
 
+    /**
+     * Поиск денежной суммы или явного нуля. Если метка найдена и значение равно 0 — возвращает 0L.
+     * Если найдено > 0 — возвращает сумму в тийинах. Если метка не найдена вообще — возвращает null.
+     */
+    private fun firstMoneyMatchOrZero(text: String, labels: List<String>): Long? {
+        for (lab in labels) {
+            val r = Regex("(?i)(?:^|[^\\p{L}\\p{Nd}])(?:$lab)(?![\\p{L}\\p{Nd}])\\s*[:\\-]?\\s*([\\d][\\d \\u00A0',.\\-]*)")
+            val m = r.find(text) ?: continue
+            val raw = m.groupValues[1].trim()
+            val v = MoneyFormat.toTiyin(raw)
+            if (v > 0L) return v
+            // Проверяем, является ли значение явным нулём
+            val clean = raw.replace("\u00A0", " ").replace(" ", "").replace(",", ".")
+            val d = clean.toDoubleOrNull()
+            if (d != null && d == 0.0) {
+                return 0L
+            }
+        }
+        return null
+    }
+
     // -------- Total amount --------
 
     private fun extractTotal(doc: Document, text: String): Long? {
@@ -676,25 +697,27 @@ class ReceiptParser(
             // Внимание: "QQS" и "Soliq" в одиночку НЕ включаем — это даст ложные срабатывания
             // на "QQS qiymati"/"QQS foizi" внутри отдельных позиций или на бренд "SOLIQ".
         )
-        firstMoneyMatch(text, labels)?.let { return it }
+        firstMoneyMatchOrZero(text, labels)?.let { return it }
 
         // DOM-фолбэк.
         labelValue(doc, listOf(
             "Umumiy QQS qiymati", "QQS summasi", "Soliq summasi",
             "Итоговый НДС", "Итог НДС", "НДС"
         ))?.let {
+            val clean = it.trim().replace("\u00A0", " ").replace(" ", "").replace(",", ".")
+            val d = clean.toDoubleOrNull()
+            if (d != null && d == 0.0) return 0L
             val v = MoneyFormat.toTiyin(it)
             if (v > 0) return v
         }
 
         // Если есть только построчные QQS qiymati по позициям — суммируем их.
-        val perItem = Regex("(?i)QQS\\s+qiymati\\s*[:\\-]?\\s*([\\d][\\d \\u00A0',.\\-]*)")
+        val perItemMatches = Regex("(?i)QQS\\s+qiymati\\s*[:\\-]?\\s*([\\d][\\d \\u00A0',.\\-]*)")
             .findAll(text)
-            .map { MoneyFormat.toTiyin(it.groupValues[1]) }
-            .filter { it > 0 }
             .toList()
-        if (perItem.isNotEmpty()) {
-            return perItem.sum()
+        if (perItemMatches.isNotEmpty()) {
+            val sum = perItemMatches.sumOf { MoneyFormat.toTiyin(it.groupValues[1]) }
+            return sum
         }
         return null
     }

@@ -93,9 +93,13 @@ object PdfReportGenerator {
      *
      * Открыто, чтобы тот же контент использовать в PrintDocumentAdapter.
      */
+    internal fun sanitizeParams(params: ReportParams): ReportParams =
+        params.copy(rows = params.rows.filter { it.receipt.vatAmountTiyin > 0L })
+
     fun renderInto(doc: PdfDocument, params: ReportParams) {
-        val totalPages = countPages(params)
-        renderOnce(doc, params, totalPages)
+        val sanitizedParams = sanitizeParams(params)
+        val totalPages = countPages(sanitizedParams)
+        renderOnce(doc, sanitizedParams, totalPages)
     }
 
     /** Сухой прогон ради подсчёта страниц. Временный документ закрывается. */

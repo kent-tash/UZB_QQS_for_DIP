@@ -65,6 +65,8 @@ fun ReceiptsScreen(
 ) {
     val context = LocalContext.current
     val rows by receiptsViewModel.receipts.collectAsStateWithLifecycle()
+    val zeroVatRows by receiptsViewModel.zeroVatReceipts.collectAsStateWithLifecycle()
+    val detectedZeroVatList by receiptsViewModel.detectedZeroVatReceipts.collectAsStateWithLifecycle()
     val settings by receiptsViewModel.settings.collectAsStateWithLifecycle()
     val users by receiptsViewModel.users.collectAsStateWithLifecycle()
     val currentUser by receiptsViewModel.currentUser.collectAsStateWithLifecycle()
@@ -181,6 +183,17 @@ fun ReceiptsScreen(
             Spacer(Modifier.height(12.dp))
         }
 
+        if (zeroVatRows.isNotEmpty()) {
+            item {
+                com.example.uzb_qqs_for_dip.ui.components.ZeroVatReceiptsCard(
+                    zeroVatReceipts = zeroVatRows,
+                    onDeleteReceipt = { receiptsViewModel.deleteReceipt(it) },
+                    onDeleteAll = { receiptsViewModel.deleteZeroVatReceipts(it) },
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+        }
+
         if (rows.isEmpty()) {
             item {
                 Box(
@@ -211,6 +224,16 @@ fun ReceiptsScreen(
                 )
             }
         }
+    }
+
+    detectedZeroVatList?.let { detected ->
+        com.example.uzb_qqs_for_dip.ui.components.ZeroVatDetectedDialog(
+            detectedReceipts = detected,
+            onDelete = { ids ->
+                receiptsViewModel.deleteZeroVatReceipts(ids)
+            },
+            onDismiss = { receiptsViewModel.dismissZeroVatDialog() }
+        )
     }
 
     pendingDelete?.let { item ->

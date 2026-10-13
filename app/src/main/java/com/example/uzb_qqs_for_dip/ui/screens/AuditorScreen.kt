@@ -774,6 +774,30 @@ private fun EmployeeCard(
                 }
             }
 
+            if (summary.zeroVatCount > 0) {
+                Spacer(Modifier.height(6.dp))
+                androidx.compose.material3.Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = androidx.compose.ui.res.stringResource(
+                                com.example.uzb_qqs_for_dip.R.string.zero_vat_auditor_chip,
+                                summary.zeroVatCount
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+
             // Declaration delta
             if (decl != null && (hasDeltaTotal || hasDeltaVat || hasDeltaCount)) {
                 Spacer(Modifier.height(6.dp))

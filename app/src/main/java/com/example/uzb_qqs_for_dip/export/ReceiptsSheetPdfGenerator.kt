@@ -41,6 +41,9 @@ object ReceiptsSheetPdfGenerator {
      * (как в профиле).
      * @param periodLabel выбранный на вкладке «Отчёт» период: квартал и год или диапазон дат.
      */
+    internal fun sanitizeRows(rowsInOrder: List<ReceiptWithUser>): List<ReceiptWithUser> =
+        rowsInOrder.filter { it.receipt.vatAmountTiyin > 0L }
+
     suspend fun generate(
         context: Context,
         rowsInOrder: List<ReceiptWithUser>,
@@ -48,6 +51,7 @@ object ReceiptsSheetPdfGenerator {
         periodLabel: String,
         fileName: String = "receipts_sheet_${System.currentTimeMillis()}.pdf"
     ): File = withContext(Dispatchers.IO) {
+        val sanitizedRows = sanitizeRows(rowsInOrder)
         val file = File(ExportPaths.exportsDir(context), fileName)
         val doc = PdfDocument()
         try {
@@ -77,12 +81,12 @@ object ReceiptsSheetPdfGenerator {
             }
             val generatedAtText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(System.currentTimeMillis())}"
 
-            val manualReceiptsCount = rowsInOrder.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
-            val gridPages = if (rowsInOrder.isEmpty()) 1 else (rowsInOrder.size + PER_PAGE - 1) / PER_PAGE
+            val manualReceiptsCount = sanitizedRows.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
+            val gridPages = if (sanitizedRows.isEmpty()) 1 else (sanitizedRows.size + PER_PAGE - 1) / PER_PAGE
             val totalPages = gridPages + manualReceiptsCount
 
             val sheetTitle =
-                "Сохранённые чеки (${rowsInOrder.size}) за $periodLabel"
+                "Сохранённые чеки (${sanitizedRows.size}) за $periodLabel"
             val contentW = PAGE_W - 2f * MARGIN
             val titleLines = wrapLines(sheetTitle, titlePaint, contentW, maxLines = 8)
             val rightLines = if (headerRightText.isBlank()) emptyList()
@@ -129,7 +133,7 @@ object ReceiptsSheetPdfGenerator {
                 }
 
                 val from = pageIndex * PER_PAGE
-                val to = minOf(from + PER_PAGE, rowsInOrder.size)
+                val to = minOf(from + PER_PAGE, sanitizedRows.size)
                 for (i in from until to) {
                     val cellIndex = i - from
                     val row = cellIndex / COLS
@@ -137,7 +141,7 @@ object ReceiptsSheetPdfGenerator {
                     val left = gridLeft + col * (cellW + GAP)
                     val top = gridTop + row * (cellH + GAP)
 
-                    val item = rowsInOrder[i].receipt
+                    val item = sanitizedRows[i].receipt
                     ReceiptCardRenderer.renderInto(
                         canvas = canvas,
                         receipt = item,
@@ -162,7 +166,7 @@ object ReceiptsSheetPdfGenerator {
             }
 
             // --- Добавление страниц с фото для чеков, добавленных вручную ---
-            val manualReceipts = rowsInOrder.mapIndexedNotNull { index, row ->
+            val manualReceipts = sanitizedRows.mapIndexedNotNull { index, row ->
                 if (row.receipt.isManual && row.receipt.manualPhotoUri != null) {
                     index + 1 to row.receipt
                 } else null

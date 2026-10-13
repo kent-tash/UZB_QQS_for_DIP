@@ -13,18 +13,22 @@ import java.nio.charset.StandardCharsets
 
 object CsvExporter {
 
+    internal fun sanitizeRows(rows: List<ReceiptWithUser>): List<ReceiptWithUser> =
+        rows.filter { it.receipt.vatAmountTiyin > 0L }
+
     suspend fun export(
         context: Context,
         rows: List<ReceiptWithUser>,
         fileName: String = "checks_${System.currentTimeMillis()}.csv"
     ): File = withContext(Dispatchers.IO) {
+        val sanitizedRows = sanitizeRows(rows)
         val file = File(ExportPaths.exportsDir(context), fileName)
         FileOutputStream(file).use { fos ->
             // BOM нужен Excel-у, чтобы корректно отобразить кириллицу из UTF-8.
             fos.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
             OutputStreamWriter(fos, StandardCharsets.UTF_8).use { w ->
                 w.append("Пользователь;Должность;Дата и время;Юридическое лицо;Итоговая сумма;НДС (QQS)\r\n")
-                rows.forEach { r ->
+                sanitizedRows.forEach { r ->
                     w.append(escape(r.userFullName)).append(';')
                     w.append(escape(r.userPosition)).append(';')
                     w.append(escape(DateFormat.formatDateTime(r.receipt.purchasedAt))).append(';')

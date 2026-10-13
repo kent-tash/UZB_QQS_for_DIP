@@ -87,6 +87,7 @@ fun ReportScreen(
     val context = LocalContext.current
     val users by reportViewModel.users.collectAsStateWithLifecycle()
     val rows by reportViewModel.rows.collectAsStateWithLifecycle()
+    val zeroVatRows by reportViewModel.zeroVatRows.collectAsStateWithLifecycle()
     val settings by reportViewModel.settings.collectAsStateWithLifecycle()
     val event by reportViewModel.event.collectAsStateWithLifecycle()
     val selectedIds by reportViewModel.selectedIds.collectAsStateWithLifecycle()
@@ -97,6 +98,7 @@ fun ReportScreen(
     var saveSuccessMessage by remember { mutableStateOf<String?>(null) }
     var showSaveFormatDialog by remember { mutableStateOf(false) }
     var showShareFormatDialog by remember { mutableStateOf(false) }
+    var detectedZeroVatList by remember { mutableStateOf<List<com.example.uzb_qqs_for_dip.data.model.ZeroVatReceiptInfo>?>(null) }
 
 
     val savePdfLauncher = rememberLauncherForActivityResult(
@@ -142,6 +144,10 @@ fun ReportScreen(
                     "Удалено чеков: ${e.count}",
                     Toast.LENGTH_SHORT
                 ).show()
+                reportViewModel.consumeEvent()
+            }
+            is ReportEvent.ZeroVatDetected -> {
+                detectedZeroVatList = e.list
                 reportViewModel.consumeEvent()
             }
             null -> Unit
@@ -327,6 +333,18 @@ fun ReportScreen(
             }
         }
 
+        // Блок исключённых чеков с нулевым НДС
+        if (zeroVatRows.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            com.example.uzb_qqs_for_dip.ui.components.ZeroVatReceiptsCard(
+                zeroVatReceipts = zeroVatRows,
+                onDeleteReceipt = { reportViewModel.deleteReceipt(it) },
+                onDeleteAll = { reportViewModel.deleteZeroVatReceipts(it) }
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
         // Превью таблицы — то же содержимое, что попадёт в PDF/печать.
         // Расположено в самом низу, чтобы кнопки экспорта оставались на виду
         // независимо от того, насколько длинной стала таблица.
@@ -341,6 +359,17 @@ fun ReportScreen(
             onClearSelection = { reportViewModel.clearSelection() },
             totalSum = totalSum,
             totalVat = totalVat
+        )
+    }
+
+    detectedZeroVatList?.let { detected ->
+        com.example.uzb_qqs_for_dip.ui.components.ZeroVatDetectedDialog(
+            detectedReceipts = detected,
+            onDelete = { ids ->
+                reportViewModel.deleteZeroVatReceipts(ids)
+                detectedZeroVatList = null
+            },
+            onDismiss = { detectedZeroVatList = null }
         )
     }
 

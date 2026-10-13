@@ -21,6 +21,7 @@ data class UserReceiptStats(
     val vatTiyin: Long,
     val verifiedTotalTiyin: Long,
     val verifiedVatTiyin: Long,
+    val zeroVatCount: Int = 0,
 )
 
 class ReceiptRepository(private val dbHelper: DbHelper) {
@@ -149,12 +150,13 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
             val db = dbHelper.readableDatabase
             db.rawQuery(
                 """
-                SELECT COUNT(*),
-                       COUNT(CASE WHEN verified_at IS NOT NULL THEN 1 END),
-                       COALESCE(SUM(total_amount_tiyin), 0),
-                       COALESCE(SUM(vat_amount_tiyin), 0),
-                       COALESCE(SUM(CASE WHEN verified_at IS NOT NULL THEN total_amount_tiyin END), 0),
-                       COALESCE(SUM(CASE WHEN verified_at IS NOT NULL THEN vat_amount_tiyin END), 0)
+                SELECT COUNT(CASE WHEN vat_amount_tiyin > 0 THEN 1 END),
+                       COUNT(CASE WHEN vat_amount_tiyin > 0 AND verified_at IS NOT NULL THEN 1 END),
+                       COALESCE(SUM(CASE WHEN vat_amount_tiyin > 0 THEN total_amount_tiyin ELSE 0 END), 0),
+                       COALESCE(SUM(CASE WHEN vat_amount_tiyin > 0 THEN vat_amount_tiyin ELSE 0 END), 0),
+                       COALESCE(SUM(CASE WHEN vat_amount_tiyin > 0 AND verified_at IS NOT NULL THEN total_amount_tiyin ELSE 0 END), 0),
+                       COALESCE(SUM(CASE WHEN vat_amount_tiyin > 0 AND verified_at IS NOT NULL THEN vat_amount_tiyin ELSE 0 END), 0),
+                       COUNT(CASE WHEN vat_amount_tiyin <= 0 THEN 1 END)
                 FROM receipts
                 WHERE user_id = ? AND purchased_at >= ? AND purchased_at <= ?
                 """.trimIndent(),
@@ -168,9 +170,10 @@ class ReceiptRepository(private val dbHelper: DbHelper) {
                         vatTiyin = c.getLong(3),
                         verifiedTotalTiyin = c.getLong(4),
                         verifiedVatTiyin = c.getLong(5),
+                        zeroVatCount = c.getInt(6),
                     )
                 } else {
-                    UserReceiptStats(0, 0, 0L, 0L, 0L, 0L)
+                    UserReceiptStats(0, 0, 0L, 0L, 0L, 0L, 0)
                 }
             }
         }

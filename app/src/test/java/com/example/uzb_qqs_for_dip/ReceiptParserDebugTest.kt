@@ -285,4 +285,73 @@ class ReceiptParserDebugTest {
         assertEquals(12, cal.get(Calendar.HOUR_OF_DAY))
         assertEquals(28, cal.get(Calendar.MINUTE))
     }
+
+    @Test
+    fun ofd_payment_api_handles_explicit_zero_vat() {
+        val json = """
+            {
+                "success": true,
+                "data": {
+                    "terminalId": "LG123456789012",
+                    "paymentNo": "999",
+                    "paymentDate": "2026-05-10 14:30:00",
+                    "cashTotal": 10000.0,
+                    "cardTotal": 0.0,
+                    "vatTotal": 0.0,
+                    "extraInfo": {
+                        "companyName": "TEST LLC"
+                    }
+                }
+            }
+        """.trimIndent()
+        val parsed = OfdPaymentApi.parseResponse("https://ofd.soliq.uz/check?t=LG123456789012&r=999&s=123", json)
+        assertNotNull(parsed)
+        assertTrue(parsed!!.isValid)
+        assertEquals(1_000_000L, parsed.totalAmountTiyin)
+        assertEquals(0L, parsed.vatAmountTiyin)
+    }
+
+    @Test
+    fun ofd_payment_api_handles_missing_vat_key_as_null() {
+        val json = """
+            {
+                "success": true,
+                "data": {
+                    "terminalId": "LG123456789012",
+                    "paymentNo": "999",
+                    "paymentDate": "2026-05-10 14:30:00",
+                    "cashTotal": 10000.0,
+                    "cardTotal": 0.0,
+                    "extraInfo": {
+                        "companyName": "TEST LLC"
+                    }
+                }
+            }
+        """.trimIndent()
+        val parsed = OfdPaymentApi.parseResponse("https://ofd.soliq.uz/check?t=LG123456789012&r=999&s=123", json)
+        assertNotNull(parsed)
+        assertEquals(null, parsed!!.vatAmountTiyin)
+        // isValid should be false because vatAmountTiyin is null
+        assertEquals(false, parsed.isValid)
+    }
+
+    @Test
+    fun receipt_parser_parses_html_with_explicit_zero_vat() {
+        val html = """
+            <html>
+            <body>
+                <h1>Savdo cheki</h1>
+                <h2>"OOO TEST ZERO"</h2>
+                <div>Sana: 12.05.2026 15:00:00</div>
+                <div>Jami to'lov: 50 000.00</div>
+                <div>Umumiy QQS qiymati: 0.00</div>
+            </body>
+            </html>
+        """.trimIndent()
+        val parser = ReceiptParser()
+        val parsed = parser.parseHtml("https://ofd.soliq.uz/check?t=123&r=456&s=789", html)
+        assertEquals(5_000_000L, parsed.totalAmountTiyin)
+        assertEquals(0L, parsed.vatAmountTiyin)
+        assertTrue(parsed.isValid)
+    }
 }

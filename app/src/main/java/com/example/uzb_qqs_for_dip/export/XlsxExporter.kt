@@ -28,12 +28,16 @@ object XlsxExporter {
         val style: Int = 0
     )
 
+    internal fun sanitizeRows(rows: List<ReceiptWithUser>): List<ReceiptWithUser> =
+        rows.filter { it.receipt.vatAmountTiyin > 0L }
+
     /** Отчёт в форме PDF: шапка + таблица + подпись. */
     suspend fun exportReport(
         context: Context,
         params: ReportParams,
         fileName: String = "report_${params.user.id}_${System.currentTimeMillis()}.xlsx"
     ): File = withContext(Dispatchers.IO) {
+        val sanitizedRows = sanitizeRows(params.rows)
         val periodText = params.quarterLabel
             ?: "${DateFormat.formatDate(params.periodStart)} — ${DateFormat.formatDate(params.periodEnd)}"
         val userLine = "${params.user.position} ${params.user.fullName}".trim()
@@ -54,7 +58,7 @@ object XlsxExporter {
                 )
             )
 
-            params.rows.forEachIndexed { idx, item ->
+            sanitizedRows.forEachIndexed { idx, item ->
                 add(
                     listOf(
                         Cell(number = (idx + 1).toDouble()),
@@ -66,8 +70,8 @@ object XlsxExporter {
                 )
             }
 
-            val totalSum = params.rows.sumOf { it.receipt.totalAmountTiyin } / 100.0
-            val totalVat = params.rows.sumOf { it.receipt.vatAmountTiyin } / 100.0
+            val totalSum = sanitizedRows.sumOf { it.receipt.totalAmountTiyin } / 100.0
+            val totalVat = sanitizedRows.sumOf { it.receipt.vatAmountTiyin } / 100.0
             add(
                 listOf(
                     Cell(text = "Итого:", style = 2),
@@ -115,6 +119,7 @@ object XlsxExporter {
         rows: List<ReceiptWithUser>,
         fileName: String = "checks_${System.currentTimeMillis()}.xlsx"
     ): File = withContext(Dispatchers.IO) {
+        val sanitizedRows = sanitizeRows(rows)
         val sheet = buildList {
             add(
                 listOf(
@@ -126,7 +131,7 @@ object XlsxExporter {
                     Cell(text = "НДС (QQS)", style = 1)
                 )
             )
-            rows.forEach { r ->
+            sanitizedRows.forEach { r ->
                 add(
                     listOf(
                         Cell(text = r.userFullName),
@@ -138,8 +143,8 @@ object XlsxExporter {
                     )
                 )
             }
-            val totalSum = rows.sumOf { it.receipt.totalAmountTiyin } / 100.0
-            val totalVat = rows.sumOf { it.receipt.vatAmountTiyin } / 100.0
+            val totalSum = sanitizedRows.sumOf { it.receipt.totalAmountTiyin } / 100.0
+            val totalVat = sanitizedRows.sumOf { it.receipt.vatAmountTiyin } / 100.0
             add(
                 listOf(
                     Cell(text = "Итого:", style = 2),

@@ -322,7 +322,7 @@ class AuditorViewModel(app: Application) : AndroidViewModel(app) {
                         userId = summary.userId,
                         fromMs = from,
                         toMs = to
-                    )
+                    ).filter { it.receipt.vatAmountTiyin > 0L }
                     if (receipts.isEmpty()) return@mapNotNull null
                     val pdfName = "receipts_${summary.fullName.replace(" ", "_")}.pdf"
                     com.example.uzb_qqs_for_dip.export.ReceiptsSheetPdfGenerator.generate(

@@ -15,8 +15,8 @@ android {
         applicationId = "com.example.uzb_qqs_for_dip"
         minSdk = 24
         targetSdk = 36
-        versionCode = 28
-        versionName = "1.9.8"
+        versionCode = 29
+        versionName = "1.9.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
