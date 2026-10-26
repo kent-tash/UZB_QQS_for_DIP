@@ -35,6 +35,7 @@ Android-приложение для сканирования QR-кодов фи�
 | Файл | Описание |
 |------|----------|
 | [**UZB_QQS_v1.10.1.apk**](release/UZB_QQS_v1.10.1.apk) | Версия 1.10.1: Актуальная подписанная release-сборка APK |
+| [**UZB_QQS_v1.10.1.aab**](release/UZB_QQS_v1.10.1.aab) | Версия 1.10.1: Подписанный Android App Bundle для RuStore |
 | [**UZB_QQS_v1.10.0.apk**](release/UZB_QQS_v1.10.0.apk) | Версия 1.10.0: Актуальная подписанная release-сборка APK |
 | [**UZB_QQS_v1.10.0.aab**](release/UZB_QQS_v1.10.0.aab) | Версия 1.10.0: Подписанный Android App Bundle для RuStore |
 
