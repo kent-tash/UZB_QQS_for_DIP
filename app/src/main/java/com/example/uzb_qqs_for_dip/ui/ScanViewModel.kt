@@ -34,6 +34,7 @@ sealed interface ScanState {
     data object Idle : ScanState
     data object Loading : ScanState
     data class Parsed(val parsed: ParsedReceipt, val existingOwner: ExistingOwner? = null) : ScanState
+    data class ZeroVat(val parsed: ParsedReceipt) : ScanState
     data class Error(val message: String) : ScanState
 }
 
@@ -89,7 +90,8 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         if (index !in list.indices) return
         val item = list[index]
         if (item.status == SheetItemStatus.OTHER_OWNER ||
-            item.status == SheetItemStatus.ERROR
+            item.status == SheetItemStatus.ERROR ||
+            item.status == SheetItemStatus.ZERO_VAT
         ) {
             return
         }
@@ -126,6 +128,11 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
             val currentUserId = container.sessionManager.currentUserId.value
             container.receiptParser.fetchAndParse(raw)
                 .onSuccess { parsed ->
+                    val isZeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
+                    if (isZeroVat) {
+                        _state.value = ScanState.ZeroVat(parsed)
+                        return@onSuccess
+                    }
                     val owner = container.receiptRepository.findOwner(
                         qrUrl = parsed.qrUrl,
                         fiscalSign = parsed.fiscalSign,
@@ -180,6 +187,14 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
             return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
         val parsed = container.receiptParser.fetchAndParse(url).getOrThrow()
         if (!parsed.isValid) return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
+        val zeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
+        if (zeroVat) {
+            return CameraScanResult(
+                status = CameraScanStatus.WARNING,
+                message = R.string.scanner_zero_vat_not_added,
+                completedReceiptId = null
+            )
+        }
         val owner = container.receiptRepository.findOwner(
             qrUrl = parsed.qrUrl, fiscalSign = parsed.fiscalSign,
             terminalId = parsed.terminalId, receiptNumber = parsed.receiptNumber,
@@ -194,10 +209,9 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         val id = inserted.getOrNull()
         if (id == null || id <= 0L) return CameraScanResult(
             CameraScanStatus.ERROR, R.string.scanner_save_error, retryable = true)
-        val zeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
         return CameraScanResult(
-            if (zeroVat) CameraScanStatus.WARNING else CameraScanStatus.SUCCESS,
-            if (zeroVat) R.string.scanner_added_zero else R.string.scanner_added,
+            CameraScanStatus.SUCCESS,
+            R.string.scanner_added,
             completedReceiptId = id,
         )
         } catch (cancelled: CancellationException) {
@@ -267,7 +281,15 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                         terminalId = parsed.terminalId,
                         receiptNumber = parsed.receiptNumber,
                     )
+                    val isZeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
                     when {
+                        isZeroVat ->
+                            SheetReceiptItem(
+                                qrUrl = parsed.qrUrl,
+                                parsed = parsed,
+                                status = SheetItemStatus.ZERO_VAT,
+                                selected = false
+                            )
                         existingOwner != null && existingOwner.userId != userId ->
                             SheetReceiptItem(
                                 qrUrl = parsed.qrUrl,
@@ -333,6 +355,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                 when {
                     item.status == SheetItemStatus.OTHER_OWNER -> conflicts++
                     item.status == SheetItemStatus.ERROR -> errors++
+                    item.status == SheetItemStatus.ZERO_VAT -> skipped++
                     !item.selected -> {
                         if (item.status == SheetItemStatus.ALREADY_THIS) alreadyInDb++
                         else skipped++
@@ -340,8 +363,8 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                     item.status == SheetItemStatus.ALREADY_THIS -> alreadyInDb++
                     item.status == SheetItemStatus.NEW -> {
                         val parsed = item.parsed
-                        if (parsed == null || !parsed.isValid) {
-                            errors++
+                        if (parsed == null || !parsed.isValid || (parsed.vatAmountTiyin ?: 0L) == 0L) {
+                            skipped++
                             continue
                         }
                         val insertResult = insertParsed(parsed, userId)
@@ -396,6 +419,10 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         val parsed = current.parsed
         if (!parsed.isValid) {
             _state.value = ScanState.Error("Не удалось распознать обязательные поля чека")
+            return
+        }
+        if ((parsed.vatAmountTiyin ?: 0L) == 0L) {
+            _state.value = ScanState.Error("Чек с нулевым НДС не может быть сохранён")
             return
         }
         val userId = container.sessionManager.currentUserId.value
@@ -532,6 +559,9 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         auditorUserId: Long? = null
     ): Result<Long> {
         if (!parsed.isValid) return Result.failure(IllegalStateException("Неполные данные чека"))
+        if ((parsed.vatAmountTiyin ?: 0L) == 0L) {
+            return Result.failure(IllegalStateException("Чек с нулевым НДС не может быть сохранён"))
+        }
         val owner = container.receiptRepository.findOwner(
             qrUrl = parsed.qrUrl,
             fiscalSign = parsed.fiscalSign,

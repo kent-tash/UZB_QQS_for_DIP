@@ -74,6 +74,7 @@ import com.example.uzb_qqs_for_dip.ui.ScanViewModel
 import com.example.uzb_qqs_for_dip.ui.SheetItemStatus
 import com.example.uzb_qqs_for_dip.ui.components.MultiQrCameraScannerDialog
 import com.example.uzb_qqs_for_dip.ui.components.SheetPreviewDialog
+import com.example.uzb_qqs_for_dip.ui.components.ZeroVatScanDialog
 import com.example.uzb_qqs_for_dip.ui.theme.Danger
 import com.example.uzb_qqs_for_dip.ui.theme.Success
 import com.example.uzb_qqs_for_dip.ui.theme.Warning
@@ -135,6 +136,7 @@ fun ScanScreen(
 
     val isBusy = state is ScanState.Loading ||
         state is ScanState.Parsed ||
+        state is ScanState.ZeroVat ||
         sheetLoading ||
         sheetPreviewItems.isNotEmpty()
 
@@ -307,6 +309,7 @@ fun ScanScreen(
             ScanState.Idle -> { /* nothing */ }
             ScanState.Loading -> LoadingCard()
             is ScanState.Parsed -> { /* диалог см. ниже */ }
+            is ScanState.ZeroVat -> { /* диалог см. ниже */ }
             is ScanState.Error -> { /* SnackBar is handling this now */ }
         }
     }
@@ -336,6 +339,14 @@ fun ScanScreen(
                 onCancel = { scanViewModel.reset() }
             )
         }
+    }
+
+    val zeroVatState = state as? ScanState.ZeroVat
+    if (zeroVatState != null) {
+        ZeroVatScanDialog(
+            parsed = zeroVatState.parsed,
+            onDismiss = { scanViewModel.reset() }
+        )
     }
 
     if (showManualDialog) {

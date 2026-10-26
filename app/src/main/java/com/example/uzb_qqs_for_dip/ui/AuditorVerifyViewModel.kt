@@ -53,7 +53,8 @@ enum class SheetItemStatus {
     ALREADY_THIS,
     OTHER_OWNER,
     ERROR,
-    OUT_OF_PERIOD
+    OUT_OF_PERIOD,
+    ZERO_VAT
 }
 
 data class SheetReceiptItem(
@@ -360,7 +361,7 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
         val list = _sheetPreviewItems.value.toMutableList()
         if (index !in list.indices) return
         val item = list[index]
-        if (item.status == SheetItemStatus.OTHER_OWNER) return
+        if (item.status == SheetItemStatus.OTHER_OWNER || item.status == SheetItemStatus.ZERO_VAT) return
         list[index] = item.copy(selected = !item.selected)
         _sheetPreviewItems.value = list
     }
@@ -376,6 +377,14 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
             return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
         val parsed = container.receiptParser.fetchAndParse(url).getOrThrow()
         if (!parsed.isValid) return CameraScanResult(CameraScanStatus.ERROR, R.string.scanner_invalid)
+        val zeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
+        if (zeroVat) {
+            return CameraScanResult(
+                status = CameraScanStatus.WARNING,
+                message = R.string.scanner_zero_vat_not_added,
+                completedReceiptId = null
+            )
+        }
         val owner = container.receiptRepository.findOwner(
             qrUrl = parsed.qrUrl, fiscalSign = parsed.fiscalSign,
             terminalId = parsed.terminalId, receiptNumber = parsed.receiptNumber,
@@ -411,10 +420,9 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
         if (verified.isFailure) return CameraScanResult(
             CameraScanStatus.ERROR, R.string.scanner_partial, retryable = true)
         refreshEmployeeData()
-        val zeroVat = (parsed.vatAmountTiyin ?: 0L) == 0L
         return CameraScanResult(
-            if (zeroVat || outOfPeriod) CameraScanStatus.WARNING else CameraScanStatus.SUCCESS,
-            if (zeroVat) R.string.scanner_verified_zero else R.string.scanner_verified,
+            if (outOfPeriod) CameraScanStatus.WARNING else CameraScanStatus.SUCCESS,
+            R.string.scanner_verified,
             completedReceiptId = receiptId, outOfPeriod = outOfPeriod,
         )
         } catch (cancelled: CancellationException) {
@@ -516,7 +524,16 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                     )
                     val outOfPeriod = parsed.purchasedAt?.let { it < from || it > to } ?: false
 
+                    val isZeroVat = (parsed.vatAmountTiyin == null || parsed.vatAmountTiyin == 0L)
+
                     when {
+                        isZeroVat ->
+                            SheetReceiptItem(
+                                qrUrl = parsed.qrUrl,
+                                parsed = parsed,
+                                status = SheetItemStatus.ZERO_VAT,
+                                selected = false
+                            )
                         existingOwner != null && existingOwner.userId != employee.id ->
                             SheetReceiptItem(
                                 qrUrl = parsed.qrUrl,
@@ -592,6 +609,9 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                     item.status == SheetItemStatus.OTHER_OWNER -> {
                         conflicts++
                     }
+                    item.status == SheetItemStatus.ZERO_VAT -> {
+                        skipped++
+                    }
                     !item.selected -> {
                         skipped++
                     }
@@ -617,7 +637,7 @@ class AuditorVerifyViewModel(app: Application) : AndroidViewModel(app) {
                     item.status == SheetItemStatus.NEW ||
                         item.status == SheetItemStatus.OUT_OF_PERIOD -> {
                         val parsed = item.parsed
-                        if (parsed == null || !parsed.isValid) {
+                        if (parsed == null || !parsed.isValid || (parsed.vatAmountTiyin ?: 0L) == 0L) {
                             errors++
                             continue
                         }

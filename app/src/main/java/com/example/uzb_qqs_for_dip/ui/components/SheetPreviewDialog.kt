@@ -24,11 +24,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.uzb_qqs_for_dip.R
 import com.example.uzb_qqs_for_dip.ui.SheetItemStatus
 import com.example.uzb_qqs_for_dip.ui.SheetReceiptItem
 import com.example.uzb_qqs_for_dip.util.DateFormat
@@ -99,7 +102,8 @@ fun SheetPreviewDialog(
                             alreadyThisLabel = alreadyThisLabel,
                             enabled = !loading &&
                                 item.status != SheetItemStatus.OTHER_OWNER &&
-                                item.status != SheetItemStatus.ERROR,
+                                item.status != SheetItemStatus.ERROR &&
+                                item.status != SheetItemStatus.ZERO_VAT,
                             onToggle = { onToggle(index) }
                         )
                         if (index < items.lastIndex) HorizontalDivider()
@@ -150,17 +154,20 @@ private fun SheetPreviewRow(
         SheetItemStatus.ERROR ->
             (item.errorMessage ?: "Ошибка") to SheetDanger
         SheetItemStatus.OUT_OF_PERIOD -> "Вне периода" to SheetWarning
+        SheetItemStatus.ZERO_VAT -> stringResource(R.string.sheet_status_zero_vat) to SheetWarning
     }
     val parsed = item.parsed
+    val isZeroVat = item.status == SheetItemStatus.ZERO_VAT
     Row(
         Modifier
             .fillMaxWidth()
+            .then(if (isZeroVat) Modifier.alpha(0.65f) else Modifier)
             .clickable(enabled = enabled, onClick = onToggle)
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = item.selected,
+            checked = if (isZeroVat) false else item.selected,
             onCheckedChange = { if (enabled) onToggle() },
             enabled = enabled
         )

@@ -30,6 +30,12 @@
     <string name="scanner_out_of_period">Чек вне выбранного квартала</string>
 
     <!-- Чеки с нулевым НДС -->
+    <string name="zero_vat_scan_dialog_title">Чек с нулевым НДС</string>
+    <string name="zero_vat_scan_dialog_message">Чек содержит нулевую ставку НДС и не может быть включен в реестр и отчет. Он не был сохранен в базу.</string>
+    <string name="zero_vat_scan_dialog_dismiss">Понятно</string>
+    <string name="zero_vat_scan_dialog_vat_zero">НДС: 0 сум</string>
+    <string name="sheet_status_zero_vat">НДС 0 сум</string>
+    <string name="scanner_zero_vat_not_added">НДС 0 сум. Чек не добавлен</string>
     <string name="zero_vat_card_title">Чеки с нулевым НДС (%1$d шт.) — исключены из отчёта</string>
     <string name="zero_vat_card_warning">Внимание: чеки с нулевым НДС (ставка 0%% или без НДС) не принимаются к возмещению и не включены в официальный реестр и расчёты.</string>
     <string name="zero_vat_delete_all">Удалить все (%1$d)</string>

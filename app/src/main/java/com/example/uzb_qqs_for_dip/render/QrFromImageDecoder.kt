@@ -6,6 +6,10 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
@@ -20,16 +24,17 @@ import com.google.zxing.FormatException
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.qrcode.QRCodeMultiReader
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 
 /**
  * Декодирует QR-код с фотографии, выбранной пользователем (Uri из галереи/файлов).
  *
- * Стратегия: загружаем картинку (учитывая EXIF-ориентацию через ImageDecoder),
- * при необходимости даунсемплим, далее пробуем несколько вариантов:
- *   1) HybridBinarizer на оригинале;
- *   2) GlobalHistogramBinarizer (лучше для фото с засветами);
- *   3) HybridBinarizer на повороте 180° (на случай чека «вверх ногами»).
+ * Стратегия:
+ *   1) Сначала пробуем Google ML Kit Barcode Scanning напрямую из Uri (InputImage.fromFilePath);
+ *   2) Если не найдено — загружаем Bitmap и пробуем ML Kit (InputImage.fromBitmap);
+ *   3) Fallback — ZXing (HybridBinarizer, GlobalHistogramBinarizer, поворот на 180°).
  *
  * [decode] возвращает первый найденный QR; [decodeAll] — все уникальные URL на листе.
  */
@@ -44,6 +49,78 @@ object QrFromImageDecoder {
         DecodeHintType.CHARACTER_SET to "UTF-8"
     )
 
+    private suspend fun decodeWithMlKit(context: Context, uri: Uri): List<String> =
+        suspendCancellableCoroutine { cont ->
+            val options = BarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .build()
+            val scanner = BarcodeScanning.getClient(options)
+            cont.invokeOnCancellation {
+                try {
+                    scanner.close()
+                } catch (_: Throwable) {}
+            }
+            try {
+                val inputImage = InputImage.fromFilePath(context, uri)
+                scanner.process(inputImage)
+                    .addOnSuccessListener { barcodes ->
+                        val results = barcodes.mapNotNull { it.rawValue?.trim() }
+                            .filter { it.isNotEmpty() }
+                            .distinct()
+                        if (cont.isActive) cont.resume(results)
+                    }
+                    .addOnFailureListener {
+                        if (cont.isActive) cont.resume(emptyList())
+                    }
+                    .addOnCompleteListener {
+                        try {
+                            scanner.close()
+                        } catch (_: Throwable) {}
+                    }
+            } catch (_: Throwable) {
+                try {
+                    scanner.close()
+                } catch (_: Throwable) {}
+                if (cont.isActive) cont.resume(emptyList())
+            }
+        }
+
+    private suspend fun decodeWithMlKit(bitmap: Bitmap): List<String> =
+        suspendCancellableCoroutine { cont ->
+            val options = BarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .build()
+            val scanner = BarcodeScanning.getClient(options)
+            cont.invokeOnCancellation {
+                try {
+                    scanner.close()
+                } catch (_: Throwable) {}
+            }
+            try {
+                val inputImage = InputImage.fromBitmap(bitmap, 0)
+                scanner.process(inputImage)
+                    .addOnSuccessListener { barcodes ->
+                        val results = barcodes.mapNotNull { it.rawValue?.trim() }
+                            .filter { it.isNotEmpty() }
+                            .distinct()
+                        if (cont.isActive) cont.resume(results)
+                    }
+                    .addOnFailureListener {
+                        if (cont.isActive) cont.resume(emptyList())
+                    }
+                    .addOnCompleteListener {
+                        try {
+                            scanner.close()
+                        } catch (_: Throwable) {}
+                    }
+            } catch (_: Throwable) {
+                try {
+                    scanner.close()
+                } catch (_: Throwable) {}
+                if (cont.isActive) cont.resume(emptyList())
+            }
+        }
+
     suspend fun decode(context: Context, uri: Uri): String = withContext(Dispatchers.IO) {
         val all = decodeAll(context, uri)
         all.firstOrNull()
@@ -55,14 +132,30 @@ object QrFromImageDecoder {
      * URL дедуплицируются с сохранением порядка первого появления.
      */
     suspend fun decodeAll(context: Context, uri: Uri): List<String> = withContext(Dispatchers.IO) {
+        // Шаг 1: ML Kit через InputImage.fromFilePath
+        val mlKitUriResults = decodeWithMlKit(context, uri)
+        if (mlKitUriResults.isNotEmpty()) {
+            return@withContext mlKitUriResults
+        }
+
+        // Шаг 2: Загружаем битмап для альтернативных попыток
         val bitmap = loadBitmap(context, uri)
             ?: throw IllegalArgumentException("Не удалось открыть изображение")
         try {
-            decodeAllBitmap(bitmap).also { urls ->
-                if (urls.isEmpty()) {
-                    throw IllegalStateException("На фото не удалось распознать QR-код")
-                }
+            // Шаг 3: ML Kit через InputImage.fromBitmap
+            val mlKitBitmapResults = decodeWithMlKit(bitmap)
+            if (mlKitBitmapResults.isNotEmpty()) {
+                return@withContext mlKitBitmapResults
             }
+
+            // Шаг 4: ZXing Fallback
+            val zxingResults = decodeAllBitmap(bitmap)
+            if (zxingResults.isNotEmpty()) {
+                return@withContext zxingResults
+            }
+
+            // Шаг 5: Ничего не найдено
+            throw IllegalStateException("На фото не удалось распознать QR-код")
         } finally {
             bitmap.recycle()
         }
