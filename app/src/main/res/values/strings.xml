@@ -52,4 +52,10 @@
     <string name="widget_quick_scan_title">Скан QR чека</string>
     <string name="widget_quick_scan_subtitle">Быстро добавить чек</string>
     <string name="widget_quick_scan_description">Виджет для быстрого сканирования и добавления чека по QR-коду</string>
+
+    <!-- Экран Чеки и отчёт -->
+    <string name="screen_receipts_and_report">Чеки и отчёт</string>
+    <string name="export_mode_all">Всё</string>
+    <string name="export_mode_report">Отчёт</string>
+    <string name="export_mode_receipts">Чеки</string>
 </resources>
