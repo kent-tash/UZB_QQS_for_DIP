@@ -5,11 +5,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +64,7 @@ import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,8 +74,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -261,33 +272,74 @@ fun ReportScreen(
         }
 
         // =====================================================================
-        // Блок 5: Сортировка и пакетные действия (SortAndBatchBar + SelectionActionBar)
+        // Блок 5: Сортировка и пакетные действия (Sticky Header: SortAndBatchBar + SelectionActionBar)
         // =====================================================================
-        item {
-            SortAndBatchBar(
-                totalCount = rows.size,
-                selectedCount = selectedIds.size,
-                onSelectAll = { reportViewModel.selectAllVisible() },
-                onClearAll = { reportViewModel.clearSelection() },
-                sortField = settings.sortField,
-                sortOrder = settings.sortOrder,
-                onSortFieldSelected = { reportViewModel.toggleSort(it) },
-                onToggleSortOrder = { reportViewModel.toggleSort(settings.sortField) }
+        @OptIn(ExperimentalFoundationApi::class)
+        stickyHeader(key = "sort_and_batch_sticky_header") {
+            val isPinned by remember {
+                derivedStateOf { listState.firstVisibleItemIndex >= 3 }
+            }
+            val animatedShadow by animateDpAsState(
+                targetValue = if (isPinned) 4.dp else 0.dp,
+                animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                label = "stickyShadowElevation"
             )
-        }
+            val animatedTonal by animateDpAsState(
+                targetValue = if (isPinned) 2.dp else 0.dp,
+                animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                label = "stickyTonalElevation"
+            )
+            val dividerAlpha by animateFloatAsState(
+                targetValue = if (isPinned) 0.5f else 0f,
+                animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                label = "stickyDividerAlpha"
+            )
 
-        item {
-            AnimatedVisibility(
-                visible = selectedIds.isNotEmpty(),
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { paneTitle = "Панель управления списком чеков" },
+                color = MaterialTheme.colorScheme.background,
+                shadowElevation = animatedShadow,
+                tonalElevation = animatedTonal
             ) {
-                Column(Modifier.padding(vertical = 4.dp)) {
-                    SelectionActionBar(
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = if (isPinned) 2.dp else 0.dp)
+                ) {
+                    SortAndBatchBar(
+                        totalCount = rows.size,
                         selectedCount = selectedIds.size,
-                        onClear = { reportViewModel.clearSelection() },
-                        onDelete = { showDeleteBatchConfirm = true }
+                        onSelectAll = { reportViewModel.selectAllVisible() },
+                        onClearAll = { reportViewModel.clearSelection() },
+                        sortField = settings.sortField,
+                        sortOrder = settings.sortOrder,
+                        onSortFieldSelected = { reportViewModel.toggleSort(it) },
+                        onToggleSortOrder = { reportViewModel.toggleSort(settings.sortField) }
                     )
+
+                    AnimatedVisibility(
+                        visible = selectedIds.isNotEmpty(),
+                        enter = expandVertically(animationSpec = tween(200, easing = FastOutSlowInEasing)) + fadeIn(tween(200)),
+                        exit = shrinkVertically(animationSpec = tween(150, easing = FastOutSlowInEasing)) + fadeOut(tween(150))
+                    ) {
+                        Column(Modifier.padding(vertical = 4.dp)) {
+                            SelectionActionBar(
+                                selectedCount = selectedIds.size,
+                                onClear = { reportViewModel.clearSelection() },
+                                onDelete = { showDeleteBatchConfirm = true }
+                            )
+                        }
+                    }
+
+                    if (dividerAlpha > 0.01f) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = dividerAlpha),
+                            thickness = 0.5.dp
+                        )
+                    }
                 }
             }
         }
@@ -802,6 +854,12 @@ private fun SortAndBatchBar(
         else -> ToggleableState.Indeterminate
     }
 
+    val haptic = LocalHapticFeedback.current
+    val handleToggleAll = {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        if (toggleState == ToggleableState.On) onClearAll() else onSelectAll()
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -878,12 +936,11 @@ private fun SortAndBatchBar(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .defaultMinSize(minHeight = 48.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .clickable(
                     enabled = totalCount > 0,
-                    onClick = {
-                        if (toggleState == ToggleableState.On) onClearAll() else onSelectAll()
-                    }
+                    onClick = handleToggleAll
                 )
                 .padding(start = 6.dp, end = 2.dp)
         ) {
@@ -895,9 +952,7 @@ private fun SortAndBatchBar(
             Spacer(Modifier.width(4.dp))
             TriStateCheckbox(
                 state = toggleState,
-                onClick = {
-                    if (toggleState == ToggleableState.On) onClearAll() else onSelectAll()
-                },
+                onClick = handleToggleAll,
                 enabled = totalCount > 0
             )
         }

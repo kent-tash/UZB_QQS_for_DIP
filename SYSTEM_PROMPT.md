@@ -183,7 +183,7 @@ C:\Users\kuret\AndroidStudioProjects\UZB_QQS_for_DIP
 #### `test` (Unit-тесты)
 - **Корень тестов:** `ExampleUnitTest.kt`, `ReceiptParserDebugTest.kt`, `ZeroVatReceiptParsingTest.kt`
 - **Тесты экспорта:** `CombinedPdfGeneratorTest.kt`, `PdfReportPageCapacityTest.kt`, `ZeroVatExporterFilterTest.kt`
-- **Тесты UI & ViewModels:** `AuditorVerifyViewModelTest.kt`, `MainDispatcherRule.kt`, `PeriodPickerLogicTest.kt`, `ProfileValidationTest.kt`, `ReportViewModelTest.kt`, `ZeroVatScanLogicTest.kt`
+- **Тесты UI & ViewModels:** `AuditorVerifyViewModelTest.kt`, `MainDispatcherRule.kt`, `PeriodPickerLogicTest.kt`, `ProfileValidationTest.kt`, `ReportStickyHeaderLogicTest.kt`, `ReportViewModelTest.kt`, `ZeroVatScanLogicTest.kt`
 - **Тесты утилит:** `ReceiptUrlExtractorTest.kt`
 </architecture_map>
 <execution_trigger>
