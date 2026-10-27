@@ -44,6 +44,11 @@ object ReceiptsSheetPdfGenerator {
     internal fun sanitizeRows(rowsInOrder: List<ReceiptWithUser>): List<ReceiptWithUser> =
         rowsInOrder.filter { it.receipt.vatAmountTiyin > 0L }
 
+    fun calculatePagesCount(receiptsCount: Int, manualPhotosCount: Int = 0): Int {
+        val gridPages = if (receiptsCount == 0) 1 else (receiptsCount + PER_PAGE - 1) / PER_PAGE
+        return gridPages + manualPhotosCount
+    }
+
     suspend fun generate(
         context: Context,
         rowsInOrder: List<ReceiptWithUser>,
@@ -51,173 +56,191 @@ object ReceiptsSheetPdfGenerator {
         periodLabel: String,
         fileName: String = "receipts_sheet_${System.currentTimeMillis()}.pdf"
     ): File = withContext(Dispatchers.IO) {
-        val sanitizedRows = sanitizeRows(rowsInOrder)
         val file = File(ExportPaths.exportsDir(context), fileName)
         val doc = PdfDocument()
         try {
-            val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-                textSize = 13f
-                color = 0xFF111827.toInt()
-                textAlign = Paint.Align.LEFT
+            renderInto(doc, rowsInOrder, headerRightText, periodLabel)
+            FileOutputStream(file).use { doc.writeTo(it) }
+        } finally {
+            doc.close()
+        }
+        file
+    }
+
+    /**
+     * Рендерит страницы реестра чеков в переданный [doc].
+     * @param startDocPageNumber сквозной номер страницы внутри [doc], с которого начинается реестр.
+     * @return общее количество страниц реестра, добавленных в [doc].
+     */
+    fun renderInto(
+        doc: PdfDocument,
+        rowsInOrder: List<ReceiptWithUser>,
+        headerRightText: String,
+        periodLabel: String,
+        startDocPageNumber: Int = 1,
+        generatedAt: Long = System.currentTimeMillis()
+    ): Int {
+        val sanitizedRows = sanitizeRows(rowsInOrder)
+        val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            textSize = 13f
+            color = 0xFF111827.toInt()
+            textAlign = Paint.Align.LEFT
+        }
+        val subtitlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            textSize = 10f
+            color = 0xFF6B7280.toInt()
+            textAlign = Paint.Align.RIGHT
+        }
+        val pagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            textSize = 8.5f
+            color = 0xFF6B7280.toInt()
+            textAlign = Paint.Align.RIGHT
+        }
+        val footerDatePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            textSize = 8.5f
+            color = 0xFF6B7280.toInt()
+            textAlign = Paint.Align.RIGHT
+        }
+        val generatedAtText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(generatedAt)}"
+
+        val manualReceiptsCount = sanitizedRows.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
+        val gridPages = if (sanitizedRows.isEmpty()) 1 else (sanitizedRows.size + PER_PAGE - 1) / PER_PAGE
+        val totalRegistryPages = gridPages + manualReceiptsCount
+
+        val sheetTitle = "Сохранённые чеки (${sanitizedRows.size}) за $periodLabel"
+        val contentW = PAGE_W - 2f * MARGIN
+        val titleLines = wrapLines(sheetTitle, titlePaint, contentW, maxLines = 8)
+        val rightLines = if (headerRightText.isBlank()) emptyList()
+        else wrapLines(headerRightText.trim(), subtitlePaint, contentW, maxLines = 6)
+
+        val gridTop = measureHeaderBottomY(titleLines, rightLines, titlePaint, subtitlePaint)
+
+        // Размер ячейки
+        val gridLeft = MARGIN
+        val gridW = PAGE_W - MARGIN * 2
+        val gridH = PAGE_H - gridTop - 24f
+        val cellW = (gridW - GAP * (COLS - 1)) / COLS
+        val cellH = (gridH - GAP * (ROWS - 1)) / ROWS
+
+        for (pageIndex in 0 until gridPages) {
+            val registryPageNumber = pageIndex + 1
+            val docPageNumber = startDocPageNumber + pageIndex
+            val page = doc.startPage(
+                PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, docPageNumber).create()
+            )
+            val canvas = page.canvas
+
+            // Шапка: заголовок на всю ширину (перенос), ниже — должность и ФИО справа (перенос)
+            var baseline = MARGIN + titlePaint.textSize
+            for (i in titleLines.indices) {
+                canvas.drawText(titleLines[i], MARGIN, baseline, titlePaint)
+                if (i < titleLines.lastIndex) {
+                    baseline += titlePaint.textSize + TITLE_LINE_EXTRA
+                }
             }
-            val subtitlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-                textSize = 10f
-                color = 0xFF6B7280.toInt()
-                textAlign = Paint.Align.RIGHT
+            if (rightLines.isNotEmpty()) {
+                baseline = if (titleLines.isNotEmpty()) {
+                    baseline + titlePaint.fontMetrics.descent + HEADER_BLOCKS_GAP -
+                        subtitlePaint.fontMetrics.ascent
+                } else {
+                    MARGIN + subtitlePaint.textSize
+                }
+                for (i in rightLines.indices) {
+                    canvas.drawText(rightLines[i], PAGE_W - MARGIN, baseline, subtitlePaint)
+                    if (i < rightLines.lastIndex) {
+                        baseline += subtitlePaint.textSize + SUB_LINE_EXTRA
+                    }
+                }
             }
-            val pagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-                textSize = 8.5f
-                color = 0xFF6B7280.toInt()
-                textAlign = Paint.Align.RIGHT
-            }
-            val footerDatePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-                textSize = 8.5f
-                color = 0xFF6B7280.toInt()
-                textAlign = Paint.Align.RIGHT
-            }
-            val generatedAtText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(System.currentTimeMillis())}"
 
-            val manualReceiptsCount = sanitizedRows.count { it.receipt.isManual && it.receipt.manualPhotoUri != null }
-            val gridPages = if (sanitizedRows.isEmpty()) 1 else (sanitizedRows.size + PER_PAGE - 1) / PER_PAGE
-            val totalPages = gridPages + manualReceiptsCount
+            val from = pageIndex * PER_PAGE
+            val to = minOf(from + PER_PAGE, sanitizedRows.size)
+            for (i in from until to) {
+                val cellIndex = i - from
+                val row = cellIndex / COLS
+                val col = cellIndex % COLS
+                val left = gridLeft + col * (cellW + GAP)
+                val top = gridTop + row * (cellH + GAP)
 
-            val sheetTitle =
-                "Сохранённые чеки (${sanitizedRows.size}) за $periodLabel"
-            val contentW = PAGE_W - 2f * MARGIN
-            val titleLines = wrapLines(sheetTitle, titlePaint, contentW, maxLines = 8)
-            val rightLines = if (headerRightText.isBlank()) emptyList()
-            else wrapLines(headerRightText.trim(), subtitlePaint, contentW, maxLines = 6)
-
-            val gridTop = measureHeaderBottomY(titleLines, rightLines, titlePaint, subtitlePaint)
-
-            // Размер ячейки
-            val gridLeft = MARGIN
-            val gridW = PAGE_W - MARGIN * 2
-            val gridH = PAGE_H - gridTop - 24f
-            val cellW = (gridW - GAP * (COLS - 1)) / COLS
-            val cellH = (gridH - GAP * (ROWS - 1)) / ROWS
-
-            for (pageIndex in 0 until gridPages) {
-                val pageNumber = pageIndex + 1
-                val page = doc.startPage(
-                    PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, pageNumber).create()
+                val item = sanitizedRows[i].receipt
+                ReceiptCardRenderer.renderInto(
+                    canvas = canvas,
+                    receipt = item,
+                    ordinal = i + 1,
+                    left = left,
+                    top = top,
+                    width = cellW,
+                    height = cellH
                 )
+            }
+
+            // Нумерация страниц реестра всегда изолирована и начинается с 1: «стр. X из M»
+            canvas.drawText(
+                "стр. $registryPageNumber из $totalRegistryPages",
+                PAGE_W - MARGIN, MARGIN - 6f, pagePaint
+            )
+            canvas.drawText(
+                generatedAtText,
+                PAGE_W - MARGIN, PAGE_H - 10f, footerDatePaint
+            )
+
+            doc.finishPage(page)
+        }
+
+        // --- Добавление страниц с фото для чеков, добавленных вручную ---
+        val manualReceipts = sanitizedRows.mapIndexedNotNull { index, row ->
+            if (row.receipt.isManual && row.receipt.manualPhotoUri != null) {
+                index + 1 to row.receipt
+            } else null
+        }
+
+        var manualSeq = 1
+        for ((tableIdx, receipt) in manualReceipts) {
+            val photoFile = java.io.File(receipt.manualPhotoUri!!)
+            if (photoFile.exists()) {
+                val registryPageNumber = gridPages + manualSeq
+                val docPageNumber = startDocPageNumber + gridPages + manualSeq - 1
+                val page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, docPageNumber).create())
                 val canvas = page.canvas
 
-                // Шапка: заголовок на всю ширину (перенос), ниже — должность и ФИО справа (перенос),
-                // без горизонтального пересечения.
-                var baseline = MARGIN + titlePaint.textSize
-                for (i in titleLines.indices) {
-                    canvas.drawText(titleLines[i], MARGIN, baseline, titlePaint)
-                    if (i < titleLines.lastIndex) {
-                        baseline += titlePaint.textSize + TITLE_LINE_EXTRA
-                    }
-                }
-                if (rightLines.isNotEmpty()) {
-                    baseline = if (titleLines.isNotEmpty()) {
-                        baseline + titlePaint.fontMetrics.descent + HEADER_BLOCKS_GAP -
-                            subtitlePaint.fontMetrics.ascent
-                    } else {
-                        MARGIN + subtitlePaint.textSize
-                    }
-                    for (i in rightLines.indices) {
-                        canvas.drawText(rightLines[i], PAGE_W - MARGIN, baseline, subtitlePaint)
-                        if (i < rightLines.lastIndex) {
-                            baseline += subtitlePaint.textSize + SUB_LINE_EXTRA
-                        }
-                    }
-                }
+                val attachTitle = "Фото ручного чека № $tableIdx (в реестре)"
+                canvas.drawText(attachTitle, PAGE_W / 2f, MARGIN + titlePaint.textSize, titlePaint.apply { textAlign = Paint.Align.CENTER })
+                titlePaint.textAlign = Paint.Align.LEFT
 
-                val from = pageIndex * PER_PAGE
-                val to = minOf(from + PER_PAGE, sanitizedRows.size)
-                for (i in from until to) {
-                    val cellIndex = i - from
-                    val row = cellIndex / COLS
-                    val col = cellIndex % COLS
-                    val left = gridLeft + col * (cellW + GAP)
-                    val top = gridTop + row * (cellH + GAP)
-
-                    val item = sanitizedRows[i].receipt
-                    ReceiptCardRenderer.renderInto(
-                        canvas = canvas,
-                        receipt = item,
-                        ordinal = i + 1,
-                        left = left,
-                        top = top,
-                        width = cellW,
-                        height = cellH
-                    )
+                val bitmap = android.graphics.BitmapFactory.decodeFile(receipt.manualPhotoUri)
+                if (bitmap != null) {
+                    val imgMaxWidth = PAGE_W - 2f * MARGIN
+                    val imgMaxHeight = PAGE_H - 2f * MARGIN - titlePaint.textSize - 20f
+                    val scale = minOf(imgMaxWidth / bitmap.width, imgMaxHeight / bitmap.height, 1f)
+                    val scaledWidth = bitmap.width * scale
+                    val scaledHeight = bitmap.height * scale
+                    
+                    val imgLeft = (PAGE_W - scaledWidth) / 2f
+                    val imgTop = MARGIN + titlePaint.textSize + 20f
+                    
+                    val destRect = android.graphics.RectF(imgLeft, imgTop, imgLeft + scaledWidth, imgTop + scaledHeight)
+                    canvas.drawBitmap(bitmap, null, destRect, null)
+                    bitmap.recycle()
                 }
 
                 canvas.drawText(
-                    "стр. $pageNumber из $totalPages",
+                    "стр. $registryPageNumber из $totalRegistryPages",
                     PAGE_W - MARGIN, MARGIN - 6f, pagePaint
                 )
                 canvas.drawText(
                     generatedAtText,
                     PAGE_W - MARGIN, PAGE_H - 10f, footerDatePaint
                 )
-
                 doc.finishPage(page)
+                manualSeq++
             }
-
-            // --- Добавление страниц с фото для чеков, добавленных вручную ---
-            val manualReceipts = sanitizedRows.mapIndexedNotNull { index, row ->
-                if (row.receipt.isManual && row.receipt.manualPhotoUri != null) {
-                    index + 1 to row.receipt
-                } else null
-            }
-
-            var manualSeq = 1
-            for ((tableIdx, receipt) in manualReceipts) {
-                val photoFile = java.io.File(receipt.manualPhotoUri!!)
-                if (photoFile.exists()) {
-                    val pageNumber = gridPages + manualSeq
-                    val page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, pageNumber).create())
-                    val canvas = page.canvas
-
-                    val attachTitle = "Фото ручного чека № $tableIdx (в реестре)"
-                    canvas.drawText(attachTitle, PAGE_W / 2f, MARGIN + titlePaint.textSize, titlePaint.apply { textAlign = Paint.Align.CENTER })
-                    titlePaint.textAlign = Paint.Align.LEFT // Возвращаем как было
-
-                    val bitmap = android.graphics.BitmapFactory.decodeFile(receipt.manualPhotoUri)
-                    if (bitmap != null) {
-                        val imgMaxWidth = PAGE_W - 2f * MARGIN
-                        val imgMaxHeight = PAGE_H - 2f * MARGIN - titlePaint.textSize - 20f
-                        val scale = minOf(imgMaxWidth / bitmap.width, imgMaxHeight / bitmap.height, 1f)
-                        val scaledWidth = bitmap.width * scale
-                        val scaledHeight = bitmap.height * scale
-                        
-                        val imgLeft = (PAGE_W - scaledWidth) / 2f
-                        val imgTop = MARGIN + titlePaint.textSize + 20f
-                        
-                        val destRect = android.graphics.RectF(imgLeft, imgTop, imgLeft + scaledWidth, imgTop + scaledHeight)
-                        canvas.drawBitmap(bitmap, null, destRect, null)
-                        bitmap.recycle()
-                    }
-
-                    canvas.drawText(
-                        "стр. $pageNumber из $totalPages",
-                        PAGE_W - MARGIN, MARGIN - 6f, pagePaint
-                    )
-                    canvas.drawText(
-                        generatedAtText,
-                        PAGE_W - MARGIN, PAGE_H - 10f, footerDatePaint
-                    )
-                    doc.finishPage(page)
-                    manualSeq++
-                }
-            }
-
-            FileOutputStream(file).use { doc.writeTo(it) }
-        } finally {
-            doc.close()
         }
-        file
+
+        return totalRegistryPages
     }
 
     /** Y верхней границы сетки карточек под шапкой. */
