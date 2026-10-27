@@ -158,7 +158,7 @@ C:\Users\kuret\AndroidStudioProjects\UZB_QQS_for_DIP
 
 #### `export` (Модуль Экспорта)
 - **Таблицы:** `CsvExporter.kt`, `SummaryTableExporter.kt`, `XlsxExporter.kt`
-- **PDF Отчеты:** `OrgReportPdfGenerator.kt`, `PdfPrintAdapter.kt`, `PdfReportGenerator.kt`, `ReceiptsSheetPdfGenerator.kt`, `SummaryPdfGenerator.kt`
+- **PDF Отчеты:** `CombinedPdfGenerator.kt`, `OrgReportPdfGenerator.kt`, `PdfPrintAdapter.kt`, `PdfReportGenerator.kt`, `ReceiptsSheetPdfGenerator.kt`, `SummaryPdfGenerator.kt`
 - **Архивы и утилиты:** `ExportPaths.kt`, `ReceiptImageExporter.kt`, `ZipExporter.kt`
 
 #### `network` (Сетевое Взаимодействие)
@@ -172,9 +172,9 @@ C:\Users\kuret\AndroidStudioProjects\UZB_QQS_for_DIP
 
 #### `ui` (Пользовательский Интерфейс - Jetpack Compose)
 - **Навигация:** `navigation/AppNavHost.kt`
-- **Экраны (`screens/`):** `AuditorReceiptSearchScreen.kt`, `AuditorScreen.kt`, `AuditorVerifyScreen.kt`, `AuthScreen.kt`, `ProfileScreen.kt`, `ReceiptsScreen.kt`, `RegisterScreen.kt`, `ReportScreen.kt`, `ScanScreen.kt`
-- **ViewModels & Состояния:** `AppViewModel.kt`, `AuditorSearchViewModel.kt`, `AuditorVerifyViewModel.kt`, `AuditorViewModel.kt`, `CameraScanResult.kt`, `ReceiptsViewModel.kt`, `ReportViewModel.kt`, `ScanViewModel.kt`
-- **Компоненты (`components/`):** `DocumentCameraCapture.kt`, `ExportActionGrid.kt`, `FormatChoiceDialog.kt`, `HelpBottomSheet.kt`, `ManualEntryBottomSheet.kt`, `MultiQrCameraScanner.kt`, `Pickers.kt`, `SaveProgressButton.kt`, `SheetPreviewDialog.kt`, `ZeroVatDetectedDialog.kt`, `ZeroVatReceiptsCard.kt`, `ZeroVatScanDialog.kt`
+- **Экраны (`screens/`):** `AuditorReceiptSearchScreen.kt`, `AuditorScreen.kt`, `AuditorVerifyScreen.kt`, `AuthScreen.kt`, `ProfileScreen.kt`, `RegisterScreen.kt`, `ReportScreen.kt`, `ScanScreen.kt`
+- **ViewModels & Состояния:** `AppViewModel.kt`, `AuditorSearchViewModel.kt`, `AuditorVerifyViewModel.kt`, `AuditorViewModel.kt`, `CameraScanResult.kt`, `ReportViewModel.kt`, `ScanViewModel.kt`
+- **Компоненты (`components/`):** `AutoScalingText.kt`, `DocumentCameraCapture.kt`, `ExportActionGrid.kt`, `FormatChoiceDialog.kt`, `HelpBottomSheet.kt`, `ManualEntryBottomSheet.kt`, `MultiQrCameraScanner.kt`, `Pickers.kt`, `SaveProgressButton.kt`, `SheetPreviewDialog.kt`, `ZeroVatDetectedDialog.kt`, `ZeroVatReceiptsCard.kt`, `ZeroVatScanDialog.kt`
 - **Тема (`theme/`):** `theme/Color.kt, Theme.kt, Type.kt`
 
 #### `util` (Утилиты)
@@ -182,8 +182,8 @@ C:\Users\kuret\AndroidStudioProjects\UZB_QQS_for_DIP
 
 #### `test` (Unit-тесты)
 - **Корень тестов:** `ExampleUnitTest.kt`, `ReceiptParserDebugTest.kt`, `ZeroVatReceiptParsingTest.kt`
-- **Тесты экспорта:** `ZeroVatExporterFilterTest.kt`
-- **Тесты UI & ViewModels:** `AuditorVerifyViewModelTest.kt`, `MainDispatcherRule.kt`, `ZeroVatScanLogicTest.kt`
+- **Тесты экспорта:** `CombinedPdfGeneratorTest.kt`, `PdfReportPageCapacityTest.kt`, `ZeroVatExporterFilterTest.kt`
+- **Тесты UI & ViewModels:** `AuditorVerifyViewModelTest.kt`, `MainDispatcherRule.kt`, `ReportViewModelTest.kt`, `ZeroVatScanLogicTest.kt`
 - **Тесты утилит:** `ReceiptUrlExtractorTest.kt`
 </architecture_map>
 <execution_trigger>
