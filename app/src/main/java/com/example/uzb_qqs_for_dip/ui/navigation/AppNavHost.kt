@@ -10,7 +10,6 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCodeScanner
-import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,7 +45,6 @@ import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuthScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ProfileScreen
-import com.example.uzb_qqs_for_dip.ui.screens.ReceiptsScreen
 import com.example.uzb_qqs_for_dip.ui.screens.RegisterScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ReportScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ScanScreen
@@ -59,13 +57,12 @@ private sealed class TopRoute(val route: String) {
 
 private sealed class MainTab(val route: String, val title: String, val icon: ImageVector) {
     data object Scan : MainTab("main/scan", "Добавить", Icons.Outlined.QrCodeScanner)
-    data object Receipts : MainTab("main/receipts", "Чеки", Icons.Outlined.TableChart)
-    data object Report : MainTab("main/report", "Отчёт", Icons.Outlined.Description)
+    data object Report : MainTab("main/report", "Чеки и отчёт", Icons.Outlined.Description)
     data object Audit : MainTab("main/audit", "Аудит", Icons.AutoMirrored.Outlined.FactCheck)
     data object Profile : MainTab("main/profile", "Профиль", Icons.Outlined.Person)
     companion object {
-        val employee = listOf(Scan, Receipts, Report, Profile)
-        val auditor = listOf(Audit, Receipts, Report, Profile)
+        val employee = listOf(Scan, Report, Profile)
+        val auditor = listOf(Audit, Report, Profile)
     }
 }
 
@@ -225,9 +222,6 @@ private fun MainScaffold(
             composable(MainTab.Scan.route) {
                 ScanScreen(appViewModel = appViewModel)
             }
-            composable(MainTab.Receipts.route) {
-                ReceiptsScreen(appViewModel = appViewModel)
-            }
             composable(MainTab.Report.route) {
                 ReportScreen(appViewModel = appViewModel)
             }
@@ -281,5 +275,3 @@ private fun MainScaffold(
         }
     }
 }
-
-
