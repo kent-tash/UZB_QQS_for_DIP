@@ -91,14 +91,13 @@ import com.example.uzb_qqs_for_dip.ui.components.DatePickerSheet
 import com.example.uzb_qqs_for_dip.ui.components.ExportActionGrid
 import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
 import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
+import com.example.uzb_qqs_for_dip.ui.components.PeriodPickerBottomSheet
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatDetectedDialog
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatReceiptsCard
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
 
 private data class UserChoice(val id: Long?, val label: String)
-private data class YearChoice(val year: Int)
-private data class QuarterChoice(val quarter: Quarter, val shortLabel: String)
 
 @Composable
 fun ReportScreen(
@@ -129,9 +128,7 @@ fun ReportScreen(
 
     // Диалоги фильтров
     var showUserPicker by remember { mutableStateOf(false) }
-    var showYearPicker by remember { mutableStateOf(false) }
-    var showQuarterPicker by remember { mutableStateOf(false) }
-    var showPeriodPicker by remember { mutableStateOf(false) }
+    var showPeriodSheet by remember { mutableStateOf(false) }
     var showFromPicker by remember { mutableStateOf(false) }
     var showToPicker by remember { mutableStateOf(false) }
 
@@ -227,7 +224,9 @@ fun ReportScreen(
                 periodText = periodLabel,
                 count = rows.size,
                 totalSum = totalSum,
-                totalVat = totalVat
+                totalVat = totalVat,
+                onUserClick = { showUserPicker = true },
+                onPeriodClick = { showPeriodSheet = true }
             )
             Spacer(Modifier.height(10.dp))
         }
@@ -257,24 +256,6 @@ fun ReportScreen(
                 isSaveEnabled = !isSaving && rows.isNotEmpty() && selectedUser.id != null,
                 isOpenPrintEnabled = rows.isNotEmpty() && selectedUser.id != null,
                 saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "Сохранение… ${(saveProgress * 100).toInt()}%"
-            )
-            Spacer(Modifier.height(10.dp))
-        }
-
-        // =====================================================================
-        // Блок 4: Панель фильтров в один ряд (CompactFiltersBar)
-        // =====================================================================
-        item {
-            CompactFiltersBar(
-                userName = selectedUser.label,
-                year = settings.year,
-                quarter = settings.quarter,
-                from = settings.from,
-                to = settings.to,
-                onUserClick = { showUserPicker = true },
-                onYearClick = { showYearPicker = true },
-                onQuarterClick = { showQuarterPicker = true },
-                onPeriodClick = { showPeriodPicker = true }
             )
             Spacer(Modifier.height(10.dp))
         }
@@ -358,8 +339,7 @@ fun ReportScreen(
                     item = item,
                     isSelected = isSelected,
                     onToggleSelect = { reportViewModel.toggleSelection(item.receipt.id) },
-                    onPreview = { previewReceipt = item },
-                    onDelete = { singleDeleteReceipt = item }
+                    onPreview = { previewReceipt = item }
                 )
             }
         }
@@ -455,81 +435,18 @@ fun ReportScreen(
         )
     }
 
-    if (showYearPicker) {
-        val currentYear = ReportSettings.currentYear()
-        val years = (currentYear + 1 downTo currentYear - 5).map { YearChoice(it) }
-        SelectOptionDialog(
-            title = "Выберите год",
-            options = years,
-            selectedOption = YearChoice(settings.year),
-            optionLabel = { it.year.toString() },
-            onDismiss = { showYearPicker = false },
-            onSelect = {
-                reportViewModel.setYear(it.year)
-                showYearPicker = false
-            }
-        )
-    }
-
-    if (showQuarterPicker) {
-        val quarters = listOf(
-            QuarterChoice(Quarter.Q1, "I квартал (январь–март)"),
-            QuarterChoice(Quarter.Q2, "II квартал (апрель–июнь)"),
-            QuarterChoice(Quarter.Q3, "III квартал (июль–сентябрь)"),
-            QuarterChoice(Quarter.Q4, "IV квартал (октябрь–декабрь)"),
-            QuarterChoice(Quarter.Custom, "Произвольный период")
-        )
-        val selected = quarters.firstOrNull { it.quarter == settings.quarter } ?: quarters.first()
-        SelectOptionDialog(
-            title = "Выберите квартал",
-            options = quarters,
-            selectedOption = selected,
-            optionLabel = { it.shortLabel },
-            onDismiss = { showQuarterPicker = false },
-            onSelect = {
-                reportViewModel.setQuarter(it.quarter)
-                showQuarterPicker = false
-            }
-        )
-    }
-
-    if (showPeriodPicker) {
-        AlertDialog(
-            onDismissRequest = { showPeriodPicker = false },
-            title = { Text("Настройка периода") },
-            text = {
-                Column {
-                    Text(
-                        text = "Текущий диапазон:\n${DateFormat.formatDate(settings.from)} — ${DateFormat.formatDate(settings.to)}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    OutlinedButton(
-                        onClick = {
-                            showPeriodPicker = false
-                            showFromPicker = true
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Изменить дату «С» (${DateFormat.formatDate(settings.from)})")
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = {
-                            showPeriodPicker = false
-                            showToPicker = true
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Изменить дату «По» (${DateFormat.formatDate(settings.to)})")
-                    }
-                }
+    if (showPeriodSheet) {
+        PeriodPickerBottomSheet(
+            initialYear = settings.year,
+            currentQuarter = settings.quarter,
+            onQuarterSelected = { quarter, year ->
+                reportViewModel.setYear(year)
+                reportViewModel.setQuarter(quarter)
             },
-            confirmButton = {
-                Button(onClick = { showPeriodPicker = false }) {
-                    Text("Готово")
-                }
-            }
+            onExactDatesClick = {
+                showFromPicker = true
+            },
+            onDismissRequest = { showPeriodSheet = false }
         )
     }
 
@@ -537,7 +454,12 @@ fun ReportScreen(
         DatePickerSheet(
             initialMillis = settings.from,
             onDismiss = { showFromPicker = false },
-            onPicked = { it?.let(reportViewModel::setFrom) }
+            onPicked = { pickedMillis ->
+                if (pickedMillis != null) {
+                    reportViewModel.setFrom(pickedMillis)
+                    showToPicker = true
+                }
+            }
         )
     }
     if (showToPicker) {
@@ -616,7 +538,9 @@ private fun ReportHeaderCard(
     periodText: String,
     count: Int,
     totalSum: Long,
-    totalVat: Long
+    totalVat: Long,
+    onUserClick: () -> Unit,
+    onPeriodClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -652,22 +576,56 @@ private fun ReportHeaderCard(
 
             Spacer(Modifier.height(8.dp))
 
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+            // Строка выбора сотрудника
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(),
+                        role = Role.Button,
+                        onClick = onUserClick
+                    )
+                    .padding(vertical = 4.dp, horizontal = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     "Сотрудник:",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(0.35f)
                 )
-                Text(
-                    userFullName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.weight(0.65f)
-                )
+                Row(
+                    modifier = Modifier.weight(0.65f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        userFullName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = "Выбрать сотрудника",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
+
             if (position.isNotBlank()) {
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp, horizontal = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         "Должность:",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -678,23 +636,54 @@ private fun ReportHeaderCard(
                         position,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.weight(0.65f)
+                        modifier = Modifier.weight(0.65f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+
+            // Строка выбора периода
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(),
+                        role = Role.Button,
+                        onClick = onPeriodClick
+                    )
+                    .padding(vertical = 4.dp, horizontal = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     "Период:",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(0.35f)
                 )
-                Text(
-                    periodText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(0.65f)
-                )
+                Row(
+                    modifier = Modifier.weight(0.65f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        periodText,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = "Выбрать период",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
             HorizontalDivider(
@@ -792,122 +781,7 @@ private fun ExportModeSelector(
 }
 
 /**
- * Блок 4: Компактная 1-рядная панель фильтров из 4 адаптивных ячеек с AutoScalingText.
- */
-@Composable
-private fun CompactFiltersBar(
-    userName: String,
-    year: Int,
-    quarter: Quarter,
-    from: Long,
-    to: Long,
-    onUserClick: () -> Unit,
-    onYearClick: () -> Unit,
-    onQuarterClick: () -> Unit,
-    onPeriodClick: () -> Unit
-) {
-    val quarterShort = when (quarter) {
-        Quarter.Q1 -> "I кв"
-        Quarter.Q2 -> "II кв"
-        Quarter.Q3 -> "III кв"
-        Quarter.Q4 -> "IV кв"
-        Quarter.Custom -> "Свой"
-    }
-
-    val periodShort = "${DateFormat.formatDate(from).take(5)}—${DateFormat.formatDate(to).take(5)}"
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        CompactFilterTile(
-            label = "Пользователь",
-            valueText = userName,
-            onClick = onUserClick,
-            modifier = Modifier.weight(1.15f)
-        )
-        CompactFilterTile(
-            label = "Год",
-            valueText = year.toString(),
-            onClick = onYearClick,
-            modifier = Modifier.weight(0.85f)
-        )
-        CompactFilterTile(
-            label = "Квартал",
-            valueText = quarterShort,
-            onClick = onQuarterClick,
-            modifier = Modifier.weight(0.95f)
-        )
-        CompactFilterTile(
-            label = "Период",
-            valueText = periodShort,
-            onClick = onPeriodClick,
-            modifier = Modifier.weight(1.05f)
-        )
-    }
-}
-
-@Composable
-private fun CompactFilterTile(
-    label: String,
-    valueText: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .height(50.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(),
-                role = Role.Button,
-                onClick = onClick
-            ),
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 4.dp, vertical = 3.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = label.uppercase(),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 8.sp,
-                    lineHeight = 9.sp,
-                    letterSpacing = 0.3.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                AutoScalingText(
-                    text = valueText,
-                    minFontSize = 7.5.sp,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                Icon(
-                    imageVector = Icons.Filled.ArrowDropDown,
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-/**
- * Блок 5: Панель сортировки.
+ * Блок 5: Панель сортировки и чекбокс «Все».
  */
 @Composable
 private fun SortAndBatchBar(
@@ -935,15 +809,90 @@ private fun SortAndBatchBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        // Слева: Фиксированная кнопка сортировки (170dp) со встроенными стрелкой и шевроном
+        Box {
+            OutlinedButton(
+                onClick = { sortMenuExpanded = true },
+                modifier = Modifier.width(170.dp),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Icon(
+                        imageVector = if (sortOrder == SortOrder.ASC) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                        contentDescription = sortOrder.label,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = ripple(bounded = false, radius = 14.dp)
+                            ) {
+                                onToggleSortOrder()
+                            }
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = sortField.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(Modifier.width(2.dp))
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = sortMenuExpanded,
+                onDismissRequest = { sortMenuExpanded = false }
+            ) {
+                SortField.entries.forEach { field ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = field.label,
+                                fontWeight = if (field == sortField) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        onClick = {
+                            sortMenuExpanded = false
+                            onSortFieldSelected(field)
+                        }
+                    )
+                }
+            }
+        }
+
+        // Справа: Надпись «Все (N)» и чекбокс справа от неё: Все (N) [✓]
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .clickable {
-                    if (toggleState == ToggleableState.On) onClearAll() else onSelectAll()
-                }
-                .padding(end = 6.dp)
+                .clickable(
+                    enabled = totalCount > 0,
+                    onClick = {
+                        if (toggleState == ToggleableState.On) onClearAll() else onSelectAll()
+                    }
+                )
+                .padding(start = 6.dp, end = 2.dp)
         ) {
+            Text(
+                text = "Все ($totalCount)",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(Modifier.width(4.dp))
             TriStateCheckbox(
                 state = toggleState,
                 onClick = {
@@ -951,62 +900,6 @@ private fun SortAndBatchBar(
                 },
                 enabled = totalCount > 0
             )
-            Text(
-                text = "Все ($totalCount)",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box {
-                OutlinedButton(
-                    onClick = { sortMenuExpanded = true },
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = sortField.label,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Icon(
-                        Icons.Filled.ArrowDropDown,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                DropdownMenu(
-                    expanded = sortMenuExpanded,
-                    onDismissRequest = { sortMenuExpanded = false }
-                ) {
-                    SortField.entries.forEach { field ->
-                        DropdownMenuItem(
-                            text = { Text(field.label) },
-                            onClick = {
-                                sortMenuExpanded = false
-                                onSortFieldSelected(field)
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.width(6.dp))
-
-            IconButton(
-                onClick = onToggleSortOrder,
-                modifier = Modifier.size(38.dp)
-            ) {
-                Icon(
-                    imageVector = if (sortOrder == SortOrder.ASC) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
-                    contentDescription = sortOrder.label,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
         }
     }
 }
@@ -1073,60 +966,48 @@ private fun ReceiptListCard(
     item: ReceiptWithUser,
     isSelected: Boolean,
     onToggleSelect: () -> Unit,
-    onPreview: () -> Unit,
-    onDelete: () -> Unit
+    onPreview: () -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.20f)
+            else MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            width = if (isSelected) 1.5.dp else 1.dp,
+            color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Чекбокс слева (48dp touch target)
+            // Компактный бейдж с номером чека (число «1», «2» без «№») размером 26x26dp
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = false, radius = 24.dp),
-                        role = Role.Checkbox,
-                        onClick = onToggleSelect
-                    ),
+                    .size(26.dp)
+                    .background(Color(0xFF1F2937), RoundedCornerShape(6.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Checkbox(
-                    checked = isSelected,
-                    onCheckedChange = { onToggleSelect() }
-                )
-            }
-
-            Spacer(Modifier.width(4.dp))
-
-            // Черный прямоугольный бейдж с номером
-            Box(
-                modifier = Modifier
-                    .background(Color.Black, RoundedCornerShape(7.dp))
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "№ $ordinal",
+                AutoScalingText(
+                    text = "$ordinal",
+                    minFontSize = 8.sp,
+                    initialFontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.ExtraBold
+                    modifier = Modifier.padding(1.dp)
                 )
             }
 
             Spacer(Modifier.width(10.dp))
 
-            // Информационный блок
+            // Центральный блок (+50dp полезной ширины)
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -1185,15 +1066,21 @@ private fun ReceiptListCard(
                 }
             }
 
-            // Кнопка удаления справа (48dp touch target)
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(48.dp)
+            // Чекбокс выбора справа с областью касания 48dp
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = false, radius = 24.dp),
+                        role = Role.Checkbox,
+                        onClick = onToggleSelect
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Filled.Delete,
-                    contentDescription = "Удалить чек №$ordinal",
-                    tint = MaterialTheme.colorScheme.error
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelect() }
                 )
             }
         }
@@ -1201,7 +1088,7 @@ private fun ReceiptListCard(
 }
 
 /**
- * Диалог полноразмерного превью электронного чека с QR-кодом.
+ * Диалог полноразмерного превью электронного чека с 3-кнопочным подвалом равного веса.
  */
 @Composable
 private fun ReceiptPreviewDialog(
@@ -1238,29 +1125,54 @@ private fun ReceiptPreviewDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onShare) {
-                Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(6.dp))
-                Text("Поделиться")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = onShare,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                ) {
+                    Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    AutoScalingText("Поделиться", minFontSize = 8.5.sp)
+                }
+
+                Button(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    AutoScalingText("Удалить", minFontSize = 8.5.sp)
+                }
+
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                ) {
+                    AutoScalingText("Закрыть", minFontSize = 8.5.sp)
+                }
             }
         },
-        dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedButton(
-                    onClick = onDelete,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(4.dp))
-                    Text("Удалить")
-                }
-                TextButton(onClick = onDismiss) {
-                    Text("Закрыть")
-                }
-            }
-        }
+        dismissButton = null
     )
 }
 
@@ -1296,53 +1208,6 @@ private fun SelectUserDialog(
                         Spacer(Modifier.width(8.dp))
                         Text(
                             text = user.label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Закрыть") }
-        }
-    )
-}
-
-/**
- * Универсальный диалог выбора опции (год / квартал).
- */
-@Composable
-private fun <T> SelectOptionDialog(
-    title: String,
-    options: List<T>,
-    selectedOption: T,
-    optionLabel: (T) -> String,
-    onDismiss: () -> Unit,
-    onSelect: (T) -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column {
-                options.forEach { option ->
-                    val isSelected = option == selectedOption
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { onSelect(option) }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = { onSelect(option) }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = optionLabel(option),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )

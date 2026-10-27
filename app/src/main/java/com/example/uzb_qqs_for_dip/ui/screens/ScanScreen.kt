@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -185,35 +184,12 @@ fun ScanScreen(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(84.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.QrCodeScanner,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-                Spacer(Modifier.height(16.dp))
                 Text(
                     "Добавить чек",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
                 )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    "Можно отсканировать QR-код, выбрать снимок чека из галереи " +
-                        "или вставить ссылку на электронный чек. Приложение автоматически " +
-                        "загрузит данные с портала soliq.uz.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(16.dp))
 
                 Button(
                     onClick = {
@@ -293,15 +269,6 @@ fun ScanScreen(
                     Spacer(Modifier.size(8.dp))
                     Text("Добавить вручную")
                 }
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "Можно выбрать готовый снимок чека из памяти устройства или вставить " +
-                        "ссылку с порталов soliq.uz / multicard.uz — приложение само " +
-                        "загрузит и распознает данные чека. «Скан всех чеков» читает " +
-                        "сразу несколько QR камерой или с одного фото.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 

@@ -174,7 +174,7 @@ C:\Users\kuret\AndroidStudioProjects\UZB_QQS_for_DIP
 - **Навигация:** `navigation/AppNavHost.kt`
 - **Экраны (`screens/`):** `AuditorReceiptSearchScreen.kt`, `AuditorScreen.kt`, `AuditorVerifyScreen.kt`, `AuthScreen.kt`, `ProfileScreen.kt`, `RegisterScreen.kt`, `ReportScreen.kt`, `ScanScreen.kt`
 - **ViewModels & Состояния:** `AppViewModel.kt`, `AuditorSearchViewModel.kt`, `AuditorVerifyViewModel.kt`, `AuditorViewModel.kt`, `CameraScanResult.kt`, `ReportViewModel.kt`, `ScanViewModel.kt`
-- **Компоненты (`components/`):** `AutoScalingText.kt`, `DocumentCameraCapture.kt`, `ExportActionGrid.kt`, `FormatChoiceDialog.kt`, `HelpBottomSheet.kt`, `ManualEntryBottomSheet.kt`, `MultiQrCameraScanner.kt`, `Pickers.kt`, `SaveProgressButton.kt`, `SheetPreviewDialog.kt`, `ZeroVatDetectedDialog.kt`, `ZeroVatReceiptsCard.kt`, `ZeroVatScanDialog.kt`
+- **Компоненты (`components/`):** `AutoScalingText.kt`, `DocumentCameraCapture.kt`, `ExportActionGrid.kt`, `FormatChoiceDialog.kt`, `HelpBottomSheet.kt`, `ManualEntryBottomSheet.kt`, `MultiQrCameraScanner.kt`, `PeriodPickerBottomSheet.kt`, `Pickers.kt`, `SaveProgressButton.kt`, `SheetPreviewDialog.kt`, `UserManagementBottomSheet.kt`, `ZeroVatDetectedDialog.kt`, `ZeroVatReceiptsCard.kt`, `ZeroVatScanDialog.kt`
 - **Тема (`theme/`):** `theme/Color.kt, Theme.kt, Type.kt`
 
 #### `util` (Утилиты)
@@ -183,7 +183,7 @@ C:\Users\kuret\AndroidStudioProjects\UZB_QQS_for_DIP
 #### `test` (Unit-тесты)
 - **Корень тестов:** `ExampleUnitTest.kt`, `ReceiptParserDebugTest.kt`, `ZeroVatReceiptParsingTest.kt`
 - **Тесты экспорта:** `CombinedPdfGeneratorTest.kt`, `PdfReportPageCapacityTest.kt`, `ZeroVatExporterFilterTest.kt`
-- **Тесты UI & ViewModels:** `AuditorVerifyViewModelTest.kt`, `MainDispatcherRule.kt`, `ReportViewModelTest.kt`, `ZeroVatScanLogicTest.kt`
+- **Тесты UI & ViewModels:** `AuditorVerifyViewModelTest.kt`, `MainDispatcherRule.kt`, `PeriodPickerLogicTest.kt`, `ProfileValidationTest.kt`, `ReportViewModelTest.kt`, `ZeroVatScanLogicTest.kt`
 - **Тесты утилит:** `ReceiptUrlExtractorTest.kt`
 </architecture_map>
 <execution_trigger>

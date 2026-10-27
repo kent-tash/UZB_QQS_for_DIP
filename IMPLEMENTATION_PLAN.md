@@ -1,522 +1,1416 @@
-# Объединение вкладок «Чеки» и «Отчёт» в единый экран «Чеки и отчёт» с режимом экспорта «Всё» и оптимизацией печати
+# Минимизация интерфейса приложения: Редизайн экрана «Чеки и отчёт», шторка профилей и инлайн-редактирование
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Объединить вкладки «Чеки» и «Отчёт» в единый высокопроизводительный экран «Чеки и отчёт» с сокращением навигации до 3 вкладок, внедрением переключателя режимов экспорта («Отчёт» | «Всё» | «Чеки»), генератором объединенного PDF («Всё»), оптимизацией отступов в PDF-отчете (до 24 чеков на 1-й странице) и актуализацией документации.
+**Goal:** Реализовать второй этап минимизации интерфейса приложения: перенести выбор периода и пользователя в шапку «Сводный отчёт» с единой шторкой `PeriodPickerBottomSheet`, удалить устаревший `CompactFiltersBar`, перенести чекбоксы в списке чеков на правую сторону с компактным бейджем 26×26dp и удалением мусорной корзины из карточек, добавить 3-кнопочный подвал в модальное превью чека, минимизировать вкладку «Профиль» со шторкой управления пользователями `UserManagementBottomSheet`, двойным подтверждением удаления и инлайн-редактированием полей, а также обновить раздел помощи `HelpBottomSheet.kt`.
 
-**Architecture:** 
-1. **Presentation Layer (Jetpack Compose + MVVM):** Единый экран `ReportScreen.kt` на базе `LazyColumn`, управляемый расширенной `ReportViewModel.kt`. Экран содержит 7 логических блоков: шапка отчёта, 3-позиционный переключатель режима экспорта («Отчёт» | «Всё» | «Чеки»), панель действий («Сохранить», «Поделиться», «Открыть», «Печать») с онлайн-синхронизацией ОФД, 1-рядную панель фильтров (4 OutlinedTextFields с AutoScalingText), панель сортировки и пакетных действий, карточку чеков с нулевым НДС, и вертикальный список карточек чеков с черными квадратными бейджами порядковых номеров и вызовом полноразмерного превью с QR-кодом.
-2. **Navigation Layer:** `AppNavHost.kt` переводится на 3 вкладки для сотрудника («Добавить», «Чеки и отчёт», «Профиль») и 3 вкладки для аудитора («Аудит», «Чеки и отчёт», «Профиль»). Устаревшие маршруты и экраны вычищаются.
-3. **Export & Print Engine:**
-   - Новый `CombinedPdfGenerator.kt` формирует единый документ: сводный отчет (стр. 1..N) с таблицей, подписью и колонтитулами, затем с НОВОЙ страницы реестр чеков по 6 на лист А4 с изолированной нумерацией («стр. 1 из M»), реквизитами пользователя и датой формирования.
-   - `PdfReportGenerator.kt` оптимизируется (Вариант 1 - Сбалансированный): поля MARGIN уменьшаются до 28f (10 мм), динамический лимит высоты на промежуточных страницах расширяется до `PAGE_HEIGHT - 32f`, компактный блок подписи занимает 70f, что гарантирует размещение до 24 чеков на 1-й странице и до 30 на последующих.
-4. **Documentation:** Актуализация интерактивной справки `HelpBottomSheet.kt`.
+**Architecture:**
+1. **Presentation Layer (`ReportScreen.kt`):**
+   - Устранение горизонтальной панели `CompactFiltersBar`.
+   - Интерактивная карточка «Сводный отчёт» (`ReportHeaderCard`): клики по строкам «Сотрудник» и «Период» открывают соответственно `SelectUserDialog` и `PeriodPickerBottomSheet`.
+   - Новый компонент `PeriodPickerBottomSheet.kt`: переключатель года `< 2026 год >`, сетка 2×2 кварталов (I, II, III, IV) с моментальным применением и кнопка вызова точного календаря `DatePickerSheet`.
+   - Панель `SortAndBatchBar`: фиксированная ширина 170dp для кнопки сортировки с встроенными внутрь стрелкой направления и шевроном меню; справа расположен чекбокс `Все (N) [✓]`.
+   - Карточка чека `ReceiptListCard`: слева бейдж 26×26dp с цифрой номера (без префикса «№»), расширенный центральный блок (+50dp ширины), справа чекбокс `[✓]`, иконка удаления полностью удалена.
+   - Диалог `ReceiptPreviewDialog`: 3 кнопки равного веса в 1 ряд высотой 46dp (`Поделиться`, красная `Удалить`, `Закрыть`) с `AutoScalingText`.
+2. **Profile & User Management (`ProfileScreen.kt` & `UserManagementBottomSheet.kt`):**
+   - Удаление 3 нижних кнопок («Редактировать», «Выйти из профиля», «Удалить»).
+   - Клик по аватару/строке пользователя в карточке профиля открывает `UserManagementBottomSheet` со списком профилей, активной отметкой, кнопкой «+ Добавить новый профиль» и удалением через 2-шаговое подтверждение.
+   - Инлайн-редактирование полей карточки профиля («Имя», «Должность», «Организация») по клику на строку с иконкой карандаша `✏` через диалог валидации `EditSingleFieldDialog`.
+3. **Documentation (`HelpBottomSheet.kt`):**
+   - Полная актуализация разделов «Чеки и отчёт» и «Управление профилями» в соответствии с новыми возможностями UI.
 
-**Tech Stack:** Kotlin 2.x, Jetpack Compose, Material3, Android PdfDocument, StateFlow/Coroutines, JUnit 4, MockK.
+**Tech Stack:** Kotlin 2.x, Jetpack Compose, Material 3, Androidx Navigation, StateFlow / Coroutines, JUnit 4, MockK.
 
 ---
 
 ## Область изменений (Scope)
 
 - **In Scope:**
-  - Оптимизация отступов и высоты страниц в `PdfReportGenerator.kt` (MARGIN = 28f, подпись 70f, динамический `bottomLimit`, вместимость до 24 чеков на 1 странице).
-  - Создание `CombinedPdfGenerator.kt` для режима «Всё» с изолированной нумерацией страниц реестра чеков («стр. 1 из M»).
-  - Рефакторинг `ReceiptsSheetPdfGenerator.kt` с выделением метода рендеринга `renderInto`.
-  - Расширение `ReportViewModel.kt` стейтом `ExportMode` («Отчёт» | «Всё» | «Чеки»), операциями экспорта, регенерацией превью чеков на диске и функциями предпросмотра/удаления отдельных чеков.
-  - Редизайн `ReportScreen.kt` в 7-блочный интерфейс с адаптивными фильтрами в один ряд (`AutoScalingText`) и вертикальным списком карточек чеков.
-  - Сокращение навигации в `AppNavHost.kt` до 3 вкладок и удаление дублирующего экрана `ReceiptsScreen.kt` и `ReceiptsViewModel.kt`.
-  - Актуализация документации в `HelpBottomSheet.kt`.
-  - Unit-тесты для генераторов, расчета емкости страниц и ViewModel.
-  - Синхронизация архитектурной карты (`scripts/update_architecture_map.py`).
+  - Создание компонента `ui/components/PeriodPickerBottomSheet.kt` (выбор года стрелками, сетка 2×2 кварталов, кнопка точного календаря).
+  - Рефакторинг `ui/screens/ReportScreen.kt`:
+    - Удаление `CompactFiltersBar` и связанных с ним локальных состояний.
+    - Добавление кликабельности строк в `ReportHeaderCard`.
+    - Фиксированная кнопка сортировки 170dp и перенос чекбокса вправо в `SortAndBatchBar`.
+    - Редизайн `ReceiptListCard` (бейдж 26×26dp, чекбокс справа, удаление кнопки корзины).
+    - Редизайн кнопок `ReceiptPreviewDialog` (3 кнопки равного веса, высота 46dp, `AutoScalingText`).
+  - Создание компонента `ui/components/UserManagementBottomSheet.kt` (список пользователей, иконка корзины, кнопка создания).
+  - Рефакторинг `ui/screens/ProfileScreen.kt`:
+    - Удаление 3 нижних кнопок.
+    - Кликабельность аватара и ФИО для открытия `UserManagementBottomSheet`.
+    - Двухэтапный диалог подтверждения удаления профиля.
+    - Создание профиля в диалоге из шторки.
+    - Инлайн-редактирование полей «Имя», «Должность», «Организация» с иконкой карандаша.
+  - Обновление справки в `ui/components/HelpBottomSheet.kt`.
+  - Unit-тесты для новой логики периодов и профилей.
+  - Синхронизация архитектурной карты проекта (`scripts/update_architecture_map.py`).
 - **Out of Scope:**
-  - Изменение структуры базы данных SQLite (`DbHelper.kt`).
-  - Изменение API сетевого взаимодействия (`OfdPaymentApi.kt`, `ReceiptParser.kt`).
-  - Изменение логики экрана сканирования (`ScanScreen.kt`) и экранов аудита (`AuditorScreen.kt`, `AuditorVerifyScreen.kt`).
+  - Изменение структуры базы данных SQLite (`DbHelper.kt`) и миграции (схема `users` и `receipts` полностью достаточна).
+  - Изменение форматов экспорта PDF, XLSX, ZIP.
+  - Изменение экранов сканирования (`ScanScreen.kt`) и аудита (`AuditorScreen.kt`, `AuditorVerifyScreen.kt`).
 
 ---
 
 ## План пошаговой реализации (Action Items)
 
-### Task 1: Оптимизация отступов отчёта и расчет вместимости страниц в `PdfReportGenerator.kt`
+### Task 1: Создание компонента `PeriodPickerBottomSheet.kt`
 
 **Files:**
-- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/export/PdfReportGenerator.kt`
-- Test: `app/src/test/java/com/example/uzb_qqs_for_dip/export/PdfReportPageCapacityTest.kt`
+- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/PeriodPickerBottomSheet.kt`
+- Test: `app/src/test/java/com/example/uzb_qqs_for_dip/ui/PeriodPickerLogicTest.kt`
 
-**Step 1: Написать failing test на расчет вместимости и отступы**
-Создать файл `app/src/test/java/com/example/uzb_qqs_for_dip/export/PdfReportPageCapacityTest.kt`:
-```kotlin
-package com.example.uzb_qqs_for_dip.export
-
-import com.example.uzb_qqs_for_dip.data.model.PaymentType
-import com.example.uzb_qqs_for_dip.data.model.Receipt
-import com.example.uzb_qqs_for_dip.data.model.ReceiptSource
-import com.example.uzb_qqs_for_dip.data.model.ReceiptWithUser
-import com.example.uzb_qqs_for_dip.data.model.User
-import com.example.uzb_qqs_for_dip.data.model.UserRole
-import org.junit.Assert.assertEquals
-import org.junit.Test
-
-class PdfReportPageCapacityTest {
-
-    private val testUser = User(
-        id = 1L,
-        fullName = "Тестовый Сотрудник",
-        position = "Бухгалтер",
-        initialsSurname = "Т. Сотрудник",
-        role = UserRole.EMPLOYEE
-    )
-
-    private fun createReceipts(count: Int): List<ReceiptWithUser> {
-        return (1..count).map { i ->
-            ReceiptWithUser(
-                receipt = Receipt(
-                    id = i.toLong(),
-                    userId = 1L,
-                    purchasedAt = 1715000000000L + i * 3600000L,
-                    sellerName = "OOO SELLER $i",
-                    totalAmountTiyin = 100_000L,
-                    vatAmountTiyin = 12_000L,
-                    qrUrl = "https://ofd.soliq.uz/check?t=$i",
-                    paymentType = PaymentType.CARD,
-                    source = ReceiptSource.APP
-                ),
-                userFullName = testUser.fullName,
-                userPosition = testUser.position,
-                userInitialsSurname = testUser.initialsSurname
-            )
-        }
-    }
-
-    @Test
-    fun testReportFitsUpTo24ReceiptsOnSinglePage() {
-        val rows = createReceipts(24)
-        val params = ReportParams(
-            user = testUser,
-            periodStart = 1714000000000L,
-            periodEnd = 1716000000000L,
-            rows = rows,
-            quarterLabel = "I квартал 2026 г."
-        )
-        val pageCount = PdfReportGenerator.calculatePageCount(params)
-        assertEquals("Отчёт до 24 чеков должен помещаться ровно на 1 страницу А4", 1, pageCount)
-    }
-
-    @Test
-    fun testReportFits54ReceiptsOnTwoPages() {
-        val rows = createReceipts(54)
-        val params = ReportParams(
-            user = testUser,
-            periodStart = 1714000000000L,
-            periodEnd = 1716000000000L,
-            rows = rows,
-            quarterLabel = "I квартал 2026 г."
-        )
-        val pageCount = PdfReportGenerator.calculatePageCount(params)
-        assertEquals("Отчёт на 54 чека (24 на 1-й + 30 на 2-й) должен занимать 2 страницы", 2, pageCount)
-    }
-}
-```
-
-**Step 2: Запустить тест и убедиться, что он падает (Red)**
-Команда: `.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.export.PdfReportPageCapacityTest"`
-Ожидаемый результат: FAIL (метод `calculatePageCount` отсутствует или возвращает > 1 страницы из-за старых отступов 40f и лимита 110f).
-
-**Step 3: Реализовать оптимизацию отступов и динамический расчет страниц в `PdfReportGenerator.kt`**
-В `app/src/main/java/com/example/uzb_qqs_for_dip/export/PdfReportGenerator.kt`:
-1. Установить `private const val MARGIN = 28f` (10 мм).
-2. Обновить `COL_WIDTHS = floatArrayOf(28f, 194f, 110f, 100f, 107f)` (сумма = 539f, точно равна `PAGE_WIDTH - 2 * MARGIN`).
-3. Сделать `calculatePageCount(params: ReportParams): Int` публичным методом для подсчета страниц.
-4. Задать компактный блок подписи: `val signatureBlockHeight = 70f`.
-5. Реализовать динамический лимит высоты строк таблицы:
-   - На промежуточных страницах (пока остаются чеки, которые не поместятся вместе с подписью на текущую страницу): лимит равен `PAGE_HEIGHT - 32f` (810f).
-   - На последней странице: лимит под чеки равен `PAGE_HEIGHT - 32f - ROW_HEIGHT_MIN - signatureBlockHeight`.
-   - Если остаток строк + итог + подпись укладываются до 810f — они рендерятся на текущей странице без создания лишнего листа.
-6. В блоке подписи:
-   - Уменьшить вертикальные отступы: базовые линии подписи `py = signatureTop + 20f`, `dateY = lastBaseline + 20f`, метка `(подпись)` на `lastBaseline + 9f`.
-   - Добавить параметр `includeManualAttachments: Boolean = true` в `renderInto`, чтобы при объединении с реестром чеков страницы фотографий не дублировались.
-
-**Step 4: Запустить тест и убедиться, что он проходит (Green)**
-Команда: `.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.export.PdfReportPageCapacityTest"`
-Ожидаемый результат: PASS (1 страница для 24 чеков, 2 страницы для 54 чеков).
-
-**Step 5: Коммит**
-`git add app/src/main/java/com/example/uzb_qqs_for_dip/export/PdfReportGenerator.kt app/src/test/java/com/example/uzb_qqs_for_dip/export/PdfReportPageCapacityTest.kt`
-`git commit -m "feat(export): optimize PdfReportGenerator margins to 28f and fit 24 receipts on page 1"`
-
----
-
-### Task 2: Создание `CombinedPdfGenerator.kt` и изоляция нумерации страниц реестра
-
-**Files:**
-- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/export/ReceiptsSheetPdfGenerator.kt`
-- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/export/CombinedPdfGenerator.kt`
-- Test: `app/src/test/java/com/example/uzb_qqs_for_dip/export/CombinedPdfGeneratorTest.kt`
-
-**Step 1: Написать failing test для `CombinedPdfGenerator`**
-Создать `app/src/test/java/com/example/uzb_qqs_for_dip/export/CombinedPdfGeneratorTest.kt`:
-```kotlin
-package com.example.uzb_qqs_for_dip.export
-
-import android.content.Context
-import com.example.uzb_qqs_for_dip.data.model.PaymentType
-import com.example.uzb_qqs_for_dip.data.model.Receipt
-import com.example.uzb_qqs_for_dip.data.model.ReceiptSource
-import com.example.uzb_qqs_for_dip.data.model.ReceiptWithUser
-import com.example.uzb_qqs_for_dip.data.model.User
-import com.example.uzb_qqs_for_dip.data.model.UserRole
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-import java.io.File
-import java.nio.file.Files
-
-class CombinedPdfGeneratorTest {
-
-    private lateinit var tempDir: File
-    private lateinit var mockContext: Context
-
-    private val testUser = User(
-        id = 1L,
-        fullName = "Иванов Иван",
-        position = "Инженер",
-        initialsSurname = "И. Иванов",
-        role = UserRole.EMPLOYEE
-    )
-
-    private val receipt1 = ReceiptWithUser(
-        receipt = Receipt(
-            id = 1L, userId = 1L, purchasedAt = 1715000000000L, sellerName = "OOO SHOP A",
-            totalAmountTiyin = 200_000L, vatAmountTiyin = 24_000L, qrUrl = "https://ofd.soliq.uz/check?t=1",
-            paymentType = PaymentType.CARD, source = ReceiptSource.APP
-        ),
-        userFullName = testUser.fullName, userPosition = testUser.position, userInitialsSurname = testUser.initialsSurname
-    )
-
-    private val receiptZero = ReceiptWithUser(
-        receipt = Receipt(
-            id = 2L, userId = 1L, purchasedAt = 1715000000000L, sellerName = "OOO ZERO",
-            totalAmountTiyin = 100_000L, vatAmountTiyin = 0L, qrUrl = "https://ofd.soliq.uz/check?t=2",
-            paymentType = PaymentType.CARD, source = ReceiptSource.APP
-        ),
-        userFullName = testUser.fullName, userPosition = testUser.position, userInitialsSurname = testUser.initialsSurname
-    )
-
-    @Before
-    fun setup() {
-        tempDir = Files.createTempDirectory("combined_test").toFile()
-        mockContext = mockk(relaxed = true)
-        every { mockContext.filesDir } returns tempDir
-    }
-
-    @Test
-    fun testCombinedPdfExcludesZeroVatAndGeneratesFile() = runBlocking {
-        val rows = listOf(receipt1, receiptZero)
-        val params = ReportParams(
-            user = testUser,
-            periodStart = 1714000000000L,
-            periodEnd = 1716000000000L,
-            rows = rows,
-            quarterLabel = "II квартал 2026 г."
-        )
-        val file = CombinedPdfGenerator.generate(
-            context = mockContext,
-            params = params,
-            periodLabel = "II квартал 2026 г.",
-            fileName = "test_all.pdf"
-        )
-        assertTrue("Файл объединенного PDF должен быть создан", file.exists())
-        assertTrue("Размер файла должен быть больше 0", file.length() > 0)
-    }
-
-    @Test
-    fun testRegistryPagesCountCalculation() {
-        // 13 чеков при 6 на страницу дают ceil(13/6) = 3 страницы реестра
-        val count = CombinedPdfGenerator.calculateRegistryPagesCount(13, manualPhotosCount = 0)
-        assertEquals(3, count)
-    }
-}
-```
-
-**Step 2: Запустить тест и убедиться, что он падает (Red)**
-Команда: `.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.export.CombinedPdfGeneratorTest"`
-Ожидаемый результат: FAIL (`CombinedPdfGenerator` не существует).
-
-**Step 3: Реализация рефакторинга `ReceiptsSheetPdfGenerator.kt` и создание `CombinedPdfGenerator.kt`**
-1. В `ReceiptsSheetPdfGenerator.kt`:
-   - Выделить метод `renderInto(doc: PdfDocument, rowsInOrder: List<ReceiptWithUser>, headerRightText: String, periodLabel: String, startDocPageNumber: Int = 1, generatedAt: Long = System.currentTimeMillis()): Int`.
-   - Внутри `renderInto`:
-     - В цикле генерации страниц: `val registryPageNumber = pageIndex + 1`.
-     - На холсте страницы отрисовывать:
-       - Вверху справа: `canvas.drawText("стр. $registryPageNumber из $totalPages", PAGE_W - MARGIN, MARGIN - 6f, pagePaint)` (нумерация всегда с 1 до M!).
-       - Вверху шапку: `headerRightText` (Должность и ФИО).
-       - Внизу: `canvas.drawText(generatedAtText, PAGE_W - MARGIN, PAGE_H - 10f, footerDatePaint)` («Сформировано дд.мм.гггг чч:мм:сс»).
-     - Метод `generate(...)` делегирует рендеринг в `renderInto`.
-2. Создать `app/src/main/java/com/example/uzb_qqs_for_dip/export/CombinedPdfGenerator.kt`:
-   - Содержит `calculateRegistryPagesCount(receiptsCount: Int, manualPhotosCount: Int): Int`.
-   - `suspend fun generate(context: Context, params: ReportParams, periodLabel: String, fileName: String): File = withContext(Dispatchers.IO)`:
-     - Очищает чеки от нулевого НДС: `val sanitizedRows = params.rows.filter { it.receipt.vatAmountTiyin > 0L }`.
-     - Создает `val doc = PdfDocument()`.
-     - Рендерит сводный отчет: `val reportPagesCount = PdfReportGenerator.renderInto(doc, params.copy(rows = sanitizedRows), includeManualAttachments = false)`.
-     - С новой страницы рендерит реестр карточек чеков: `ReceiptsSheetPdfGenerator.renderInto(doc, sanitizedRows, headerRight, periodLabel, startDocPageNumber = reportPagesCount + 1, generatedAt = params.generatedAt)`.
-     - Если есть ручные чеки с фото: рендерит страницы фотографий в конец документа с корректной сквозной регистрационной нумерацией.
-     - Сохраняет `doc.writeTo(fos)` в `ExportPaths.exportsDir(context)`.
-
-**Step 4: Запустить тест и убедиться, что он проходит (Green)**
-Команда: `.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.export.CombinedPdfGeneratorTest"`
-Ожидаемый результат: PASS.
-
-**Step 5: Коммит**
-`git add app/src/main/java/com/example/uzb_qqs_for_dip/export/CombinedPdfGenerator.kt app/src/main/java/com/example/uzb_qqs_for_dip/export/ReceiptsSheetPdfGenerator.kt app/src/test/java/com/example/uzb_qqs_for_dip/export/CombinedPdfGeneratorTest.kt`
-`git commit -m "feat(export): create CombinedPdfGenerator for mode ALL with isolated registry page numbering"`
-
----
-
-### Task 3: Расширение `ReportViewModel.kt` для объединенного функционала
-
-**Files:**
-- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/ReportViewModel.kt`
-- Test: `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ReportViewModelTest.kt`
-
-**Step 1: Написать failing unit-тест для `ReportViewModel`**
-Создать `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ReportViewModelTest.kt`:
+**Step 1: Написать failing test на логику переключения года и кварталов**
+Создать `app/src/test/java/com/example/uzb_qqs_for_dip/ui/PeriodPickerLogicTest.kt`:
 ```kotlin
 package com.example.uzb_qqs_for_dip.ui
 
+import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class ReportViewModelTest {
+class PeriodPickerLogicTest {
 
     @Test
-    fun testExportModeDefaultsToAll() {
-        val defaultMode = ExportMode.ALL
-        assertEquals("По умолчанию режим экспорта должен быть 'Всё'", ExportMode.ALL, defaultMode)
-        assertEquals("В режиме REPORT название должно быть 'Отчёт'", "Отчёт", ExportMode.REPORT.title)
-        assertEquals("В режиме RECEIPTS название должно быть 'Чеки'", "Чеки", ExportMode.RECEIPTS.title)
+    fun testQuarterMonthsLabels() {
+        assertEquals("январь–март", Quarter.Q1.monthsLabel())
+        assertEquals("апрель–июнь", Quarter.Q2.monthsLabel())
+        assertEquals("июль–сентябрь", Quarter.Q3.monthsLabel())
+        assertEquals("октябрь–декабрь", Quarter.Q4.monthsLabel())
+    }
+
+    @Test
+    fun testYearNavigationBounds() {
+        val minYear = 2020
+        val maxYear = 2035
+        var currentYear = 2026
+        
+        // Переход назад
+        currentYear = (currentYear - 1).coerceAtLeast(minYear)
+        assertEquals(2025, currentYear)
+        
+        // Переход вперед
+        currentYear = (currentYear + 2).coerceAtMost(maxYear)
+        assertEquals(2027, currentYear)
+    }
+}
+
+fun Quarter.monthsLabel(): String = when (this) {
+    Quarter.Q1 -> "январь–март"
+    Quarter.Q2 -> "апрель–июнь"
+    Quarter.Q3 -> "июль–сентябрь"
+    Quarter.Q4 -> "октябрь–декабрь"
+    Quarter.Custom -> "произвольный"
+}
+```
+
+**Step 2: Запустить тест и проверить результат**
+Команда: `.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.ui.PeriodPickerLogicTest"`
+Ожидаемый результат: PASS (логика вспомогательных функций валидна).
+
+**Step 3: Реализовать `PeriodPickerBottomSheet.kt`**
+Создать `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/PeriodPickerBottomSheet.kt`:
+```kotlin
+package com.example.uzb_qqs_for_dip.ui.components
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.uzb_qqs_for_dip.data.settings.Quarter
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PeriodPickerBottomSheet(
+    initialYear: Int,
+    currentQuarter: Quarter,
+    onQuarterSelected: (Quarter, Int) -> Unit,
+    onExactDatesClick: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var selectedYear by remember { mutableIntStateOf(initialYear) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp, top = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Выбор периода",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Переключатель года: < 2026 год >
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                IconButton(
+                    onClick = { if (selectedYear > 2020) selectedYear-- },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBackIos,
+                        contentDescription = "Предыдущий год",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Text(
+                    text = "$selectedYear год",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                IconButton(
+                    onClick = { if (selectedYear < 2035) selectedYear++ },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = "Следующий год",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Сетка 2x2 кварталов (I, II, III, IV)
+            val quartersRow1 = listOf(Quarter.Q1 to "I квартал\n(январь–март)", Quarter.Q2 to "II квартал\n(апрель–июнь)")
+            val quartersRow2 = listOf(Quarter.Q3 to "III квартал\n(июль–сентябрь)", Quarter.Q4 to "IV квартал\n(октябрь–декабрь)")
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                quartersRow1.forEach { (quarter, label) ->
+                    val isSelected = quarter == currentQuarter && selectedYear == initialYear
+                    QuarterTile(
+                        label = label,
+                        isSelected = isSelected,
+                        onClick = {
+                            onQuarterSelected(quarter, selectedYear)
+                            onDismissRequest()
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                quartersRow2.forEach { (quarter, label) ->
+                    val isSelected = quarter == currentQuarter && selectedYear == initialYear
+                    QuarterTile(
+                        label = label,
+                        isSelected = isSelected,
+                        onClick = {
+                            onQuarterSelected(quarter, selectedYear)
+                            onDismissRequest()
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Кнопка точного выбора дат в календаре
+            OutlinedButton(
+                onClick = {
+                    onDismissRequest()
+                    onExactDatesClick()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors()
+            ) {
+                Icon(Icons.Outlined.DateRange, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.size(8.dp))
+                Text("Выбрать точные даты в календаре")
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuarterTile(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+
+    Card(
+        modifier = modifier
+            .height(76.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 18.sp),
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 ```
 
-**Step 2: Запустить тест и убедиться, что он падает (Red)**
-Команда: `.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.ui.ReportViewModelTest"`
-Ожидаемый результат: FAIL (`ExportMode` отсутствует).
-
-**Step 3: Реализация `ExportMode` и объединенных операций в `ReportViewModel.kt`**
-В `app/src/main/java/com/example/uzb_qqs_for_dip/ui/ReportViewModel.kt`:
-1. Добавить `enum class ExportMode(val title: String) { REPORT("Отчёт"), ALL("Всё"), RECEIPTS("Чеки") }`.
-2. Добавить `private val _exportMode = MutableStateFlow(ExportMode.ALL)` и публичный `val exportMode: StateFlow<ExportMode> = _exportMode.asStateFlow()`.
-3. Добавить метод `fun setExportMode(mode: ExportMode) { _exportMode.value = mode }`.
-4. Добавить синхронизацию локальных картинок чеков на диске при изменении списка чеков/сортировки:
-   ```kotlin
-   viewModelScope.launch {
-       rows.distinctUntilChanged { a, b ->
-           a.size == b.size && a.zip(b).all { (x, y) -> x.receipt.id == y.receipt.id }
-       }.collect { ordered ->
-           runCatching {
-               ReceiptImageExporter.regenerateAll(appContext, ordered.map { it.receipt })
-           }
-       }
-   }
-   ```
-5. Добавить операцию шаринга отдельного чека: `fun shareReceiptImage(context: Context, item: ReceiptWithUser)`.
-6. Обновить генерацию файлов (`previewPdf`, `printPdf`, `savePdfToUri`, `saveXlsxToUri`, `sharePdf`, `shareXlsx`):
-   - При `ExportMode.ALL`:
-     - PDF: генерирует через `CombinedPdfGenerator.generate(context, params, periodLabel, fileName)`
-     - XLSX: генерирует через `XlsxExporter.exportReport(context, params, fileName)`
-   - При `ExportMode.REPORT`:
-     - PDF: генерирует через `PdfReportGenerator.generate(context, params, fileName)`
-     - XLSX: генерирует через `XlsxExporter.exportReport(context, params, fileName)`
-   - При `ExportMode.RECEIPTS`:
-     - PDF: генерирует через `ReceiptsSheetPdfGenerator.generate(context, rows, headerRight, periodLabel, fileName)`
-     - XLSX: генерирует через `XlsxExporter.export(context, rows, fileName)`
-7. Добавить генерацию имен файлов:
-   - `suggestedFileName(asPdf: Boolean): String` формирует `all_...`, `report_...`, или `receipts_...` в зависимости от `exportMode.value`.
-
-**Step 4: Запустить тесты и убедиться, что они проходят (Green)**
-Команда: `.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.ui.ReportViewModelTest"`
-Ожидаемый результат: PASS.
+**Step 4: Проверить компиляцию и тесты**
+Команда: `.\gradlew.bat compileDebugKotlin`
+Ожидаемый результат: BUILD SUCCESSFUL.
 
 **Step 5: Коммит**
-`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/ReportViewModel.kt app/src/test/java/com/example/uzb_qqs_for_dip/ui/ReportViewModelTest.kt`
-`git commit -m "feat(ui): add ExportMode to ReportViewModel and support ALL/REPORT/RECEIPTS exports"`
+`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/PeriodPickerBottomSheet.kt app/src/test/java/com/example/uzb_qqs_for_dip/ui/PeriodPickerLogicTest.kt`
+`git commit -m "feat(ui): add PeriodPickerBottomSheet with year navigator and 2x2 quarter grid"`
 
 ---
 
-### Task 4: Редизайн экрана «Чеки и отчёт» (`ReportScreen.kt`)
+### Task 2: Рефакторинг `ReportHeaderCard` и удаление `CompactFiltersBar` в `ReportScreen.kt`
 
 **Files:**
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
-- Modify: `app/src/main/res/values/strings.xml` (для локализации новых надписей)
 
-**Step 1: Реализация UI компонентов экрана по блокам**
-В `ReportScreen.kt` организовать единую структуру `LazyColumn` со следующими 7 блоками:
-1. **Блок 1 (Вверху): «Шапка отчёта» (`ReportHeaderCard`)**:
-   - Карточка с полями:
-     - Период: квартал и диапазон дат (например, "I квартал 2026 г. (01.01.2026 — 31.03.2026)" или диапазон для Custom).
-     - ФИО и должность выбранного сотрудника.
-     - Количество чеков.
-     - «Итого сумма»: крупным жирным шрифтом с суффиксом «сум» в `primary` цвете.
-     - «Итого НДС»: крупным жирным шрифтом в `primary` цвете.
-2. **Блок 2: Переключатель контекста экспорта (`ExportModeSelector`)**:
-   - Однорядный переключатель из 3 сегментов: «Отчёт» | «Всё» | «Чеки».
-   - По умолчанию выбрано «Всё».
-   - Активный сегмент подсвечен `primaryContainer` / `onPrimaryContainer`.
-3. **Блок 3: Кнопки действий (`ExportActionGrid`)**:
-   - 4 кнопки в один ряд: «Сохранить» | «Поделиться» | «Открыть» | «Печать».
-   - При нажатии запускается `syncWithOfd` с индикацией прогресса «Обновлено X/Y».
-   - Кнопки открывают соответствующие диалоги (`FormatChoiceDialog`) с подсказками согласно выбранному `exportMode`.
-4. **Блок 4: Блок фильтров в один ряд (`FiltersBar`)**:
-   - `Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp))` из 4 полей:
-     1. «Пользователь»: отображает имя/инициалы, по клику открывает диалог выбора пользователя.
-     2. «Год»: отображает год, по клику открывает селектор года.
-     3. «Квартал»: отображает краткий квартал (например, "I кв", "II кв", "Свой"). По умолчанию: текущий квартал текущей даты Asia/Tashkent.
-     4. «Период»: отображает диапазон дат, по клику открывает `DatePickerSheet`.
-   - Внутри полей используется компонент `AutoScalingText`, предотвращающий обрезание и переполнение текста на экранах любой ширины.
-5. **Блок 5: Панель сортировки и пакетных действий (`SortAndBatchBar`)**:
-   - Выпадающий список (Dropdown) «Сортировать по...»: Дата, Юр. лицо, Сумма, НДС, По дате добавления.
-   - Кнопка-переключатель направления сортировки (↑ / ↓).
-   - Чекбокс «Выбрать все» / TriState.
-   - Плашка `SelectionActionBar` с анимацией: «Выбрано: X чеков [Снять] [Удалить]».
-   - Диалог подтверждения удаления выбранных чеков.
-6. **Блок 6: Предупреждение о чеках с нулевым НДС (`ZeroVatReceiptsCard`)**:
-   - Отображается только если в выборке есть чеки с `vatAmountTiyin == 0L`.
-   - Кнопки почекового удаления и «Удалить все».
-7. **Блок 7: Список карточек чеков (`items(rows, key = { it.receipt.id })`)**:
-   - Каждая карточка чека содержит:
-     - Чекбокс слева для выбора.
-     - Черный квадратный бейдж с порядковым номером (`№ 1..N`), строго совпадающим с номером строки в сводном отчете.
-     - Наименование организации (жирным, до 2 строк).
-     - Дата и время покупки.
-     - Сумма и сумма НДС.
-     - Иконка корзины справа для быстрого удаления чека.
-   - Клик по карточке открывает `ReceiptPreviewDialog`:
-     - Отрисовывает полноразмерный электронный чек высокого разрешения с QR-кодом (`ReceiptCardRenderer.renderBitmap`).
-     - Кнопки: «Поделиться» (экспорт PNG чека), «Удалить» (с диалогом подтверждения) и «Закрыть».
+**Step 1: Обновить `ReportHeaderCard`**
+Добавить параметры кликов `onUserClick: () -> Unit` и `onPeriodClick: () -> Unit`.
+Сделать строки «Сотрудник:» и «Период:» интерактивными:
+```kotlin
+@Composable
+private fun ReportHeaderCard(
+    userFullName: String,
+    position: String,
+    periodText: String,
+    count: Int,
+    totalSum: Long,
+    totalVat: Long,
+    onUserClick: () -> Unit,
+    onPeriodClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Сводный отчёт",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Text(
+                        text = "$count чеков",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
 
-**Step 2: Запустить компиляцию и сборку**
+            Spacer(Modifier.height(8.dp))
+
+            // Строка выбора сотрудника
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onUserClick)
+                    .padding(vertical = 4.dp, horizontal = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Сотрудник:",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(0.35f)
+                )
+                Row(
+                    modifier = Modifier.weight(0.65f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        userFullName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = "Выбрать сотрудника",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            if (position.isNotBlank()) {
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp, horizontal = 2.dp)) {
+                    Text(
+                        "Должность:",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(0.35f)
+                    )
+                    Text(
+                        position,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(0.65f)
+                    )
+                }
+            }
+
+            // Строка выбора периода
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onPeriodClick)
+                    .padding(vertical = 4.dp, horizontal = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Период:",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(0.35f)
+                )
+                Row(
+                    modifier = Modifier.weight(0.65f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        periodText,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = "Выбрать период",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 10.dp),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+            )
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Итого сумма",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        MoneyFormat.fromTiyin(totalSum) + " сум",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                    Text(
+                        "Итого НДС (12%)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.End
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        MoneyFormat.fromTiyin(totalVat) + " сум",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.End
+                    )
+                }
+            }
+        }
+    }
+}
+```
+
+**Step 2: Удалить `CompactFiltersBar` и подключить `PeriodPickerBottomSheet`**
+В `ReportScreen`:
+- Удалить элемент `item { CompactFiltersBar(...) }`.
+- Удалить composable функции `CompactFiltersBar` и `CompactFilterTile`.
+- Заменить устаревшие состояния `showYearPicker`, `showQuarterPicker`, `showPeriodPicker` на единое состояние:
+  `var showPeriodSheet by remember { mutableStateOf(false) }`
+- Подключить `PeriodPickerBottomSheet`:
+```kotlin
+if (showPeriodSheet) {
+    PeriodPickerBottomSheet(
+        initialYear = settings.year,
+        currentQuarter = settings.quarter,
+        onQuarterSelected = { quarter, year ->
+            reportViewModel.setYear(year)
+            reportViewModel.setQuarter(quarter)
+        },
+        onExactDatesClick = {
+            showFromPicker = true
+        },
+        onDismissRequest = { showPeriodSheet = false }
+    )
+}
+```
+
+**Step 3: Запустить компиляцию**
+Команда: `.\gradlew.bat compileDebugKotlin`
+Ожидаемый результат: BUILD SUCCESSFUL.
+
+**Step 4: Коммит**
+`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
+`git commit -m "refactor(ui): move user and period pickers into ReportHeaderCard, remove CompactFiltersBar"`
+
+---
+
+### Task 3: Редизайн панели `SortAndBatchBar` (170dp кнопка сортировки и чекбокс справа)
+
+**Files:**
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
+
+**Step 1: Реализовать `SortAndBatchBar` с фиксированной шириной 170dp и чекбоксом `Все (N) [✓]`**
+В `ReportScreen.kt` заменить функцию `SortAndBatchBar`:
+```kotlin
+@Composable
+private fun SortAndBatchBar(
+    totalCount: Int,
+    selectedCount: Int,
+    onSelectAll: () -> Unit,
+    onClearAll: () -> Unit,
+    sortField: SortField,
+    sortOrder: SortOrder,
+    onSortFieldSelected: (SortField) -> Unit,
+    onToggleSortOrder: () -> Unit
+) {
+    var sortMenuExpanded by remember { mutableStateOf(false) }
+
+    val toggleState = when {
+        totalCount == 0 || selectedCount == 0 -> ToggleableState.Off
+        selectedCount == totalCount -> ToggleableState.On
+        else -> ToggleableState.Indeterminate
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Слева: Фиксированная кнопка сортировки (170dp) со встроенными стрелкой и шевроном
+        Box {
+            OutlinedButton(
+                onClick = { sortMenuExpanded = true },
+                modifier = Modifier.width(170.dp),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Icon(
+                        imageVector = if (sortOrder == SortOrder.ASC) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                        contentDescription = sortOrder.label,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = ripple(bounded = false, radius = 14.dp)
+                            ) {
+                                onToggleSortOrder()
+                            }
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = sortField.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(Modifier.width(2.dp))
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = sortMenuExpanded,
+                onDismissRequest = { sortMenuExpanded = false }
+            ) {
+                SortField.entries.forEach { field ->
+                    DropdownMenuItem(
+                        text = { Text(field.label) },
+                        onClick = {
+                            sortMenuExpanded = false
+                            onSortFieldSelected(field)
+                        }
+                    )
+                }
+            }
+        }
+
+        // Справа: Надпись «Все (N)» и чекбокс справа от неё
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(
+                    enabled = totalCount > 0,
+                    onClick = {
+                        if (toggleState == ToggleableState.On) onClearAll() else onSelectAll()
+                    }
+                )
+                .padding(start = 6.dp)
+        ) {
+            Text(
+                text = "Все ($totalCount)",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(Modifier.width(4.dp))
+            TriStateCheckbox(
+                state = toggleState,
+                onClick = {
+                    if (toggleState == ToggleableState.On) onClearAll() else onSelectAll()
+                },
+                enabled = totalCount > 0
+            )
+        }
+    }
+}
+```
+
+**Step 2: Запустить компиляцию**
 Команда: `.\gradlew.bat compileDebugKotlin`
 Ожидаемый результат: BUILD SUCCESSFUL.
 
 **Step 3: Коммит**
-`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt app/src/main/res/values/strings.xml`
-`git commit -m "feat(ui): redesign ReportScreen to unified 7-block Receipts & Report screen"`
+`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
+`git commit -m "refactor(ui): update SortAndBatchBar with 170dp fixed button and right-aligned batch checkbox"`
 
 ---
 
-### Task 5: Обновление навигации в `AppNavHost.kt` и удаление дублирующего кода
+### Task 4: Редизайн карточки чека `ReceiptListCard` (компактный бейдж 26×26dp, чекбокс справа, удаление корзины)
 
 **Files:**
-- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/navigation/AppNavHost.kt`
-- Delete: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReceiptsScreen.kt`
-- Delete: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/ReceiptsViewModel.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
 
-**Step 1: Обновить `MainTab` и маршруты в `AppNavHost.kt`**
-1. В `AppNavHost.kt`:
-   ```kotlin
-   private sealed class MainTab(val route: String, val title: String, val icon: ImageVector) {
-       data object Scan : MainTab("main/scan", "Добавить", Icons.Outlined.QrCodeScanner)
-       data object Report : MainTab("main/report", "Чеки и отчёт", Icons.Outlined.Description)
-       data object Audit : MainTab("main/audit", "Аудит", Icons.AutoMirrored.Outlined.FactCheck)
-       data object Profile : MainTab("main/profile", "Профиль", Icons.Outlined.Person)
-       companion object {
-           val employee = listOf(Scan, Report, Profile)
-           val auditor = listOf(Audit, Report, Profile)
-       }
-   }
-   ```
-2. Удалить объект `MainTab.Receipts` и удаление `composable(MainTab.Receipts.route)`.
-3. Удалить файлы `ReceiptsScreen.kt` и `ReceiptsViewModel.kt`, так как вся их функциональность полностью перенесена и расширена в `ReportScreen.kt` и `ReportViewModel.kt`.
+**Step 1: Обновить `ReceiptListCard`**
+- Удалить параметр `onDelete: () -> Unit` из `ReceiptListCard` (удаление переносится в модальное превью и пакетное удаление).
+- Слева расположить компактный черный бейдж размером `26.dp` x `26.dp` со скруглением `6.dp` и текстом `$ordinal` (без префикса «№»).
+- По центру: продавец, дата, сумма и НДС занимают всю полезную ширину (`weight(1f)`).
+- Справа: чекбокс выбора с кликабельной областью 48dp.
+- Вызов `ReceiptListCard` в `itemsIndexed`: убрать аргумент `onDelete = ...`.
 
-**Step 2: Проверить компиляцию всего проекта**
+Код реализации:
+```kotlin
+@Composable
+private fun ReceiptListCard(
+    modifier: Modifier = Modifier,
+    ordinal: Int,
+    item: ReceiptWithUser,
+    isSelected: Boolean,
+    onToggleSelect: () -> Unit,
+    onPreview: () -> Unit
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Компактный бейдж номера (26x26dp)
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .background(Color.Black, RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                AutoScalingText(
+                    text = "$ordinal",
+                    minFontSize = 9.sp,
+                    maxLines = 1,
+                    modifier = Modifier.padding(1.dp)
+                )
+            }
+
+            Spacer(Modifier.width(10.dp))
+
+            // Центральный блок с информацией о чеке (+50dp полезной ширины)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(),
+                        role = Role.Button,
+                        onClick = onPreview
+                    )
+                    .padding(vertical = 4.dp, horizontal = 2.dp)
+            ) {
+                Text(
+                    text = item.receipt.sellerName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = DateFormat.formatDateTime(item.receipt.purchasedAt),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(2.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Сумма: ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = MoneyFormat.fromTiyin(item.receipt.totalAmountTiyin) + " сум",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "НДС: ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = MoneyFormat.fromTiyin(item.receipt.vatAmountTiyin) + " сум",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+
+            // Чекбокс выбора справа (48dp touch target)
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = false, radius = 24.dp),
+                        role = Role.Checkbox,
+                        onClick = onToggleSelect
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelect() }
+                )
+            }
+        }
+    }
+}
+```
+
+**Step 2: Запустить компиляцию**
 Команда: `.\gradlew.bat compileDebugKotlin`
-Ожидаемый результат: BUILD SUCCESSFUL (отсутствуют битые импорты и ссылки на удаленные классы).
+Ожидаемый результат: BUILD SUCCESSFUL.
 
 **Step 3: Коммит**
-`git add -A`
-`git commit -m "refactor(navigation): reduce navigation tabs to 3 and remove obsolete ReceiptsScreen"`
+`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
+`git commit -m "refactor(ui): update ReceiptListCard with 26x26dp badge, right checkbox and removed trash icon"`
 
 ---
 
-### Task 6: Актуализация справочного раздела `HelpBottomSheet.kt`
+### Task 5: Редизайн `ReceiptPreviewDialog` (3 кнопки равного веса, высота 46dp, `AutoScalingText`)
+
+**Files:**
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
+
+**Step 1: Реализовать обновленный `ReceiptPreviewDialog`**
+Под картинкой чека размещаются 3 кнопки равного веса в один ряд на всю ширину:
+`[ 🔗 Поделиться ]  [ 🗑 Удалить (красная) ]  [ ✕ Закрыть ]`
+
+```kotlin
+@Composable
+private fun ReceiptPreviewDialog(
+    item: ReceiptWithUser,
+    ordinal: Int,
+    onDismiss: () -> Unit,
+    onShare: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Чек №$ordinal")
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val bitmap = remember(item.receipt.id, ordinal) {
+                    com.example.uzb_qqs_for_dip.render.ReceiptCardRenderer.renderBitmap(
+                        receipt = item.receipt,
+                        ordinal = ordinal,
+                        width = 540
+                    )
+                }
+                androidx.compose.foundation.Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Превью чека №$ordinal",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = onShare,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                ) {
+                    Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    AutoScalingText("Поделиться", maxLines = 1, minFontSize = 9.sp)
+                }
+
+                Button(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    AutoScalingText("Удалить", maxLines = 1, minFontSize = 9.sp)
+                }
+
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                ) {
+                    AutoScalingText("Закрыть", maxLines = 1, minFontSize = 9.sp)
+                }
+            }
+        },
+        dismissButton = null
+    )
+}
+```
+
+**Step 2: Запустить компиляцию**
+Команда: `.\gradlew.bat compileDebugKotlin`
+Ожидаемый результат: BUILD SUCCESSFUL.
+
+**Step 3: Коммит**
+`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
+`git commit -m "feat(ui): redesign ReceiptPreviewDialog with 3 equal-weight buttons and AutoScalingText"`
+
+---
+
+### Task 6: Создание компонента `UserManagementBottomSheet.kt`
+
+**Files:**
+- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/UserManagementBottomSheet.kt`
+
+**Step 1: Реализовать `UserManagementBottomSheet.kt`**
+Компонент шторки управления пользователями:
+- Заголовок «Управление профилями».
+- Список профилей с круглыми аватарами, ФИО, должностями.
+- Бейдж/индикатор активного профиля.
+- Иконка корзины для вызова удаления конкретного профиля.
+- Внизу кнопка «+ Добавить новый профиль».
+
+Код `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/UserManagementBottomSheet.kt`:
+```kotlin
+package com.example.uzb_qqs_for_dip.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.example.uzb_qqs_for_dip.data.model.User
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserManagementBottomSheet(
+    users: List<User>,
+    currentUserId: Long?,
+    onSelectUser: (User) -> Unit,
+    onDeleteUser: (User) -> Unit,
+    onCreateProfileClick: () -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp, top = 4.dp)
+        ) {
+            Text(
+                text = "Управление профилями",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(users, key = { it.id }) { user ->
+                    val isActive = user.id == currentUserId
+                    UserItemRow(
+                        user = user,
+                        isActive = isActive,
+                        onSelect = {
+                            onSelectUser(user)
+                            onDismissRequest()
+                        },
+                        onDelete = { onDeleteUser(user) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedButton(
+                onClick = {
+                    onDismissRequest()
+                    onCreateProfileClick()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Outlined.PersonAdd, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.size(8.dp))
+                Text("Добавить новый профиль")
+            }
+        }
+    }
+}
+
+@Composable
+private fun UserItemRow(
+    user: User,
+    isActive: Boolean,
+    onSelect: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onSelect),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+            else MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isActive) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.secondaryContainer
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = user.fullName.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isActive) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+
+            Spacer(Modifier.size(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = user.fullName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (isActive) {
+                        Spacer(Modifier.size(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        ) {
+                            Text(
+                                text = "Активен",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = user.position,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = "Удалить профиль",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+```
+
+**Step 2: Запустить компиляцию**
+Команда: `.\gradlew.bat compileDebugKotlin`
+Ожидаемый результат: BUILD SUCCESSFUL.
+
+**Step 3: Коммит**
+`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/UserManagementBottomSheet.kt`
+`git commit -m "feat(ui): add UserManagementBottomSheet for profile switching, creation, and deletion"`
+
+---
+
+### Task 7: Рефакторинг `ProfileScreen.kt` (удаление 3 кнопок, шторка профилей, двойное подтверждение и инлайн-редактирование)
+
+**Files:**
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`
+
+**Step 1: Реализовать диалог инлайн-редактирования одного поля `EditSingleFieldDialog` и диалог создания профиля `CreateProfileDialog`**
+Создать в `ProfileScreen.kt`:
+```kotlin
+enum class EditableProfileField(val title: String, val label: String) {
+    FULL_NAME("Изменить имя", "Имя пользователя (полностью)"),
+    POSITION("Изменить должность", "Должность"),
+    ORGANIZATION("Изменить организацию", "Организация (необязательно)")
+}
+
+@Composable
+fun EditSingleFieldDialog(
+    field: EditableProfileField,
+    initialValue: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var value by remember { mutableStateOf(initialValue) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(field.title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = {
+                        value = it
+                        error = null
+                    },
+                    label = { Text(field.label) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = error != null
+                )
+                error?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val trimmed = value.trim()
+                    if (field != EditableProfileField.ORGANIZATION && trimmed.isEmpty()) {
+                        error = "Поле не может быть пустым"
+                        return@Button
+                    }
+                    onConfirm(trimmed)
+                }
+            ) { Text("Сохранить") }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
+        }
+    )
+}
+
+@Composable
+fun CreateProfileDialog(
+    error: String?,
+    onClearError: () -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: (fullName: String, position: String, organization: String) -> Unit
+) {
+    var fullName by remember { mutableStateOf("") }
+    var position by remember { mutableStateOf("") }
+    var organization by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Новый профиль") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it; onClearError() },
+                    label = { Text("Имя пользователя (полностью)") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = position,
+                    onValueChange = { position = it; onClearError() },
+                    label = { Text("Должность") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = organization,
+                    onValueChange = { organization = it; onClearError() },
+                    label = { Text("Организация (необязательно)") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                error?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Medium)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(fullName, position, organization) }
+            ) { Text("Создать") }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
+        }
+    )
+}
+```
+
+**Step 2: Обновить `ProfileRow` с иконкой карандаша и кликом**
+```kotlin
+@Composable
+private fun ProfileRow(
+    label: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.35f)
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(0.55f)
+        )
+        Icon(
+            Icons.Outlined.Edit,
+            contentDescription = "Редактировать $label",
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        )
+    }
+}
+```
+
+**Step 3: Интегрировать `UserManagementBottomSheet`, двойное подтверждение и удалить 3 нижние кнопки в `ProfileScreen`**
+- Удалить кнопки «Редактировать», «Выйти из профиля», «Удалить» внизу экрана.
+- Сделать шапку карточки профиля (аватар + ФИО/должность) кликабельной:
+  `Modifier.clip(RoundedCornerShape(12.dp)).clickable { showUserManagementSheet = true }`
+- Добавить состояния:
+  - `var showUserManagementSheet by remember { mutableStateOf(false) }`
+  - `var editingField by remember { mutableStateOf<EditableProfileField?>(null) }`
+  - `var showCreateProfileDialog by remember { mutableStateOf(false) }`
+  - `var profileToDeleteStage1 by remember { mutableStateOf<User?>(null) }`
+  - `var profileToDeleteStage2 by remember { mutableStateOf<User?>(null) }`
+- Диалог 1 удаления:
+  «Удалить профиль «${user.fullName}»? Будут удалены связанные чеки.» -> кнопка «Удалить» переводит в `profileToDeleteStage2 = user`.
+- Диалог 2 удаления (окончательный):
+  «Вы абсолютно уверены? Это действие необратимо.» -> красная кнопка «Удалить окончательно» вызывает:
+  `appViewModel.deleteProfile(id) { if (id == currentUser?.id) onLoggedOut() }`.
+
+**Step 4: Запустить тесты и компиляцию**
+Команда: `.\gradlew.bat compileDebugKotlin`
+Ожидаемый результат: BUILD SUCCESSFUL.
+
+**Step 5: Коммит**
+`git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`
+`git commit -m "feat(ui): minimize ProfileScreen, add UserManagementBottomSheet, double confirmation delete and inline editing"`
+
+---
+
+### Task 8: Актуализация документации в `HelpBottomSheet.kt`
 
 **Files:**
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/HelpBottomSheet.kt`
 
-**Step 1: Обновить справочные тексты под новую вкладку**
+**Step 1: Обновить раздел «Чеки и отчёт» и «Управление профилями»**
 В `HelpBottomSheet.kt`:
-1. Раздел «Что нужно печатать»:
-   - Описать, что теперь доступен режим «Всё», позволяющий в один клик распечатать или экспортировать полный комплект документов: сводный отчёт и реестр чеков по 6 на лист с непрерывными реквизитами и отдельной нумерацией.
-2. Объединить и актуализировать разделы «Чеки» и «Генерация отчета» в единый подробный пункт «Чеки и отчёт (Режимы экспорта)»:
-   - Разъяснить 3 режима переключателя:
-     - «Всё» (по умолчанию): единый официальный PDF-документ (сводная таблица, подпись, колонтитулы + реестр чеков с нумерацией «стр. 1 из M»).
-     - «Отчёт»: сводный аналитический отчет для налогового возмещения (PDF/XLSX).
-     - «Чеки»: реестр карточек чеков высокого разрешения с фискальными данными и QR-кодами (по 6 шт. на лист А4).
-   - Описать кнопки действий («Сохранить», «Поделиться», «Открыть», «Печать»).
-   - Описать работу онлайн-синхронизации ОФД с индикатором «Обновлено X/Y».
-   - Описать фильтры (Пользователь, Год, Квартал по умолчанию Asia/Tashkent, Период).
-   - Описать пакетное удаление и предупреждения о нулевом НДС.
-   - Описать просмотр полноразмерного чека по клику на карточку.
+1. В секции «Чеки и отчёт (Единый экран)»:
+   - Описать, что выбор сотрудника и периода теперь встроен прямо в шапку «Сводный отчёт» (клик открывает выбор пользователя или шторку `PeriodPickerBottomSheet` со стрелками года, сеткой 2×2 кварталов и календарем).
+   - Описать фиксированную 170dp кнопку сортировки и чекбокс справа `Все (N) [✓]`.
+   - Описать, что в карточке чека номер отображается в компактном бейдже 26×26dp, удалена иконка корзины, а удаление чека выполняется в модальном окне превью (кнопка «Удалить») или через панель пакетного удаления.
+2. В секции «Управление профилями»:
+   - Описать минимизацию экрана без лишних кнопок внизу.
+   - Описать шторку управления профилями (открывается кликом по аватару или ФИО): переключение активного профиля, добавление нового («+ Добавить новый профиль») и двойное подтверждение удаления профиля и связанных чеков.
+   - Описать инлайн-редактирование полей «Имя», «Должность» и «Организация» по клику на значок карандаша.
 
-**Step 2: Проверить сборку**
+**Step 2: Проверить компиляцию**
 Команда: `.\gradlew.bat compileDebugKotlin`
 Ожидаемый результат: BUILD SUCCESSFUL.
 
 **Step 3: Коммит**
 `git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/HelpBottomSheet.kt`
-`git commit -m "docs(help): update HelpBottomSheet with unified Receipts and Report screen guide"`
+`git commit -m "docs(help): update HelpBottomSheet with new period picker, receipt cards, and profile management instructions"`
 
 ---
 
-### Task 7: Финальное тестирование, синхронизация архитектурной карты и Quality Gate
+### Task 9: Финальное тестирование, проверка регрессий и обновление архитектурной карты
 
 **Files:**
-- Modify: `SYSTEM_PROMPT.md`
-- Modify: `.cursorrules`
+- Modify: `SYSTEM_PROMPT.md`, `.cursorrules`
+- Test: Все Unit-тесты (`ReportViewModelTest`, `PeriodPickerLogicTest`, и др.)
 
 **Step 1: Запустить все Unit-тесты проекта**
-Команда: `.\gradlew.bat test`
-Ожидаемый результат: BUILD SUCCESSFUL, все тесты пройдены без ошибок (100% green).
+Команда: `.\gradlew.bat testDebugUnitTest`
+Ожидаемый результат: Все тесты пройдены успешно (BUILD SUCCESSFUL).
 
 **Step 2: Запустить автосинхронизацию архитектурной карты**
 Команда: `python scripts/update_architecture_map.py`
-Ожидаемый результат:
-- Успешное обновление блока `<architecture_map>` в `SYSTEM_PROMPT.md`.
-- Успешная синхронизация в `.cursorrules`.
+Скрипт просканирует новые компоненты (`PeriodPickerBottomSheet.kt`, `UserManagementBottomSheet.kt`) и обновит секции `<architecture_map>` в `SYSTEM_PROMPT.md` и `.cursorrules`.
 
-**Step 3: Финальный коммит изменений**
-`git add SYSTEM_PROMPT.md .cursorrules`
-`git commit -m "chore(architecture): update architecture map after unifying receipts and report screens"`
+**Step 3: Запустить финальную сборку сборки приложения**
+Команда: `.\gradlew.bat assembleDebug`
+Ожидаемый результат: BUILD SUCCESSFUL.
+
+**Step 4: Финальный коммит плана**
+`git add SYSTEM_PROMPT.md .cursorrules IMPLEMENTATION_PLAN.md`
+`git commit -m "chore: synchronize architecture map and finalize implementation plan"`
 
 ---
 
-## Валидация и критерии готовности (Verification Checklist)
+## Варианты выполнения (Execution Handoff)
 
-- [ ] Навигация в `AppNavHost.kt` содержит ровно 3 вкладки:
-  - Для сотрудника: «Добавить», «Чеки и отчёт», «Профиль»
-  - Для аудитора: «Аудит», «Чеки и отчёт», «Профиль»
-- [ ] Экран «Чеки и отчёт» содержит все 7 блоков в строгом порядке сверху вниз:
-  1. Шапка отчёта (период, ФИО, должность, количество чеков, общая сумма и НДС).
-  2. Переключатель в один ряд: «Отчёт» | «Всё» | «Чеки» (по умолчанию «Всё»).
-  3. Кнопки экспорта в один ряд: «Сохранить», «Поделиться», «Открыть», «Печать» с предварительной ОФД-синхронизацией и индикатором «Обновлено X/Y».
-  4. Фильтры в один ряд из 4 полей с `AutoScalingText`: Пользователь, Год, Квартал (Asia/Tashkent по умолчанию), Период.
-  5. Сортировка (выпадающий список полей + переключатель направления) и чекбокс «Выбрать все» / `SelectionActionBar`.
-  6. Предупреждение о чеках с нулевым НДС (`ZeroVatReceiptsCard`).
-  7. Список карточек чеков с черными квадратными бейджами номеров № 1..N, совпадающими со строкой отчета, и открытием `ReceiptPreviewDialog` по клику.
-- [ ] Генерация файла «Всё» (`CombinedPdfGenerator.kt`):
-  - Страницы сводного отчета 1..N.
-  - С НОВОЙ страницы начинается реестр карточек чеков по 6 на лист А4.
-  - Нумерация страниц реестра изолирована и начинается с 1-й страницы: «стр. 1 из M».
-  - На каждой странице реестра выводятся Должность, ФИО и дата формирования («Сформировано дд.мм.гггг чч:мм:сс»).
-- [ ] Оптимизация отступов в `PdfReportGenerator.kt`:
-  - `MARGIN = 28f` (10 мм).
-  - На промежуточных страницах без подписи лимит высоты `PAGE_HEIGHT - 32f` (резерв 110f убран).
-  - Компактный блок подписи (70f).
-  - До 24 чеков гарантированно умещаются на 1 странице А4; до 30 на последующих.
-- [ ] Справочный раздел `HelpBottomSheet.kt` полностью актуализирован.
-- [ ] Все Unit-тесты (`.\gradlew.bat test`) проходят успешно.
-- [ ] Скрипт `python scripts/update_architecture_map.py` выполнен без ошибок.
+План полностью сформирован и сохранён в `IMPLEMENTATION_PLAN.md`.
+
+Доступны 2 варианта исполнения:
+1. **Subagent-Driven (в текущей сессии)** — запуск свежих субагентов для каждого этапа (Doer -> TestEngineer -> Reviewer -> Supervisor), валидация после каждого таска, быстрый темп и контроль качества.
+2. **Parallel Session (отдельная сессия)** — открытие новой рабочей сессии с навыком `executing-plans` для пакетного выполнения с контрольными точками.
