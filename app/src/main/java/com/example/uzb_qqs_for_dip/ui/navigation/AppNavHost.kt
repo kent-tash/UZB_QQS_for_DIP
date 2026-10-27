@@ -26,9 +26,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,11 +49,8 @@ import com.example.uzb_qqs_for_dip.data.model.UserRole
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
-import com.example.uzb_qqs_for_dip.ui.components.AboutAppBottomSheet
-import com.example.uzb_qqs_for_dip.ui.components.BackupBottomSheet
-import com.example.uzb_qqs_for_dip.ui.components.HelpBottomSheet
-import com.example.uzb_qqs_for_dip.ui.components.MainMenuBottomSheet
-import com.example.uzb_qqs_for_dip.ui.components.UserManagementBottomSheet
+import com.example.uzb_qqs_for_dip.ui.components.HierarchicalMenuBottomSheet
+import com.example.uzb_qqs_for_dip.ui.components.MenuScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorReceiptSearchScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
@@ -146,7 +140,7 @@ private fun MainScaffold(
     val currentTitle = when {
         isAuditVerify -> "Проверка чеков"
         isAuditSearch -> "Поиск чека"
-        else -> tabs.find { it.route == currentRoute }?.title ?: "UZB QQS"
+        else -> tabs.find { it.route == currentRoute }?.title ?: "Скан чеков Узбекистана"
     }
 
     val quickScanRequested by appViewModel.quickScanRequested.collectAsStateWithLifecycle()
@@ -188,46 +182,15 @@ private fun MainScaffold(
         }
     }
 
-    var showMainMenu by remember { mutableStateOf(false) }
-    var showUserManagement by remember { mutableStateOf(false) }
-    var showBackup by remember { mutableStateOf(false) }
-    var showHelp by remember { mutableStateOf(false) }
-    var showAboutApp by remember { mutableStateOf(false) }
+    val menuInitialScreen by appViewModel.menuInitialScreen.collectAsStateWithLifecycle()
 
-    if (showMainMenu) {
-        MainMenuBottomSheet(
-            user = currentUser,
-            onOpenUserManagement = { showUserManagement = true },
-            onSwitchRole = { appViewModel.switchCurrentUserRole() },
-            onOpenBackup = { showBackup = true },
-            onOpenHelp = { showHelp = true },
-            onOpenAboutApp = { showAboutApp = true },
-            onDismissRequest = { showMainMenu = false }
-        )
-    }
-
-    if (showUserManagement) {
-        UserManagementBottomSheet(
+    menuInitialScreen?.let { initialScreen ->
+        HierarchicalMenuBottomSheet(
             appViewModel = appViewModel,
-            onDismissRequest = { showUserManagement = false },
+            initialScreen = initialScreen,
+            onDismissRequest = { appViewModel.closeMenu() },
             onLoggedOut = onLoggedOut
         )
-    }
-
-    if (showBackup) {
-        BackupBottomSheet(
-            appViewModel = appViewModel,
-            onDismissRequest = { showBackup = false },
-            onNavigateToAuth = onLoggedOut
-        )
-    }
-
-    if (showHelp) {
-        HelpBottomSheet(onDismissRequest = { showHelp = false })
-    }
-
-    if (showAboutApp) {
-        AboutAppBottomSheet(onDismissRequest = { showAboutApp = false })
     }
 
     Scaffold(
@@ -256,7 +219,7 @@ private fun MainScaffold(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .clickable { showMainMenu = true }
+                            .clickable { appViewModel.openMenu(MenuScreen.MAIN) }
                             .semantics {
                                 role = Role.Button
                                 contentDescription = "Главное меню профиля: ${currentUser?.fullName ?: "Гость"}"

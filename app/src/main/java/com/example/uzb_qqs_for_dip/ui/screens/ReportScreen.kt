@@ -102,8 +102,8 @@ import com.example.uzb_qqs_for_dip.ui.components.DatePickerSheet
 import com.example.uzb_qqs_for_dip.ui.components.ExportActionGrid
 import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
 import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
+import com.example.uzb_qqs_for_dip.ui.components.MenuScreen
 import com.example.uzb_qqs_for_dip.ui.components.PeriodPickerBottomSheet
-import com.example.uzb_qqs_for_dip.ui.components.UserManagementBottomSheet
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatDetectedDialog
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatReceiptsCard
 import com.example.uzb_qqs_for_dip.util.DateFormat
@@ -137,7 +137,6 @@ fun ReportScreen(
     var showDeleteBatchConfirm by remember { mutableStateOf(false) }
 
     // Диалоги фильтров
-    var showUserPicker by remember { mutableStateOf(false) }
     var showPeriodSheet by remember { mutableStateOf(false) }
     var showFromPicker by remember { mutableStateOf(false) }
     var showToPicker by remember { mutableStateOf(false) }
@@ -237,7 +236,7 @@ fun ReportScreen(
                 count = rows.size,
                 totalSum = totalSum,
                 totalVat = totalVat,
-                onUserClick = { showUserPicker = true },
+                onUserClick = { appViewModel.openMenu(MenuScreen.USERS) },
                 onPeriodClick = { showPeriodSheet = true }
             )
             Spacer(Modifier.height(10.dp))
@@ -476,16 +475,6 @@ fun ReportScreen(
     }
 
     // --- Диалоги выбора параметров фильтров ---
-    if (showUserPicker) {
-        UserManagementBottomSheet(
-            appViewModel = appViewModel,
-            onDismissRequest = { showUserPicker = false },
-            onSelectUser = { selected ->
-                reportViewModel.setUserFilter(selected.id)
-            }
-        )
-    }
-
     if (showPeriodSheet) {
         PeriodPickerBottomSheet(
             initialYear = settings.year,

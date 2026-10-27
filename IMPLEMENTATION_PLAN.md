@@ -1,621 +1,542 @@
-# План реализации: Рефакторинг навигации, главное меню профиля в TopAppBar, шторки резервного копирования и «О приложении», единое управление пользователями и обновление справки
+# План реализации: Новая иконка и имя приложения, цветовая индикация роли, единая иерархическая шторка (Hierarchical BottomSheet), переключатель тем, редизайн приветствия и актуализация справки с виджетом
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Удалить вкладку «Профиль» из нижней панели навигации, интегрировать круглый кликабельный аватар текущего пользователя в TopAppBar с открытием `MainMenuBottomSheet`, разработать шторки `BackupBottomSheet` и `AboutAppBottomSheet`, сделать кликабельным приветствие сотрудника в «Добавить», внедрить единую шторку `UserManagementBottomSheet` с инлайн-редактированием (✏️), безопасным удалением (🗑️) и сквозной синхронизацией сессии во всех экранах, а также полностью актуализировать раздел справки `HelpBottomSheet.kt`.
+**Goal:** Внедрить новую официальную иконку и название «Скан чеков Узбекистана», разработать единую иерархическую шторку (`Hierarchical BottomSheet`) с плавной горизонтальной слайд-анимацией (`AnimatedContent`) и системным `BackHandler`, внедрить цветовое разделение ролей (красный «Аудитор» / синий «Сотрудник»), реализовать сохраняемое переключение тем оформления (Светлая / Тёмная / Системная) с сегментированным контролом в меню, обновить экран «Добавить» полноразмерной карточкой приветствия без заголовка «Добавить чек», добавить в «О приложении» официальный логотип и прямую ссылку на RuStore, а также полностью актуализировать раздел справки иконками для всех пунктов и новыми блоками про виджет и авто-открытие ссылок.
 
 **Architecture:**
-1. **Навигационный слой (`ui/navigation/AppNavHost.kt`):**
-   - Удаление `MainTab.Profile`. В нижней навигационной панели (`NavigationBar`) остаются строго по 2 вкладки:
-     - Режим сотрудника (`EMPLOYEE`): «Добавить» (`Scan`) и «Чеки и отчёт» (`Report`).
-     - Режим аудитора (`AUDITOR`): «Аудит» (`Audit`) и «Чеки и отчёт» (`Report`).
-   - В правом верхнем углу `TopAppBar` на всех экранах вместо статичной иконки «?» размещается интерактивный круглый аватар активного пользователя (диаметр 38dp, контейнер `primaryContainer`, первая буква имени, сенсорная зона 48dp). Клик по аватару открывает `MainMenuBottomSheet`.
-   - Удаление устаревшего экрана `ProfileScreen.kt`.
+1. **Ресурсы и брендинг (`res/`):**
+   - Сохранение официальной иконки пользователя как `app/src/main/res/drawable/app_logo.png`.
+   - Генерация полного комплекта launcher mipmaps (`mdpi` 48x48, `hdpi` 72x72, `xhdpi` 96x96, `xxhdpi` 144x144, `xxxhdpi` 192x192), адаптивного слоя `ic_launcher_foreground.png` (108..432px) и `ic_launcher-playstore.png` (512x512).
+   - Обновление названия в `res/values/strings.xml` на `<string name="app_name">Скан чеков Узбекистана</string>`.
+2. **Слой настроек и тем оформления (`data/settings/ThemeManager.kt`, `ui/theme/`):**
+   - `AppThemeMode` (`SYSTEM`, `LIGHT`, `DARK`) с персистентным хранением в `SharedPreferences` (`app_theme_prefs`).
+   - Реактивный `StateFlow<AppThemeMode>` в `ThemeManager`, проброшенный через `AppContainer` в `AppViewModel` и `MainActivity`.
+   - `MainActivity.kt` динамически переключает тему `UZB_QQS_for_DIPTheme(darkTheme = isDark)` без перезапуска Activity.
+3. **Единая иерархическая шторка (`Hierarchical BottomSheet` в `ui/components/MainMenuBottomSheet.kt`):**
+   - ОДНА общая `ModalBottomSheet` с состоянием `MenuScreen` (`MAIN`, `USERS`, `BACKUP`, `HELP`, `ABOUT`).
+   - Навигация между экранами внутри шторки через `AnimatedContent` с горизонтальными слайд-анимациями влево/вправо.
+   - Каждый подэкран содержит `SubScreenHeader` со стрелкой «Назад» `←` и заголовком.
+   - `BackHandler(enabled = currentScreen != MenuScreen.MAIN) { currentScreen = MenuScreen.MAIN }` перехватывает системный жест «Назад».
+   - В главном экране меню (`MAIN`):
+     - Цветовая индикация роли «Режим работы»: «Аудитор» (красная иконка, светло-красная подложка, красный бейдж) / «Сотрудник» (синяя иконка, светло-синяя подложка, синий бейдж).
+     - Сегментированный переключатель `[Системная] [Светлая] [Тёмная]`.
+   - Экспорт содержимого подэкранов как переиспользуемых composables: `UserManagementContent`, `BackupContent`, `HelpContent`, `AboutAppContent`.
+4. **Сквозная навигация к шторке профилей (`AppNavHost.kt`, `ScanScreen.kt`, `ReportScreen.kt`):**
+   - `AppViewModel` предоставляет методы `openMenu(screen: MenuScreen)` и `closeMenu()`.
+   - Клик по аватару в `TopAppBar` открывает `MenuScreen.MAIN`.
+   - Клик по приветствию в «Добавить» (`ScanScreen`) и строке сотрудника в «Чеки и отчёт» (`ReportScreen`) открывает шторку сразу на `MenuScreen.USERS`. При нажатии «Назад» `←` пользователь попадает в главное меню.
+5. **Экран «Добавить» (`ScanScreen.kt`):**
+   - Карточка приветствия «Здравствуйте, [ФИО] ▾» занимает всю ширину экрана (16dp скругление, аватар с первой буквой, имя, стрелка).
+   - Удаление текста «Добавить чек» и лишнего вертикального отступа над кнопками.
+6. **Шторка «О приложении» (`AboutAppContent`):**
+   - Логотип `app_logo.png` (72x72dp, 16dp скругление), имя «Скан чеков Узбекистана», версия.
+   - Прямая кнопка «Страница в RuStore» (`https://www.rustore.ru/catalog/app/com.example.uzb_qqs_for_dip`).
+   - Кнопка «Поделиться приложением», «Политика конфиденциальности», интерактивные контакты (Telegram `@dis_night`, Email `i@dis-night.ru`).
+7. **Справка («?») (`HelpContent`):**
+   - Иконки и значки во всех пунктах и подпунктах в едином визуальном стиле карточек функций.
+   - Новый раздел: «Виджет быстрого сканирования» (добавление на домашний экран, скан в 1 тап без открытия приложения).
+   - Новый раздел: «Автоматическое открытие ссылок на чеки» (настройки Android для `ofd.soliq.uz`, `my.soliq.uz`, `ofd.multicard.uz` и системный Share).
+8. **Тестирование и автосинхронизация карты архитектуры:**
+   - Unit-тесты для `ThemeManager`, `AppViewModel` и иерархической навигации шторки.
+   - Автосинхронизация карты архитектуры через `python scripts/update_architecture_map.py`.
 
-2. **Компонентный слой (`ui/components/`):**
-   - `ProfileDialogs.kt`: вынос переиспользуемых диалогов профиля (`EditProfileDialog`, `CreateProfileDialog`, `EditableProfileField`, `EditSingleFieldDialog`) из `ProfileScreen.kt` в отдельный независимый файл компонентов.
-   - `MainMenuBottomSheet.kt`: карточка текущего пользователя (аватар, ФИО, должность, переход в управление пользователями), переключатель «Режим работы» (`switchCurrentUserRole()`), вызовы шторок «Резервная копия», «Справка» и «О приложении».
-   - `BackupBottomSheet.kt`: шторка резервного копирования с кнопками «Создать бэкап», «Загрузить бэкап» (с диалогом выбора: «Добавить к текущим» или «Полностью заменить» с окном предупреждения) и «Поделиться данными».
-   - `AboutAppBottomSheet.kt`: карточка информации о приложении (версия, описание), кнопка «Поделиться приложением» (ссылка на RuStore), диалог `PrivacyPolicyDialog` и блок «Обратная связь» с кликабельными контактами (Telegram, Email).
-   - `UserManagementBottomSheet.kt`: единый компонент управления пользователями со списком сотрудников, индикатором «Активен», кнопкой редактирования ✏️ (`EditProfileDialog`), кнопкой безопасного двухэтапного удаления 🗑️, кнопкой «+ Добавить новый профиль» (`CreateProfileDialog`) и мгновенным переключением активной сессии через `appViewModel.login(userId)`.
-
-3. **Слой экранов (`ui/screens/`):**
-   - `ScanScreen.kt`: заголовок «Здравствуйте, [ФИО] ▾» становится кликабельным с иконкой выпадающего списка `ArrowDropDown`. Клик открывает единый `UserManagementBottomSheet`.
-   - `ReportScreen.kt`: строка «Сотрудник: [ФИО] ▾» в шапке отчёта открывает единый `UserManagementBottomSheet` вместо старого `SelectUserDialog`. Устаревший диалог `SelectUserDialog` удаляется.
-   - `HelpBottomSheet.kt`: полное очищение от устаревших упоминаний вкладки «Профиль» и детальное описание новой архитектуры навигации, главного меню, управления профилями, 5 способов сканирования с иконками, sticky header в отчётах, бэкапа и аудита.
-
-4. **Тестирование и проверка:**
-   - Сохранение и адаптация существующих Unit-тестов (`ProfileValidationTest.kt`).
-   - Прогон полного набора unit-тестов `./gradlew testDebugUnitTest`.
-   - Автоматическая синхронизация карты архитектуры проекта через `python scripts/update_architecture_map.py`.
-
-**Tech Stack:** Kotlin 2.x, Jetpack Compose, Material 3, AndroidX Navigation, StateFlow / Coroutines, JUnit 4.
+**Tech Stack:** Kotlin 2.x, Jetpack Compose, Material 3, AndroidX Navigation, StateFlow / Coroutines, AndroidX Activity Compose (BackHandler), JUnit 4, Python Pillow (для ассетов).
 
 ---
 
 ## Область изменений (Scope)
 
 - **In Scope:**
-  - Создание `ui/components/ProfileDialogs.kt` с переносом `EditProfileDialog`, `CreateProfileDialog`, `EditableProfileField`, `EditSingleFieldDialog`.
-  - Обновление `ui/components/UserManagementBottomSheet.kt` с поддержкой редактирования (✏️), создания, двухэтапного удаления (🗑️) и авто-синхронизации через `appViewModel.login(userId)`.
-  - Создание `ui/components/BackupBottomSheet.kt` для создания, загрузки (merge/replace) и отправки бэкапа.
-  - Создание `ui/components/AboutAppBottomSheet.kt` с версией приложения, ссылкой на RuStore, политикой конфиденциальности и контактами разработчика.
-  - Создание `ui/components/MainMenuBottomSheet.kt` для TopAppBar.
-  - Модификация `ui/navigation/AppNavHost.kt`: удаление `MainTab.Profile`, интеграция аватара в `TopAppBar`, поддержка 2 вкладок для режимов сотрудника и аудитора.
-  - Удаление `ui/screens/ProfileScreen.kt`.
-  - Модификация `ui/screens/ScanScreen.kt`: кликабельное приветствие с иконкой выпадающего списка и вызовом `UserManagementBottomSheet`.
-  - Модификация `ui/screens/ReportScreen.kt`: замена `SelectUserDialog` на `UserManagementBottomSheet`.
-  - Полная переработка контента `ui/components/HelpBottomSheet.kt`.
-  - Адаптация тестов `ProfileValidationTest.kt` и прогон тестов `./gradlew testDebugUnitTest`.
+  - Генерация ассетов иконок (`app_logo.png`, `ic_launcher.png`, `ic_launcher_round.png`, `ic_launcher_foreground.png`, `ic_launcher-playstore.png`) из загруженного изображения `media_1793121883860_72c3d03d.png`.
+  - Изменение `<string name="app_name">Скан чеков Узбекистана</string>` в `strings.xml` и актуализация названий в интерфейсе.
+  - Создание `data/settings/ThemeManager.kt` с enum `AppThemeMode` (`SYSTEM`, `LIGHT`, `DARK`) и сохранением в SharedPreferences.
+  - Подключение `ThemeManager` в `AppContainer`, `AppViewModel` и `MainActivity`.
+  - Модификация `MainMenuBottomSheet.kt`: единый `HierarchicalMenuBottomSheet` с `AnimatedContent`, `BackHandler`, индикацией ролей (красный/синий), сегментированным селектором тем и `SubScreenHeader`.
+  - Декомпозиция шторок на `UserManagementContent`, `BackupContent`, `HelpContent`, `AboutAppContent`.
+  - Модификация `AppNavHost.kt`: управление единой шторкой, поддержка открытия с `MenuScreen.USERS` или `MenuScreen.MAIN`.
+  - Модификация `ScanScreen.kt`: карточка приветствия во всю ширину, удаление надписи «Добавить чек» и отступа над кнопками.
+  - Модификация `AboutAppBottomSheet.kt`: логотип 72x72dp, имя «Скан чеков Узбекистана», прямая кнопка в RuStore.
+  - Модификация `HelpBottomSheet.kt`: цветные иконки для ВСЕХ пунктов справки, новые разделы виджета и авто-открытия ссылок.
+  - Создание Unit-тестов для `ThemeManager` и навигации шторки.
   - Запуск скрипта обновления карты архитектуры `scripts/update_architecture_map.py`.
 
 - **Out of Scope:**
-  - Изменение схемы базы данных SQLite (`DbHelper.kt`) и миграции (база данных не меняется).
-  - Модификация логики парсинга фискальных чеков и сетевых запросов (`ReceiptParser.kt`, `OfdPaymentApi.kt`).
-  - Изменение логики алгоритмов генерации PDF и Excel экспорта.
+  - Изменение схемы БД SQLite (`DbHelper.kt`) и миграции.
+  - Изменение сетевого протокола парсинга ОФД (`ReceiptParser.kt`, `OfdPaymentApi.kt`).
+  - Изменение логики генерации PDF/Excel отчетов.
 
 ---
 
 ## План пошаговой реализации (Action Items)
 
-### Task 1: Выделение диалогов профилей в `ProfileDialogs.kt` и адаптация импортов
+### Task 1: Генерация иконок приложения и обновление названия в `strings.xml`
 
 **Files:**
-- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/ProfileDialogs.kt`
-- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/AuthScreen.kt`
-- Modify: `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ProfileValidationTest.kt`
+- Source image: `C:/Users/kuret/.gemini/antigravity/brain/96a0e738-0b39-4be1-a6e5-3befd9f9a707/.user_uploaded/media_1793121883860_72c3d03d.png`
+- Create/Overwrite: `app/src/main/res/drawable/app_logo.png`
+- Create/Overwrite: `app/src/main/ic_launcher-playstore.png` (512x512)
+- Create/Overwrite: `app/src/main/res/mipmap-mdpi/ic_launcher.png`, `ic_launcher_round.png`, `ic_launcher_foreground.png`
+- Create/Overwrite: `app/src/main/res/mipmap-hdpi/ic_launcher.png`, `ic_launcher_round.png`, `ic_launcher_foreground.png`
+- Create/Overwrite: `app/src/main/res/mipmap-xhdpi/ic_launcher.png`, `ic_launcher_round.png`, `ic_launcher_foreground.png`
+- Create/Overwrite: `app/src/main/res/mipmap-xxhdpi/ic_launcher.png`, `ic_launcher_round.png`, `ic_launcher_foreground.png`
+- Create/Overwrite: `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`, `ic_launcher_round.png`, `ic_launcher_foreground.png`
+- Remove old webp icons in `mipmap-*` to prevent duplicate resource conflicts.
+- Modify: `app/src/main/res/values/strings.xml:2`
 
-**Step 1: Создание `ProfileDialogs.kt`**
-Перенести компоненты `EditableProfileField`, `EditSingleFieldDialog`, `CreateProfileDialog` и `EditProfileDialog` из `ProfileScreen.kt` в отдельный файл `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/ProfileDialogs.kt`.
-Диалоги должны использовать Material 3, валидировать обязательные поля (имя и должность) и иметь эргономичные кнопки.
+**Step 1: Написание Python-скрипта генерации иконок**
+Создать временный скрипт `scripts/generate_app_icons.py` (с кодировкой `utf-8`), который:
+1. Загружает исходное изображение `media_1793121883860_72c3d03d.png`.
+2. Сохраняет полноразмерный `app/src/main/res/drawable/app_logo.png`.
+3. Генерирует `app/src/main/ic_launcher-playstore.png` размером 512x512 (высококачественный ресемплинг `LANCZOS`).
+4. Для каждого каталога mipmap генерирует:
+   - `mdpi`: 48x48 (`ic_launcher.png`, `ic_launcher_round.png`), 108x108 (`ic_launcher_foreground.png`)
+   - `hdpi`: 72x72 (`ic_launcher.png`, `ic_launcher_round.png`), 162x162 (`ic_launcher_foreground.png`)
+   - `xhdpi`: 96x96 (`ic_launcher.png`, `ic_launcher_round.png`), 216x216 (`ic_launcher_foreground.png`)
+   - `xxhdpi`: 144x144 (`ic_launcher.png`, `ic_launcher_round.png`), 324x324 (`ic_launcher_foreground.png`)
+   - `xxxhdpi`: 192x192 (`ic_launcher.png`, `ic_launcher_round.png`), 432x432 (`ic_launcher_foreground.png`)
+5. Удаляет старые `.webp` файлы (`ic_launcher.webp`, `ic_launcher_round.webp`, `ic_launcher_foreground.webp`) во всех папках `mipmap-*`.
 
-```kotlin
-package com.example.uzb_qqs_for_dip.ui.components
+**Step 2: Запуск скрипта генерации**
+Запустить: `python scripts/generate_app_icons.py`.
+Убедиться, что файлы созданы и старые webp удалены.
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-
-enum class EditableProfileField(val title: String, val label: String) {
-    FULL_NAME("Изменить имя", "Имя пользователя (полностью)"),
-    POSITION("Изменить должность", "Должность"),
-    ORGANIZATION("Изменить организацию", "Организация (необязательно)")
-}
-
-@Composable
-fun EditSingleFieldDialog(
-    field: EditableProfileField,
-    initialValue: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var value by remember { mutableStateOf(initialValue) }
-    var error by remember { mutableStateOf<String?>(null) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(field.title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = {
-                        value = it
-                        error = null
-                    },
-                    label = { Text(field.label) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = error != null
-                )
-                error?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val trimmed = value.trim()
-                    if (field != EditableProfileField.ORGANIZATION && trimmed.isEmpty()) {
-                        error = "Поле не может быть пустым"
-                        return@Button
-                    }
-                    onConfirm(trimmed)
-                }
-            ) { Text("Сохранить") }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
-        }
-    )
-}
-
-@Composable
-fun CreateProfileDialog(
-    error: String?,
-    onClearError: () -> Unit,
-    onDismiss: () -> Unit,
-    onConfirm: (fullName: String, position: String, organization: String) -> Unit
-) {
-    var fullName by remember { mutableStateOf("") }
-    var position by remember { mutableStateOf("") }
-    var organization by remember { mutableStateOf("") }
-    var localError by remember { mutableStateOf<String?>(null) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Новый профиль") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it; localError = null; onClearError() },
-                    label = { Text("Имя пользователя (полностью)") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = position,
-                    onValueChange = { position = it; localError = null; onClearError() },
-                    label = { Text("Должность") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = organization,
-                    onValueChange = { organization = it; localError = null; onClearError() },
-                    label = { Text("Организация (необязательно)") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                val displayError = localError ?: error
-                displayError?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Medium)
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (fullName.trim().isEmpty() || position.trim().isEmpty()) {
-                        localError = "Заполните имя и должность"
-                        return@Button
-                    }
-                    onConfirm(fullName.trim(), position.trim(), organization.trim())
-                }
-            ) { Text("Создать") }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
-        }
-    )
-}
-
-@Composable
-fun EditProfileDialog(
-    initialFullName: String,
-    initialPosition: String,
-    initialOrganization: String = "",
-    error: String?,
-    onClearError: () -> Unit,
-    onDismiss: () -> Unit,
-    onConfirm: (fullName: String, position: String, organization: String) -> Unit,
-    title: String = "Редактирование профиля"
-) {
-    var fullName by remember { mutableStateOf(initialFullName) }
-    var position by remember { mutableStateOf(initialPosition) }
-    var organization by remember { mutableStateOf(initialOrganization) }
-
-    LaunchedEffect(initialFullName, initialPosition, initialOrganization) {
-        fullName = initialFullName
-        position = initialPosition
-        organization = initialOrganization
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it; onClearError() },
-                    label = { Text("Имя пользователя (полностью)") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = position,
-                    onValueChange = { position = it; onClearError() },
-                    label = { Text("Должность") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = organization,
-                    onValueChange = { organization = it; onClearError() },
-                    label = { Text("Организация (необязательно)") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                error?.let {
-                    Text(
-                        it,
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = { onConfirm(fullName, position, organization) }) {
-                Text("Сохранить")
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
-        }
-    )
-}
+**Step 3: Обновление названия в `strings.xml`**
+В `app/src/main/res/values/strings.xml` заменить:
+```xml
+    <string name="app_name">QQS Сканер</string>
+```
+на:
+```xml
+    <string name="app_name">Скан чеков Узбекистана</string>
 ```
 
-**Step 2: Обновление импортов в `AuthScreen.kt` и `ProfileValidationTest.kt`**
-- В `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/AuthScreen.kt`:
-  Заменить импорт `EditProfileDialog` из `ProfileScreen` на `com.example.uzb_qqs_for_dip.ui.components.EditProfileDialog`.
-- В `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ProfileValidationTest.kt`:
-  Заменить импорт `EditableProfileField` на `com.example.uzb_qqs_for_dip.ui.components.EditableProfileField`.
-
-**Step 3: Проверка тестов валидации**
-Запустить: `./gradlew testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.ui.ProfileValidationTest"`
-Ожидаемый результат: тесты проходят успешно (BUILD SUCCESSFUL).
+**Step 4: Проверка компиляции ресурсов**
+Запустить: `./gradlew processDebugResources`.
+Ожидаемый результат: `BUILD SUCCESSFUL`.
 
 ---
 
-### Task 2: Единая шторка управления пользователями `UserManagementBottomSheet.kt`
+### Task 2: Реализация менеджера тем `ThemeManager.kt`, реактивного `themeMode` в `AppViewModel` и `MainActivity`
+
+**Files:**
+- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/data/settings/ThemeManager.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/data/AppContainer.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/AppViewModel.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/MainActivity.kt`
+
+**Step 1: Создание `ThemeManager.kt`**
+Реализовать класс управления темами оформления:
+```kotlin
+package com.example.uzb_qqs_for_dip.data.settings
+
+import android.content.Context
+import androidx.core.content.edit
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+enum class AppThemeMode(val title: String) {
+    SYSTEM("Системная"),
+    LIGHT("Светлая"),
+    DARK("Тёмная")
+}
+
+class ThemeManager(context: Context) {
+    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    private val _themeMode = MutableStateFlow(loadThemeMode())
+    val themeMode: StateFlow<AppThemeMode> = _themeMode.asStateFlow()
+
+    private fun loadThemeMode(): AppThemeMode {
+        val raw = prefs.getString(KEY_THEME_MODE, AppThemeMode.SYSTEM.name)
+        return runCatching { AppThemeMode.valueOf(raw ?: AppThemeMode.SYSTEM.name) }
+            .getOrDefault(AppThemeMode.SYSTEM)
+    }
+
+    fun setThemeMode(mode: AppThemeMode) {
+        prefs.edit { putString(KEY_THEME_MODE, mode.name) }
+        _themeMode.value = mode
+    }
+
+    private companion object {
+        const val PREFS_NAME = "app_theme_prefs"
+        const val KEY_THEME_MODE = "app_theme_mode"
+    }
+}
+```
+
+**Step 2: Регистрация `ThemeManager` в `AppContainer.kt`**
+Добавить в `AppContainer`:
+```kotlin
+val themeManager: ThemeManager by lazy { ThemeManager(appContext) }
+```
+
+**Step 3: Проброс `themeMode` в `AppViewModel.kt`**
+Добавить в `AppViewModel`:
+```kotlin
+val themeMode: StateFlow<AppThemeMode> = container.themeManager.themeMode
+
+fun setThemeMode(mode: AppThemeMode) {
+    container.themeManager.setThemeMode(mode)
+}
+```
+
+**Step 4: Подключение динамической темы в `MainActivity.kt`**
+В `MainActivity.kt`:
+```kotlin
+val themeMode by appViewModel.themeMode.collectAsStateWithLifecycle()
+val isDark = when (themeMode) {
+    AppThemeMode.SYSTEM -> isSystemInDarkTheme()
+    AppThemeMode.LIGHT -> false
+    AppThemeMode.DARK -> true
+}
+UZB_QQS_for_DIPTheme(darkTheme = isDark) {
+    AppNavHost(appViewModel = appViewModel)
+}
+```
+
+**Step 5: Проверка тестов**
+Запустить: `./gradlew testDebugUnitTest`.
+
+---
+
+### Task 3: Декомпозиция содержимого шторок на переиспользуемые composables (`UserManagementContent`, `BackupContent`, `AboutAppContent`, `HelpContent`)
 
 **Files:**
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/UserManagementBottomSheet.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/BackupBottomSheet.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/AboutAppBottomSheet.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/HelpBottomSheet.kt`
 
-**Требования к UI и поведению:**
-1. Отображение списка всех зарегистрированных пользователей (`users` из `AppViewModel`).
-2. В строке каждого пользователя:
-   - Круглый аватар с первой буквой имени.
-   - ФИО (жирным шрифтом, если активен) и должность.
-   - Индикатор «Активен» (чип `primaryContainer` / `primary`) для текущего авторизованного пользователя.
-   - Кнопка-карандаш ✏️ `Icons.Outlined.Edit` с доступным Touch Target (не менее 48dp).
-   - Кнопка-корзина 🗑️ `Icons.Outlined.Delete` с оттенком `error` и Touch Target не менее 48dp.
-3. Поведение при клике на строку пользователя:
-   - Вызывает `appViewModel.login(user.id)`.
-   - Мгновенно синхронизирует текущую сессию во всех экранах приложения.
-   - Закрывает шторку (`onDismissRequest()`).
-4. Поведение при клике на ✏️:
-   - Открывает модальный диалог `EditProfileDialog`.
-   - Позволяет изменить «Имя», «Должность», «Организацию».
-   - При подтверждении вызывает `appViewModel.updateProfile(user.id, name, pos, org, user.role)`.
-5. Поведение при клике на 🗑️:
-   - Запускает двухэтапное безопасное подтверждение:
-     - Этап 1: Диалог с предупреждением, что все чеки этого пользователя будут удалены.
-     - Этап 2: Финальный диалог с иконкой предупреждения `Icons.Filled.WarningAmber` и кнопкой «Удалить окончательно».
-     - При подтверждении вызывает `appViewModel.deleteProfile(user.id) { if (isCurrent) onLoggedOut() }`.
-6. Кнопка «+ Добавить новый профиль»:
-   - Расположена внизу списка пользователей.
-   - Открывает `CreateProfileDialog`.
-   - При создании вызывает `appViewModel.register(fullName, position, organization, autoLogin = false)`.
+**Требования к декомпозиции:**
+Чтобы избежать создания вложенных `ModalBottomSheet` и эффекта мерцания при переходах, каждый файл должен предоставлять чистый composable-контент (например, `UserManagementContent(...)`), который может размещаться внутри единой шторки с горизонтальной навигацией `AnimatedContent`.
 
-**Сигнатура компонента:**
+**Step 1: Выделение `UserManagementContent` в `UserManagementBottomSheet.kt`**
+Вынести внутренний Column со списком пользователей, кнопками ✏️ и 🗑️, а также диалогами в:
 ```kotlin
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserManagementBottomSheet(
+fun UserManagementContent(
     appViewModel: AppViewModel,
-    onDismissRequest: () -> Unit,
-    onLoggedOut: () -> Unit = {}
+    onUserSelected: (User) -> Unit,
+    onLoggedOut: () -> Unit = {},
+    modifier: Modifier = Modifier
 )
 ```
+Оставить `UserManagementBottomSheet` как легкую composable-обертку вокруг `UserManagementContent` для обратной совместимости.
 
-**Step 1: Реализация компонента в `UserManagementBottomSheet.kt`**
-Написать код компонента с внутренней обработкой состояний диалогов редактирования, создания и удаления, исключая дублирование кода в других экранах.
-
-**Step 2: Проверка сборки**
-Запустить: `./gradlew testDebugUnitTest`
-Убедиться в отсутствии ошибок компиляции.
-
----
-
-### Task 3: Шторка резервного копирования `BackupBottomSheet.kt`
-
-**Files:**
-- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/BackupBottomSheet.kt`
-
-**Требования к UI и поведению:**
-1. Заголовок «Резервная копия» и пояснение: «Один файл JSON: все профили, сохранённые чеки и настройки отчёта.»
-2. Карточка / кнопки действий:
-   - **«Создать бэкап»** (`Icons.Outlined.SaveAlt`):
-     - Открывает системный ActivityResultLauncher `CreateDocument(AppBackup.MIME_TYPE)`.
-     - При выборе файла вызывает `appViewModel.exportBackupToUri(context, uri)`.
-   - **«Загрузить бэкап»** (`Icons.Outlined.FolderOpen`):
-     - Открывает системный ActivityResultLauncher `OpenDocument()`.
-     - При выборе файла открывает модальный диалог с двумя опциями:
-       - «Добавить к текущим» -> вызывает `appViewModel.mergeBackupFromUri(context, uri)`.
-       - «Полностью заменить» -> открывает второе окно предупреждения «Внимание! Вы уверены в полной замене базы? Текущие данные будут безвозвратно потеряны» -> вызывает `appViewModel.importBackupFromUri(context, uri, onNavigateToAuth)`.
-   - **«Поделиться данными»** (`Icons.Outlined.Share`):
-     - Вызывает `appViewModel.shareBackup(context)`, создавая временный файл во внешнем хранилище кэша и вызывая системное меню «Поделиться».
-3. Соблюдение Material 3, скругление карточек 16dp, высота кнопок 48dp, иконки перед текстом кнопок.
-
-**Сигнатура компонента:**
+**Step 2: Выделение `BackupContent` в `BackupBottomSheet.kt`**
+Вынести карточки создания, загрузки (с диалогом выбора merge/replace) и отправки бэкапа в:
 ```kotlin
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BackupBottomSheet(
+fun BackupContent(
     appViewModel: AppViewModel,
-    onDismissRequest: () -> Unit,
-    onNavigateToAuth: () -> Unit = {}
+    onNavigateToAuth: () -> Unit = {},
+    modifier: Modifier = Modifier
 )
 ```
+Оставить `BackupBottomSheet` как composable-обертку вокруг `BackupContent`.
 
-**Step 1: Создание `BackupBottomSheet.kt`**
-Реализовать компонент с интеграцией ActivityResultContract и вызовом методов бэкапа из `AppViewModel`.
+**Step 3: Выделение `AboutAppContent` в `AboutAppBottomSheet.kt`**
+Вынести карточку с логотипом, описанием, кнопками RuStore, Поделиться, диалогом политики и контактами в:
+```kotlin
+@Composable
+fun AboutAppContent(
+    onDismissRequest: () -> Unit = {},
+    modifier: Modifier = Modifier
+)
+```
+Оставить `AboutAppBottomSheet` как обертку.
 
-**Step 2: Проверка сборки**
-Запустить: `./gradlew testDebugUnitTest`
+**Step 4: Выделение `HelpContent` в `HelpBottomSheet.kt`**
+Вынести список раскрывающихся разделов справки в:
+```kotlin
+@Composable
+fun HelpContent(
+    modifier: Modifier = Modifier
+)
+```
+Оставить `HelpBottomSheet` как обертку.
+
+**Step 5: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`.
 
 ---
 
-### Task 4: Шторка «О приложении» `AboutAppBottomSheet.kt` и диалог политики
+### Task 4: Реализация единой иерархической шторки `HierarchicalMenuBottomSheet` с анимациями и индикацией роли
 
 **Files:**
-- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/AboutAppBottomSheet.kt`
+- Modify/Rewrite: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/MainMenuBottomSheet.kt`
 
 **Требования к UI и поведению:**
-1. Информационный блок:
-   - Название приложения: **UZB QQS for DIP**.
-   - Версия приложения: динамическое получение из `PackageManager` (с фоллбэком на `1.13.0`).
-   - Иконка приложения или тематический символ (`Icons.Outlined.QrCodeScanner`).
-   - Краткое описание: «Учёт и подготовка фискальных чеков для возврата НДС (QQS) в Республике Узбекистан».
-2. Интерактивные строки/кнопки:
-   - **«Поделиться приложением»** (`Icons.Outlined.Share`):
-     - Отправка системного Intent `ACTION_SEND` с текстом ссылки на RuStore: `https://www.rustore.ru/catalog/app/com.example.uzb_qqs_for_dip`.
-   - **«Политика конфиденциальности»** (`Icons.Outlined.Security`):
-     - Открывает диалог `PrivacyPolicyDialog`.
-   - **«Обратная связь»**:
-     - Блок контактов с кликабельными ссылками (используя `LocalUriHandler`):
-     - Telegram: `t.me/dis_night` (открывает `https://t.me/dis_night`).
-     - Email: `i@dis-night.ru` (открывает `mailto:i@dis-night.ru`).
-3. Диалог `PrivacyPolicyDialog`:
-   - Разъясняет локальное хранение данных на устройстве пользователя в SQLite.
-   - Подтверждает отсутствие сбора аналитики, трекеров и передачи данных третьим лицам.
-   - Поясняет, что сетевые запросы совершаются только к официальным шлюзам ОФД / Soliq для получения фискальных реквизитов чека.
+1. **Перечисление экранов шторки:**
+   ```kotlin
+   enum class MenuScreen(val title: String) {
+       MAIN("Меню"),
+       USERS("Управление профилями"),
+       BACKUP("Резервная копия"),
+       HELP("Справка и руководство"),
+       ABOUT("О приложении")
+   }
+   ```
+2. **Шапка подэкранов `SubScreenHeader`:**
+   - Стрелка «Назад» `IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад") }`.
+   - Заголовок подэкрана крупным шрифтом (`titleLarge`, `FontWeight.Bold`).
+   - Минимальный сенсорный размер зоны нажатия — 48dp.
+3. **Плавная горизонтальная навигация через `AnimatedContent`:**
+   - Переход вперед (`MAIN -> USERS/BACKUP/HELP/ABOUT`): `slideInHorizontally { it } + fadeIn() togetherWith slideOutHorizontally { -it } + fadeOut()`.
+   - Переход назад (`... -> MAIN`): `slideInHorizontally { -it } + fadeIn() togetherWith slideOutHorizontally { it } + fadeOut()`.
+4. **Аппаратный перехват жеста/кнопки «Назад»:**
+   - `BackHandler(enabled = currentScreen != MenuScreen.MAIN) { currentScreen = MenuScreen.MAIN }`.
+5. **Цветовая индикация роли в `MainMenuContent`:**
+   - Для роли «Аудитор»:
+     - Иконка `Icons.Outlined.AdminPanelSettings`: цвет `Danger` (`Color(0xFFDC2626)`).
+     - Подложка иконки: светло-красная (`Color(0xFFFEE2E2)` в светлой теме / `Danger.copy(alpha = 0.2f)` в тёмной).
+     - Подзаголовок: «Переключить на «Сотрудник»».
+     - Бейдж: сплошной красный фон (`Danger`), белый текст (`Color.White`), надпись «Аудитор».
+   - Для роли «Сотрудник»:
+     - Иконка `Icons.Outlined.AdminPanelSettings`: цвет `Primary` (`Color(0xFF2563EB)`).
+     - Подложка иконки: светло-синяя (`Color(0xFFDBEAFE)` в светлой теме / `Primary.copy(alpha = 0.2f)` в тёмной).
+     - Подзаголовок: «Переключить на «Аудитор»».
+     - Бейдж: сплошной синий фон (`Primary`), белый текст (`Color.White`), надпись «Сотрудник».
+6. **Сегментированный переключатель тем в `MainMenuContent`:**
+   - Строка с выбором: `[Системная] [Светлая] [Тёмная]`.
+   - Наглядная подсветка активного сегмента (`primaryContainer` / `primary`, `FontWeight.Bold`).
+   - Иконки перед текстом каждого сегмента (`AutoMode`, `LightMode`, `DarkMode`).
+   - Мгновенное обновление `onSetThemeMode(mode)`.
+7. **Сигнатура компонента:**
+   ```kotlin
+   @OptIn(ExperimentalMaterial3Api::class)
+   @Composable
+   fun HierarchicalMenuBottomSheet(
+       appViewModel: AppViewModel,
+       initialScreen: MenuScreen = MenuScreen.MAIN,
+       onDismissRequest: () -> Unit,
+       onLoggedOut: () -> Unit = {}
+   )
+   ```
 
-**Сигнатура компонента:**
-```kotlin
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AboutAppBottomSheet(
-    onDismissRequest: () -> Unit
-)
-```
-
-**Step 1: Создание `AboutAppBottomSheet.kt`**
-Написать компонент в соответствии со спецификацией.
+**Step 1: Реализация `HierarchicalMenuBottomSheet` в `MainMenuBottomSheet.kt`**
+Написать полный код шторки с переключателем тем, цветовой индикацией ролей, анимацией смены экранов и `BackHandler`.
 
 **Step 2: Проверка сборки**
-Запустить: `./gradlew testDebugUnitTest`
+Запустить: `./gradlew testDebugUnitTest`.
 
 ---
 
-### Task 5: Главная шторка `MainMenuBottomSheet.kt`
+### Task 5: Интеграция единой шторки в `AppNavHost.kt` и сквозное открытие с экрана `USERS`
 
 **Files:**
-- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/MainMenuBottomSheet.kt`
-
-**Требования к UI и поведению:**
-1. Карточка текущего профиля:
-   - Аватар пользователя (46dp, CircleShape, `primaryContainer`, первая буква имени).
-   - ФИО и должность.
-   - Иконка перехода / смены профиля (`Icons.Outlined.SwapHoriz` или шеврон).
-   - Клик по карточке закрывает текущую шторку и открывает `UserManagementBottomSheet`.
-2. Тонкий разделитель `HorizontalDivider()`.
-3. Меню пунктов (вертикальный список с иконкой, заголовком и подзаголовком / бейджем):
-   - **«Режим работы»** (`Icons.Outlined.AdminPanelSettings`):
-     - Отображает текущий режим: «Сотрудник» или «Аудитор» с бейджем.
-     - Клик вызывает `onSwitchRole()`.
-   - **«Резервная копия»** (`Icons.Outlined.Backup`):
-     - Подзаголовок: «Сохранение и восстановление базы данных».
-     - Клик закрывает меню и открывает `BackupBottomSheet`.
-   - **«Справка»** (`Icons.AutoMirrored.Outlined.HelpOutline`):
-     - Подзаголовок: «Инструкции и руководство по работе».
-     - Клик закрывает меню и открывает `HelpBottomSheet`.
-   - **«О приложении»** (`Icons.Outlined.Info`):
-     - Подзаголовок: «Версия, контакты и политика конфиденциальности».
-     - Клик закрывает меню и открывает `AboutAppBottomSheet`.
-
-**Сигнатура компонента:**
-```kotlin
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainMenuBottomSheet(
-    user: User?,
-    onOpenUserManagement: () -> Unit,
-    onSwitchRole: () -> Unit,
-    onOpenBackup: () -> Unit,
-    onOpenHelp: () -> Unit,
-    onOpenAboutApp: () -> Unit,
-    onDismissRequest: () -> Unit
-)
-```
-
-**Step 1: Создание `MainMenuBottomSheet.kt`**
-Реализовать шторку согласно архитектурному шаблону.
-
-**Step 2: Проверка сборки**
-Запустить: `./gradlew testDebugUnitTest`
-
----
-
-### Task 6: Рефакторинг навигации в `AppNavHost.kt`, TopAppBar и удаление `ProfileScreen.kt`
-
-**Files:**
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/AppViewModel.kt`
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/navigation/AppNavHost.kt`
-- Delete: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
 
-**Требования к UI и навигации:**
-1. Удалить `MainTab.Profile`:
-   - Вкладки в `MainTab.employee`: `listOf(Scan, Report)` (ровно 2 вкладки: «Добавить» и «Чеки и отчёт»).
-   - Вкладки в `MainTab.auditor`: `listOf(Audit, Report)` (ровно 2 вкладки: «Аудит» и «Чеки и отчёт»).
-2. В `TopAppBar` (в `MainScaffold`):
-   - В слоте `actions` заменить старую кнопку со знаком «?» на круглый аватар активного пользователя:
-     - Размер аватара: 38dp.
-     - Фон: `MaterialTheme.colorScheme.primaryContainer`.
-     - Текст: первая буква имени `currentUser?.fullName?.take(1)?.uppercase() ?: "?"`.
-     - Стиль текста: `MaterialTheme.typography.titleMedium`, цвет `MaterialTheme.colorScheme.primary`, `FontWeight.Bold`.
-     - Контейнер кликабельный с Touch Target не менее 48dp (`IconButton` или `Box(Modifier.size(48.dp), contentAlignment = Alignment.Center)`).
-     - Клик по аватару устанавливает `showMainMenu = true`.
-3. Управление шторками в `MainScaffold`:
-   - `var showMainMenu by remember { mutableStateOf(false) }`
-   - `var showUserManagement by remember { mutableStateOf(false) }`
-   - `var showBackup by remember { mutableStateOf(false) }`
-   - `var showHelp by remember { mutableStateOf(false) }`
-   - `var showAboutApp by remember { mutableStateOf(false) }`
-   - Подключение `MainMenuBottomSheet`, `UserManagementBottomSheet`, `BackupBottomSheet`, `AboutAppBottomSheet`, `HelpBottomSheet`.
-4. Удалить `composable(MainTab.Profile.route)` из `NavHost`.
-5. Удалить неиспользуемый файл `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`.
+**Step 1: Добавление событий управления меню в `AppViewModel.kt`**
+Добавить в `AppViewModel`:
+```kotlin
+private val _menuInitialScreen = MutableStateFlow<MenuScreen?>(null)
+val menuInitialScreen: StateFlow<MenuScreen?> = _menuInitialScreen.asStateFlow()
 
-**Step 1: Обновление `AppNavHost.kt`**
-Применить изменения в `AppNavHost.kt`.
+fun openMenu(screen: MenuScreen = MenuScreen.MAIN) {
+    _menuInitialScreen.value = screen
+}
 
-**Step 2: Удаление файла `ProfileScreen.kt`**
-Удалить файл `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`.
+fun closeMenu() {
+    _menuInitialScreen.value = null
+}
+```
 
-**Step 3: Проверка сборки и тестов**
-Запустить: `./gradlew testDebugUnitTest`
-Убедиться, что проект компилируется и старые тесты не ломаются.
+**Step 2: Обновление `AppNavHost.kt`**
+1. В `MainScaffold`:
+   - Заменить 5 флагов (`showMainMenu`, `showUserManagement`, `showBackup`, `showHelp`, `showAboutApp`) на единый сбор `val menuInitialScreen by appViewModel.menuInitialScreen.collectAsStateWithLifecycle()`.
+   - При `menuInitialScreen != null`: отображать `HierarchicalMenuBottomSheet(appViewModel = appViewModel, initialScreen = it, onDismissRequest = { appViewModel.closeMenu() }, onLoggedOut = onLoggedOut)`.
+   - В TopAppBar: клик по аватару вызывает `appViewModel.openMenu(MenuScreen.MAIN)`.
+   - Актуализировать дефолтный заголовок приложения: «Скан чеков Узбекистана».
+
+**Step 3: Обновление `ReportScreen.kt`**
+В шапке отчёта при клике на строку «Сотрудник: [ФИО] ▾» вызывать `appViewModel.openMenu(MenuScreen.USERS)`.
+Удалить вызов локального `showUserPicker` и шторки `UserManagementBottomSheet`, так как теперь используется централизованная иерархическая шторка.
+
+**Step 4: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`.
 
 ---
 
-### Task 7: Кликабельное приветствие в «Добавить» (`ScanScreen.kt`)
+### Task 6: Редизайн экрана «Добавить» (`ScanScreen.kt`): Карточка приветствия во всю ширину и очистка
 
 **Files:**
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ScanScreen.kt`
 
-**Требования к UI и поведению:**
-1. Блок приветствия вверху экрана:
-   - Отображает «Здравствуйте,», а ниже ФИО текущего пользователя со стрелочкой выпадающего списка `Icon(Icons.Filled.ArrowDropDown, contentDescription = "Сменить профиль", tint = MaterialTheme.colorScheme.primary)`.
-   - Обернут в кликабельный контейнер с `clip(RoundedCornerShape(12.dp))` и эффектом нажатия (ripple).
-   - Клик по блоку открывает `UserManagementBottomSheet`.
-2. Подключение `UserManagementBottomSheet(appViewModel = appViewModel, onDismissRequest = { showUserManagement = false })` в `ScanScreen`.
-3. Так как `currentUser` собирается через `collectAsStateWithLifecycle()`, смена пользователя в шторке мгновенно обновляет имя на экране и привязку добавляемых чеков.
+**Требования к UI экрана «Добавить»:**
+1. **Полноразмерная карточка приветствия:**
+   - Компонент `Header`:
+     - Растянут на всю ширину: `Modifier.fillMaxWidth()`.
+     - Скругление углов: 16dp (`RoundedCornerShape(16.dp)`).
+     - Контейнер карточки с фоном `MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)`.
+     - Слева: круглый аватар 44dp с первой буквой имени пользователя (`primaryContainer`, жирный текст `primary`).
+     - В центре: колонка «Здравствуйте,» мелким шрифтом `onSurfaceVariant` и имя пользователя крупным полужирным шрифтом `titleMedium`.
+     - Справа: стрелочка вниз `Icons.Filled.ArrowDropDown` (26dp, цвет `primary`).
+     - Клик по всей площади карточки вызывает `appViewModel.openMenu(MenuScreen.USERS)`.
+2. **Очистка карточки действий:**
+   - Удалить заголовок `Text("Добавить чек", style = MaterialTheme.typography.titleLarge, ...)` и `Spacer(Modifier.height(16.dp))`.
+   - 5 кнопок сканирования и добавления начинаются сразу вверху карточки с гармоничным внутренним отступом `padding(16.dp)`.
+3. **Удаление локальной шторки пользователей:**
+   - Убрать `var showUserManagementSheet` и локальный вызов `UserManagementBottomSheet`, так как клик теперь делегируется в `appViewModel.openMenu(MenuScreen.USERS)`.
 
 **Step 1: Редактирование `ScanScreen.kt`**
-Обновить composable `Header` и добавить состояние `showUserManagementSheet`.
+Применить изменения в `ScanScreen.kt`.
 
-**Step 2: Проверка сборки**
-Запустить: `./gradlew testDebugUnitTest`
+**Step 2: Проверка компиляции и тестов**
+Запустить: `./gradlew testDebugUnitTest`.
 
 ---
 
-### Task 8: Интеграция `UserManagementBottomSheet` в «Чеки и отчёт» (`ReportScreen.kt`)
+### Task 7: Обогащение шторки «О приложении» (`AboutAppContent`)
 
 **Files:**
-- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/AboutAppBottomSheet.kt`
 
-**Требования к UI и поведению:**
-1. В шапке отчёта (`ReportHeaderCard`) клик по строке сотрудника вызывает открытие `UserManagementBottomSheet`.
-2. Заменить старый радио-диалог `SelectUserDialog` на `UserManagementBottomSheet(appViewModel = appViewModel, onDismissRequest = { showUserPicker = false })`.
-3. Удалить composable `SelectUserDialog` и вспомогательный класс `UserChoice` (если он больше не используется).
-4. При смене пользователя в `UserManagementBottomSheet` происходит вызов `appViewModel.login(user.id)`, а в отчёте сбрасывается или синхронизируется фильтр, чтобы отчёт сразу отображал чеки выбранного сотрудника.
+**Требования к UI и функционалу:**
+1. **Официальный логотип:**
+   - Заменить иконку `Icons.Outlined.QrCodeScanner` на реальный логотип приложения:
+     ```kotlin
+     Image(
+         painter = painterResource(id = R.drawable.app_logo),
+         contentDescription = "Логотип приложения",
+         modifier = Modifier
+             .size(72.dp)
+             .clip(RoundedCornerShape(16.dp))
+     )
+     ```
+2. **Название и версия:**
+   - Заголовок: «Скан чеков Узбекистана».
+   - Бейдж: «Версия $versionName».
+   - Описание: «Учёт и подготовка фискальных чеков для возврата НДС (QQS) в Республике Узбекистан».
+3. **Прямая кнопка «Страница в RuStore»:**
+   - Кнопка с иконкой `Icons.Outlined.Shop` или `Icons.Outlined.OpenInBrowser`, открывающая прямую ссылку: `https://www.rustore.ru/catalog/app/com.example.uzb_qqs_for_dip` через `uriHandler.openUri(RUSTORE_APP_URL)`.
+4. **Кнопка «Поделиться приложением»:**
+   - Отправка `ACTION_SEND` с текстом:
+     `Скан чеков Узбекистана — учёт и подготовка фискальных чеков для возврата НДС:\nhttps://www.rustore.ru/catalog/app/com.example.uzb_qqs_for_dip`.
+5. **Кнопка «Политика конфиденциальности»:**
+   - Открытие `PrivacyPolicyDialog`.
+6. **Блок «Обратная связь»:**
+   - Контактные карточки Telegram (`@dis_night`) и Email (`i@dis-night.ru`).
 
-**Step 1: Модификация `ReportScreen.kt`**
-Заменить `SelectUserDialog` на `UserManagementBottomSheet`, вычистить устаревший код диалога.
+**Step 1: Редактирование `AboutAppBottomSheet.kt`**
+Обновить `AboutAppContent` в соответствии со спецификацией.
 
 **Step 2: Проверка сборки**
-Запустить: `./gradlew testDebugUnitTest`
+Запустить: `./gradlew testDebugUnitTest`.
 
 ---
 
-### Task 9: Полная актуализация справки в `HelpBottomSheet.kt`
+### Task 8: Полная актуализация справки (`HelpContent`): иконки для всех пунктов, виджет и авто-открытие ссылок
 
 **Files:**
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/HelpBottomSheet.kt`
 
-**Требования к содержанию справки:**
-1. **Полная зачистка:** Удалить любые упоминания старой вкладки «Профиль» в нижней панели.
-2. **Раздел «Навигация и Главное меню» (Новый):**
-   - Описание обновлённой нижней панели: строго 2 вкладки («Добавить» и «Чеки и отчёт» для сотрудников, «Аудит» и «Чеки и отчёт» для аудитора).
-   - Круглый аватар пользователя в TopAppBar: быстрый доступ к главному меню из любой точки приложения.
-   - Состав Главного меню: карточка профиля, переключение режима работы («Сотрудник» / «Аудитор»), «Резервная копия», «Справка» и «О приложении».
-3. **Раздел «Управление профилями» (Актуализированный):**
-   - 3 удобных точки входа: клик по аватару в TopAppBar -> карточка профиля, клик по приветствию «Здравствуйте, [ФИО] ▾» в «Добавить», клик по строке сотрудника в шапке «Чеки и отчёт».
-   - Единая шторка: список всех сотрудников с отметкой «Активен», кнопка редактирования ✏️ (ФИО, должность, организация), кнопка безопасного двухэтапного удаления 🗑️, кнопка «+ Добавить новый профиль».
-   - Мгновенная сквозная синхронизация активной сессии во всем приложении.
-4. **Раздел «Резервная копия» (Новый/Актуализированный):**
-   - Создание бэкапа в единый JSON-файл (все профили, чеки и настройки).
-   - Загрузка бэкапа: «Добавить к текущим» (умное слияние без дублей) или «Полностью заменить» (с защитой от случайного удаления).
-   - Функция «Поделиться данными» для быстрой отправки базы через мессенджеры или почту.
-5. **Раздел «О приложении» (Новый):**
-   - Версия приложения, ссылка на RuStore, политика конфиденциальности и прямые контакты разработчика (Telegram, Email).
-6. **Разделы «Добавление чеков» (5 способов с иконками), «Чеки и отчёт» (со sticky header) и «Аудит»:**
-   - Сохранить и привести к идеальному гармоничному виду с аккордеонами `AccordionItem`.
+**Требования к UI и содержанию справки:**
+1. **Единый компонент элемента справки с иконкой:**
+   Создать переиспользуемый composable:
+   ```kotlin
+   @Composable
+   fun HelpFeatureItem(
+       icon: ImageVector,
+       title: String,
+       description: String,
+       iconTint: Color = MaterialTheme.colorScheme.primary,
+       modifier: Modifier = Modifier
+   )
+   ```
+   Каждый пункт отображает иконку в скругленном квадрате 36x36dp (`iconTint.copy(alpha = 0.12f)`), заголовок полужирным шрифтом и детальное описание.
+2. **Иконки для ВСЕХ пунктов справки:**
+   - Все текстовые списки во всех аккордеонах перевести на `HelpFeatureItem`.
+3. **Новый раздел: «Виджет быстрого сканирования»:**
+   - Иконка `Icons.Outlined.Widgets`.
+   - Добавление виджета на домашний экран (долгое нажатие на рабочий стол Android -> Меню «Виджеты» -> «Скан чеков Узбекистана»).
+   - Сканирование чека в одно касание: запуск камеры мгновенно с рабочего стола без открытия основного окна приложения.
+   - Автоматическая привязка чека к текущему активному сотруднику.
+4. **Новый раздел: «Автоматическое открытие ссылок на чеки»:**
+   - Иконка `Icons.Outlined.Link` или `Icons.Outlined.OpenInBrowser`.
+   - Инструкция по настройке в Android: «Настройки» -> «Приложения» -> «Скан чеков Узбекистана» -> «Открывать по умолчанию» -> «Добавить ссылки» -> отметить `ofd.soliq.uz`, `my.soliq.uz`, `ofd.multicard.uz`.
+   - Мгновенный импорт: клик по ссылке на чек в SMS, Telegram или браузере сразу открывает приложение и загружает фискальные данные чека.
+   - Системное меню «Поделиться» (Share): отправка текста или ссылки из любого приложения в «Скан чеков Узбекистана».
+5. **Актуализация разделов:**
+   - «Навигация и Главное меню» (иконки для вкладок, аватара, меню тем, ролей).
+   - «Управление профилями» (иконки для входов, переключения, ✏️, 🗑️, + создания).
+   - «Добавление чеков» (5 способов добавления).
+   - «Чеки и отчёт» (Сводная шапка, Выбор квартала и года, Режимы экспорта, Sticky Header, Превью чеков).
+   - «Резервная копия базы данных» (JSON, Создание, Слияние, Полная замена, Отправка).
+   - «Аудит (Режим аудитора)» (Квартальная сверка, Контроль расхождений, Почековая верификация, Экспорт отчётов и ZIP).
+   - «Что нужно печатать в бухгалтерию» (Комплект «Всё», Сводный отчёт, Реестр чеков).
+   - «Контакты разработчика» (Telegram, Email).
 
-**Step 1: Обновление `HelpBottomSheet.kt`**
-Переписать содержимое с актуализацией всех блоков.
+**Step 1: Редактирование `HelpBottomSheet.kt`**
+Применить обновленную структуру и новые разделы справки.
 
 **Step 2: Проверка сборки**
-Запустить: `./gradlew testDebugUnitTest`
+Запустить: `./gradlew testDebugUnitTest`.
 
 ---
 
-### Task 10: Финальное тестирование, сборка и автосинхронизация карты архитектуры
+### Task 9: Unit-тесты для менеджера тем и иерархической навигации меню
 
 **Files:**
-- Test verification: Unit-тесты
-- Architecture Map sync: `SYSTEM_PROMPT.md`, `.cursorrules`
+- Create: `app/src/test/java/com/example/uzb_qqs_for_dip/data/ThemeManagerTest.kt`
+- Create: `app/src/test/java/com/example/uzb_qqs_for_dip/ui/MenuNavigationTest.kt`
 
-**Step 1: Запуск unit-тестов проекта**
-Выполнить команду в PowerShell:
-`./gradlew testDebugUnitTest`
-Ожидаемый результат: Все тесты (включая тесты экспорта, UI-логики, валидации профиля и парсинга) завершаются успешно: `BUILD SUCCESSFUL`.
+**Step 1: Написание теста `ThemeManagerTest.kt`**
+Проверить:
+1. Загрузка темы по умолчанию (`SYSTEM`).
+2. Переключение на `LIGHT` и `DARK` с сохранением и обновлением `themeMode.value`.
+3. Корректное чтение сохраненного значения из SharedPreferences.
+
+**Step 2: Написание теста `MenuNavigationTest.kt`**
+Проверить:
+1. По умолчанию `menuInitialScreen` равен `null`.
+2. Вызов `openMenu(MenuScreen.USERS)` выставляет `menuInitialScreen.value == MenuScreen.USERS`.
+3. Вызов `closeMenu()` сбрасывает `menuInitialScreen` в `null`.
+4. Переключение тем через `appViewModel.setThemeMode(...)`.
+
+**Step 3: Запуск всех unit-тестов**
+Запустить: `./gradlew testDebugUnitTest`.
+Ожидаемый результат: `BUILD SUCCESSFUL`, все тесты пройдены.
+
+---
+
+### Task 10: Финальная проверка, сборка и автосинхронизация архитектурной карты
+
+**Files:**
+- Modify: `SYSTEM_PROMPT.md`, `.cursorrules` (через скрипт)
+
+**Step 1: Полный прогон тестов**
+Выполнить команду:
+```powershell
+./gradlew testDebugUnitTest
+```
+Ожидаемый результат: все тесты проходят без ошибок (`BUILD SUCCESSFUL`).
 
 **Step 2: Автосинхронизация карты архитектуры**
 Выполнить команду:
-`python scripts/update_architecture_map.py`
-Скрипт просканирует файловую структуру, зафиксирует удаление `ProfileScreen.kt`, появление `MainMenuBottomSheet.kt`, `BackupBottomSheet.kt`, `AboutAppBottomSheet.kt`, `ProfileDialogs.kt` и обновит блок `<architecture_map>` в `SYSTEM_PROMPT.md` и `.cursorrules`.
+```powershell
+python scripts/update_architecture_map.py
+```
+Скрипт просканирует добавленные и модифицированные файлы (`ThemeManager.kt`, `ThemeManagerTest.kt`, `MenuNavigationTest.kt`) и обновит секцию `<architecture_map>` в `SYSTEM_PROMPT.md` и `.cursorrules`.
 
-**Step 3: Проверка статуса Git**
-`git status` — убедиться, что изменены только целевые файлы и нет лишнего мусора или повреждения кодировок UTF-8.
+**Step 3: Проверка статуса Git и кодировок**
+Выполнить `git status` и убедиться, что:
+- Нет нежелательных временных файлов.
+- Все кириллические строки сохранены в кодировке `UTF-8` без повреждений (mojibake).
 
 ---
 
 ## Варианты выполнения (Execution Handoff)
 
-План составлен, детализирован и сохранен в `IMPLEMENTATION_PLAN.md`. Доступны следующие варианты исполнения:
+План составлен, полностью детализирован и сохранен в `IMPLEMENTATION_PLAN.md`. Доступны следующие варианты исполнения:
 
 1. **Subagent-Driven (в текущей сессии):**
-   - Оркестратор запускает субагента-Дизайнера (`Designer`) для верификации эргономики UI/UX и Touch Targets (>= 48dp).
-   - Затем субагент-Исполнитель (`Doer`) последовательно реализует задачи 1–9.
-   - Тестировщик (`TestEngineer`) и Ревьюер (`Reviewer`) проверяют тесты и синхронизируют карту архитектуры.
-2. **Ручное выполнение (Step-by-step):**
-   - Пошаговое подтверждение каждого этапа пользователем.
+   - Оркестратор запускает субагента-Дизайнера (`Designer`) для подтверждения визуальных решений (цвета ролей, сегментированный переключатель тем, верстка приветствия).
+   - Затем субагент-Исполнитель (`Doer`) последовательно реализует задачи 1–10.
+   - Тестировщик (`TestEngineer`) и Ревьюер (`Reviewer`) верифицируют результат и запускают автосинхронизацию карты архитектуры.
+2. **Пошаговое подтверждение пользователем:**
+   - Утверждение каждого блока изменений перед запуском реализации.

@@ -157,6 +157,9 @@ def generate_architecture_map() -> str:
         test_root_files = scan_files(test_dir)
         if test_root_files:
             lines.append(f"- **Корень тестов:** {', '.join(f'`{f}`' for f in test_root_files)}")
+        test_data = scan_files(test_dir / "data")
+        if test_data:
+            lines.append(f"- **Тесты данных и настроек:** {', '.join(f'`{f}`' for f in test_data)}")
         test_export = scan_files(test_dir / "export")
         if test_export:
             lines.append(f"- **Тесты экспорта:** {', '.join(f'`{f}`' for f in test_export)}")

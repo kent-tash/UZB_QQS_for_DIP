@@ -268,6 +268,42 @@ class NavigationAndUserSwitchingTest {
     }
 
     @Test
+    fun testReactiveRoleSwitchingAndTabListChange() = runTest {
+        // Логика резолвинга вкладок и стартового экрана из AppNavHost
+        fun resolveTabs(user: User?): List<MainTab> =
+            if (user?.role == UserRole.AUDITOR) MainTab.auditor else MainTab.employee
+
+        fun resolveStartTab(user: User?): String =
+            if (user?.role == UserRole.AUDITOR) MainTab.Audit.route else MainTab.Scan.route
+
+        userFlow.value = listOf(employeeUser)
+        currentUserIdFlow.value = 1L
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // 1. Исходно: активный пользователь EMPLOYEE -> вкладки [Scan, Report]
+        assertEquals(UserRole.EMPLOYEE, viewModel.currentUser.value?.role)
+        assertEquals(listOf(MainTab.Scan, MainTab.Report), resolveTabs(viewModel.currentUser.value))
+        assertEquals(MainTab.Scan.route, resolveStartTab(viewModel.currentUser.value))
+
+        // 2. Реактивное переключение роли: EMPLOYEE -> AUDITOR -> вкладки динамически меняются на [Audit, Report]
+        viewModel.switchCurrentUserRole()
+        advanceUntilIdle()
+
+        assertEquals(UserRole.AUDITOR, viewModel.currentUser.value?.role)
+        assertEquals(listOf(MainTab.Audit, MainTab.Report), resolveTabs(viewModel.currentUser.value))
+        assertEquals(MainTab.Audit.route, resolveStartTab(viewModel.currentUser.value))
+
+        // 3. Реактивное обратное переключение роли: AUDITOR -> EMPLOYEE -> вкладки возвращаются к [Scan, Report]
+        viewModel.switchCurrentUserRole()
+        advanceUntilIdle()
+
+        assertEquals(UserRole.EMPLOYEE, viewModel.currentUser.value?.role)
+        assertEquals(listOf(MainTab.Scan, MainTab.Report), resolveTabs(viewModel.currentUser.value))
+        assertEquals(MainTab.Scan.route, resolveStartTab(viewModel.currentUser.value))
+    }
+
+    @Test
     fun testSwitchRoleWhenNoUserLoggedInDoesNothing() = runTest {
         userFlow.value = listOf(employeeUser)
         currentUserIdFlow.value = null

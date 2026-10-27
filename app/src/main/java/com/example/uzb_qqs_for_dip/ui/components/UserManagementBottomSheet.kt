@@ -51,15 +51,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserManagementBottomSheet(
+fun UserManagementContent(
     appViewModel: AppViewModel,
-    onDismissRequest: () -> Unit,
-    onLoggedOut: () -> Unit = {},
-    onSelectUser: ((User) -> Unit)? = null
+    modifier: Modifier = Modifier,
+    onUserSelected: (User) -> Unit = {},
+    onLoggedOut: () -> Unit = {}
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val users by appViewModel.users.collectAsStateWithLifecycle()
     val currentUser by appViewModel.currentUser.collectAsStateWithLifecycle()
     val editError by appViewModel.editError.collectAsStateWithLifecycle()
@@ -70,78 +68,57 @@ fun UserManagementBottomSheet(
     var profileToDeleteStage1 by remember { mutableStateOf<User?>(null) }
     var profileToDeleteStage2 by remember { mutableStateOf<User?>(null) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-    ) {
-        Column(
+    Column(modifier = modifier) {
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp, top = 4.dp)
+                .weight(1f, fill = false),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Управление профилями",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+            items(users, key = { it.id }) { user ->
+                val isActive = user.id == currentUser?.id
+                UserItemRow(
+                    user = user,
+                    isActive = isActive,
+                    onSelect = {
+                        appViewModel.login(user.id)
+                        onUserSelected(user)
+                    },
+                    onEdit = {
+                        appViewModel.clearEditError()
+                        editingUser = user
+                    },
+                    onDelete = {
+                        profileToDeleteStage1 = user
+                    }
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = {
+                appViewModel.clearRegisterError()
+                showCreateDialog = true
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                Icons.Outlined.PersonAdd,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
-
-            Spacer(Modifier.height(14.dp))
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(users, key = { it.id }) { user ->
-                    val isActive = user.id == currentUser?.id
-                    UserItemRow(
-                        user = user,
-                        isActive = isActive,
-                        onSelect = {
-                            appViewModel.login(user.id)
-                            onSelectUser?.invoke(user)
-                            onDismissRequest()
-                        },
-                        onEdit = {
-                            appViewModel.clearEditError()
-                            editingUser = user
-                        },
-                        onDelete = {
-                            profileToDeleteStage1 = user
-                        }
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            OutlinedButton(
-                onClick = {
-                    appViewModel.clearRegisterError()
-                    showCreateDialog = true
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.PersonAdd,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(Modifier.size(8.dp))
-                Text(
-                    "Добавить новый профиль",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            Spacer(Modifier.size(8.dp))
+            Text(
+                "Добавить новый профиль",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 
@@ -258,6 +235,49 @@ fun UserManagementBottomSheet(
                 }
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserManagementBottomSheet(
+    appViewModel: AppViewModel,
+    onDismissRequest: () -> Unit,
+    onLoggedOut: () -> Unit = {},
+    onSelectUser: ((User) -> Unit)? = null
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp, top = 4.dp)
+        ) {
+            Text(
+                text = "Управление профилями",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            UserManagementContent(
+                appViewModel = appViewModel,
+                onUserSelected = {
+                    onSelectUser?.invoke(it)
+                    onDismissRequest()
+                },
+                onLoggedOut = onLoggedOut,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 

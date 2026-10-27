@@ -7,6 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.uzb_qqs_for_dip.data.settings.AppThemeMode
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.navigation.AppNavHost
 import com.example.uzb_qqs_for_dip.ui.theme.UZB_QQS_for_DIPTheme
@@ -22,7 +26,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         handleIntent(intent)
         setContent {
-            UZB_QQS_for_DIPTheme {
+            val themeMode by appViewModel.themeMode.collectAsStateWithLifecycle()
+            val isDark = when (themeMode) {
+                AppThemeMode.SYSTEM -> isSystemInDarkTheme()
+                AppThemeMode.LIGHT -> false
+                AppThemeMode.DARK -> true
+            }
+            UZB_QQS_for_DIPTheme(darkTheme = isDark) {
                 AppNavHost(appViewModel = appViewModel)
             }
         }

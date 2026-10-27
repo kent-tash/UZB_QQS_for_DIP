@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -55,7 +56,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.LaunchedEffect
@@ -78,9 +78,9 @@ import com.example.uzb_qqs_for_dip.ui.ExistingOwner
 import com.example.uzb_qqs_for_dip.ui.ScanState
 import com.example.uzb_qqs_for_dip.ui.ScanViewModel
 import com.example.uzb_qqs_for_dip.ui.SheetItemStatus
+import com.example.uzb_qqs_for_dip.ui.components.MenuScreen
 import com.example.uzb_qqs_for_dip.ui.components.MultiQrCameraScannerDialog
 import com.example.uzb_qqs_for_dip.ui.components.SheetPreviewDialog
-import com.example.uzb_qqs_for_dip.ui.components.UserManagementBottomSheet
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatScanDialog
 import com.example.uzb_qqs_for_dip.ui.theme.Danger
 import com.example.uzb_qqs_for_dip.ui.theme.Success
@@ -131,7 +131,6 @@ fun ScanScreen(
     var showManualDialog by remember { mutableStateOf(false) }
     var showSheetSourceDialog by remember { mutableStateOf(false) }
     var showSheetCamera by remember { mutableStateOf(false) }
-    var showUserManagementSheet by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
@@ -182,7 +181,7 @@ fun ScanScreen(
     ) {
         Header(
             userName = currentUser?.fullName.orEmpty(),
-            onClick = { showUserManagementSheet = true }
+            onClick = { appViewModel.openMenu(MenuScreen.USERS) }
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { Box(modifier = Modifier.clip(RoundedCornerShape(percent = 50)).background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 16.dp, vertical = 6.dp), contentAlignment = Alignment.Center) { Text(text = "Отсканировано: $scannedCount", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer) } }
 
@@ -193,16 +192,9 @@ fun ScanScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    "Добавить чек",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(16.dp))
-
                 Button(
                     onClick = {
                         if (!isBusy) {
@@ -435,13 +427,6 @@ fun ScanScreen(
             confirmableStatuses = setOf(SheetItemStatus.NEW)
         )
     }
-
-    if (showUserManagementSheet) {
-        UserManagementBottomSheet(
-            appViewModel = appViewModel,
-            onDismissRequest = { showUserManagementSheet = false }
-        )
-    }
 }
 
 /**
@@ -505,40 +490,72 @@ private fun AddLinkDialog(
 
 @Composable
 private fun Header(userName: String, onClick: () -> Unit) {
-    Row(
+    Card(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
             .semantics {
                 role = Role.Button
-                contentDescription = "Текущий профиль: ${userName.ifEmpty { "Не выбран" }}. Нажмите для выбора или изменения профиля"
+                contentDescription = "Текущий профиль: ${userName.ifEmpty { "Не выбран" }}. Нажмите, чтобы открыть управление профилями"
             },
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        )
     ) {
-        Column(modifier = Modifier.weight(1f, fill = false)) {
-            Text(
-                "Здравствуйте,",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                userName.ifEmpty { "—" },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = userName.take(1).uppercase().ifEmpty { "?" },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            ) {
+                Text(
+                    text = "Здравствуйте,",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = userName.ifEmpty { "Выберите сотрудника" },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Filled.ArrowDropDown,
+                contentDescription = "Сменить профиль",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(26.dp)
             )
         }
-        Spacer(Modifier.size(4.dp))
-        Icon(
-            imageVector = Icons.Filled.ArrowDropDown,
-            contentDescription = "Сменить профиль",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp)
-        )
     }
 }
 

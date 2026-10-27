@@ -9,6 +9,7 @@ import com.example.uzb_qqs_for_dip.data.repository.UserRepository
 import com.example.uzb_qqs_for_dip.data.session.SessionManager
 import com.example.uzb_qqs_for_dip.data.settings.AuditorSettingsHolder
 import com.example.uzb_qqs_for_dip.data.settings.ReportSettingsHolder
+import com.example.uzb_qqs_for_dip.data.settings.ThemeManager
 import com.example.uzb_qqs_for_dip.network.ReceiptParser
 
 /**
@@ -31,6 +32,9 @@ class AppContainer(context: Context) {
 
     /** Настройки аудитора: название организации, руководитель, бухгалтер. */
     val auditorSettings: AuditorSettingsHolder = AuditorSettingsHolder(appContext)
+
+    /** Менеджер тем оформления (Системная/Авто, Светлая, Тёмная). */
+    val themeManager: ThemeManager by lazy { ThemeManager(appContext) }
 
     /** Экспорт/импорт одного JSON-файла: профили, чеки, настройки отчёта. */
     val appBackup: AppBackup = AppBackup(

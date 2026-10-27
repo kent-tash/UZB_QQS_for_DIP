@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">QQS Сканер</string>
+    <string name="app_name">Скан чеков Узбекистана</string>
     <string name="scanner_title">Сканирование чеков</string>
     <string name="scanner_close">Закрыть сканер</string>
     <string name="scanner_finish">Завершить сканирование</string>

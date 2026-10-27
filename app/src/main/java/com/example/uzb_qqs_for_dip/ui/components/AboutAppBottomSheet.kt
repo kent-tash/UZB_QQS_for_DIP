@@ -1,6 +1,7 @@
 package com.example.uzb_qqs_for_dip.ui.components
 
 import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,9 +21,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.AlternateEmail
-import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,6 +36,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,22 +48,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.uzb_qqs_for_dip.R
 
 private const val RUSTORE_APP_URL = "https://www.rustore.ru/catalog/app/com.example.uzb_qqs_for_dip"
 private const val TELEGRAM_URL = "https://t.me/dis_night"
 private const val EMAIL_URL = "mailto:i@dis-night.ru"
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutAppBottomSheet(
-    onDismissRequest: () -> Unit
+fun AboutAppContent(
+    modifier: Modifier = Modifier,
+    onDismissRequest: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var showPrivacyDialog by remember { mutableStateOf(false) }
 
@@ -69,8 +72,161 @@ fun AboutAppBottomSheet(
         runCatching {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             pInfo.versionName
-        }.getOrNull() ?: "1.13.0"
+        }.getOrNull() ?: "1.14.0"
     }
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Официальный логотип приложения
+        Image(
+            painter = painterResource(id = R.drawable.app_logo),
+            contentDescription = "Логотип приложения",
+            modifier = Modifier
+                .size(72.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+        )
+
+        // Название приложения и бейдж версии
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Скан чеков Узбекистана",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(4.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Text(
+                    text = "Версия $versionName",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                )
+            }
+        }
+
+        Text(
+            text = "Учёт и подготовка фискальных чеков для возврата НДС (QQS) в Республике Узбекистан",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        // Прямая кнопка «Страница в RuStore»
+        Button(
+            onClick = {
+                runCatching { uriHandler.openUri(RUSTORE_APP_URL) }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Icon(Icons.Outlined.Storefront, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.size(8.dp))
+            Text("Страница в RuStore", fontWeight = FontWeight.Bold)
+        }
+
+        // Кнопка «Поделиться приложением»
+        OutlinedButton(
+            onClick = {
+                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "Скан чеков Узбекистана — учёт и подготовка фискальных чеков для возврата НДС:\n$RUSTORE_APP_URL"
+                    )
+                }
+                context.startActivity(Intent.createChooser(sendIntent, "Поделиться приложением"))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.size(8.dp))
+            Text("Поделиться приложением", fontWeight = FontWeight.SemiBold)
+        }
+
+        // Кнопка «Политика конфиденциальности»
+        TextButton(
+            onClick = { showPrivacyDialog = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+        ) {
+            Icon(Icons.Outlined.Security, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.size(8.dp))
+            Text("Политика конфиденциальности", fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        // Блок «Обратная связь»
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Обратная связь",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Плашка Telegram
+                ContactCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.AutoMirrored.Outlined.Send,
+                    title = "Telegram",
+                    subtitle = "@dis_night",
+                    onClick = { uriHandler.openUri(TELEGRAM_URL) }
+                )
+
+                // Плашка Email
+                ContactCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Outlined.AlternateEmail,
+                    title = "Email",
+                    subtitle = "i@dis-night.ru",
+                    onClick = { uriHandler.openUri(EMAIL_URL) }
+                )
+            }
+        }
+    }
+
+    if (showPrivacyDialog) {
+        PrivacyPolicyDialog(onDismiss = { showPrivacyDialog = false })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutAppBottomSheet(
+    onDismissRequest: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -82,136 +238,13 @@ fun AboutAppBottomSheet(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp, top = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(bottom = 32.dp, top = 4.dp)
         ) {
-            // Иконка приложения
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Outlined.QrCodeScanner,
-                    contentDescription = null,
-                    modifier = Modifier.size(30.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            // Название приложения и бейдж версии
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "UZB QQS for DIP",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(Modifier.height(4.dp))
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
-                    Text(
-                        text = "Версия $versionName",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
-                    )
-                }
-            }
-
-            Text(
-                text = "Учёт и подготовка фискальных чеков для возврата НДС (QQS) в Республике Узбекистан",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 12.dp)
+            AboutAppContent(
+                onDismissRequest = onDismissRequest,
+                modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(Modifier.height(4.dp))
-
-            // Кнопка «Поделиться приложением» (RuStore)
-            Button(
-                onClick = {
-                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(
-                            Intent.EXTRA_TEXT,
-                            "UZB QQS for DIP — учёт и подготовка фискальных чеков для возврата НДС:\n$RUSTORE_APP_URL"
-                        )
-                    }
-                    context.startActivity(Intent.createChooser(sendIntent, "Поделиться приложением"))
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Поделиться приложением", fontWeight = FontWeight.SemiBold)
-            }
-
-            // Кнопка «Политика конфиденциальности»
-            OutlinedButton(
-                onClick = { showPrivacyDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Outlined.Security, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Политика конфиденциальности", fontWeight = FontWeight.SemiBold)
-            }
-
-            Spacer(Modifier.height(6.dp))
-
-            // Блок «Обратная связь»
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Обратная связь",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Плашка Telegram
-                    ContactCard(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.AutoMirrored.Outlined.Send,
-                        title = "Telegram",
-                        subtitle = "@dis_night",
-                        onClick = { uriHandler.openUri(TELEGRAM_URL) }
-                    )
-
-                    // Плашка Email
-                    ContactCard(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Outlined.AlternateEmail,
-                        title = "Email",
-                        subtitle = "i@dis-night.ru",
-                        onClick = { uriHandler.openUri(EMAIL_URL) }
-                    )
-                }
-            }
         }
-    }
-
-    if (showPrivacyDialog) {
-        PrivacyPolicyDialog(onDismiss = { showPrivacyDialog = false })
     }
 }
 

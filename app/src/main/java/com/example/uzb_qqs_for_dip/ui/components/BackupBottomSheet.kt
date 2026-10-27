@@ -44,16 +44,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BackupBottomSheet(
+fun BackupContent(
     appViewModel: AppViewModel,
-    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
     onNavigateToAuth: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
     var selectedBackupUri by remember { mutableStateOf<Uri?>(null) }
     var showReplaceWarning by remember { mutableStateOf(false) }
 
@@ -74,82 +71,65 @@ fun BackupBottomSheet(
         }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
+        Text(
+            text = "Один файл JSON: все профили, сохранённые чеки и настройки отчёта.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Button(
+            onClick = {
+                val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
+                createBackupLauncher.launch("${AppBackup.FILE_BASE_NAME}_$stamp.json")
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp, top = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text(
-                text = "Резервная копия",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+            Icon(Icons.Outlined.SaveAlt, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.size(8.dp))
+            Text("Создать бэкап", fontWeight = FontWeight.SemiBold)
+        }
+
+        Button(
+            onClick = {
+                openBackupLauncher.launch(arrayOf(AppBackup.MIME_TYPE, "*/*"))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
             )
+        ) {
+            Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.size(8.dp))
+            Text("Загрузить бэкап", fontWeight = FontWeight.SemiBold)
+        }
 
-            Text(
-                text = "Один файл JSON: все профили, сохранённые чеки и настройки отчёта.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        Button(
+            onClick = { appViewModel.shareBackup(context) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
-
-            Spacer(Modifier.height(4.dp))
-
-            Button(
-                onClick = {
-                    val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
-                    createBackupLauncher.launch("${AppBackup.FILE_BASE_NAME}_$stamp.json")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(Icons.Outlined.SaveAlt, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Создать бэкап", fontWeight = FontWeight.SemiBold)
-            }
-
-            Button(
-                onClick = {
-                    openBackupLauncher.launch(arrayOf(AppBackup.MIME_TYPE, "*/*"))
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                )
-            ) {
-                Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Загрузить бэкап", fontWeight = FontWeight.SemiBold)
-            }
-
-            Button(
-                onClick = { appViewModel.shareBackup(context) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Поделиться данными", fontWeight = FontWeight.SemiBold)
-            }
+        ) {
+            Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.size(8.dp))
+            Text("Поделиться данными", fontWeight = FontWeight.SemiBold)
         }
     }
 
@@ -207,6 +187,44 @@ fun BackupBottomSheet(
                 dismissButton = {
                     OutlinedButton(onClick = { showReplaceWarning = false }) { Text("Отмена") }
                 }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BackupBottomSheet(
+    appViewModel: AppViewModel,
+    onDismissRequest: () -> Unit,
+    onNavigateToAuth: () -> Unit = {}
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp, top = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Резервная копия",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            BackupContent(
+                appViewModel = appViewModel,
+                onNavigateToAuth = onNavigateToAuth,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

@@ -13,6 +13,8 @@ import com.example.uzb_qqs_for_dip.data.AppContainer
 import com.example.uzb_qqs_for_dip.data.backup.AppBackup
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.data.model.UserRole
+import com.example.uzb_qqs_for_dip.data.settings.AppThemeMode
+import com.example.uzb_qqs_for_dip.ui.components.MenuScreen
 import com.example.uzb_qqs_for_dip.util.toInitials
 import java.io.File
 import java.text.SimpleDateFormat
@@ -65,6 +67,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private val container: AppContainer = (app as QqsApp).container
+
+    val themeMode: StateFlow<AppThemeMode> = container.themeManager.themeMode
+
+    fun setThemeMode(mode: AppThemeMode) {
+        container.themeManager.setThemeMode(mode)
+    }
+
+    private val _menuInitialScreen = MutableStateFlow<MenuScreen?>(null)
+    val menuInitialScreen: StateFlow<MenuScreen?> = _menuInitialScreen.asStateFlow()
+
+    fun openMenu(screen: MenuScreen = MenuScreen.MAIN) {
+        _menuInitialScreen.value = screen
+    }
+
+    fun closeMenu() {
+        _menuInitialScreen.value = null
+    }
 
     val users: StateFlow<List<User>> = container.userRepository.users
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
