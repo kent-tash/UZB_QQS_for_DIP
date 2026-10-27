@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.uzb_qqs_for_dip.data.model.User
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
+import com.example.uzb_qqs_for_dip.ui.components.EditProfileDialog
 
 @Composable
 fun AuthScreen(

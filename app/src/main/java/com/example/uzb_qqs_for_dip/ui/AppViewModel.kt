@@ -124,7 +124,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Обновляет существующий профиль. На UI вызывается из ProfileScreen.
+     * Обновляет существующий профиль. На UI вызывается из диалогов редактирования профиля.
      * Возвращаемый Job можно слушать, но проще ориентироваться на [editError].
      */
     fun updateProfile(

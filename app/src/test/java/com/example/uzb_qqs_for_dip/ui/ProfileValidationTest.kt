@@ -1,6 +1,6 @@
 package com.example.uzb_qqs_for_dip.ui
 
-import com.example.uzb_qqs_for_dip.ui.screens.EditableProfileField
+import com.example.uzb_qqs_for_dip.ui.components.EditableProfileField
 import com.example.uzb_qqs_for_dip.util.toInitials
 import org.junit.Assert.assertEquals
 import org.junit.Test

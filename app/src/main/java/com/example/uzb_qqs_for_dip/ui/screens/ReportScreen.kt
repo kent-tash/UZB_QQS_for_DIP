@@ -103,12 +103,11 @@ import com.example.uzb_qqs_for_dip.ui.components.ExportActionGrid
 import com.example.uzb_qqs_for_dip.ui.components.ExportFileFormat
 import com.example.uzb_qqs_for_dip.ui.components.FormatChoiceDialog
 import com.example.uzb_qqs_for_dip.ui.components.PeriodPickerBottomSheet
+import com.example.uzb_qqs_for_dip.ui.components.UserManagementBottomSheet
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatDetectedDialog
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatReceiptsCard
 import com.example.uzb_qqs_for_dip.util.DateFormat
 import com.example.uzb_qqs_for_dip.util.MoneyFormat
-
-private data class UserChoice(val id: Long?, val label: String)
 
 @Composable
 fun ReportScreen(
@@ -192,12 +191,16 @@ fun ReportScreen(
         }
     }
 
-    val userOptions = remember(users) { users.map { UserChoice(it.id, it.fullName) } }
-    val selectedUser =
-        userOptions.firstOrNull { it.id == settings.userId }
-            ?: userOptions.firstOrNull { it.id == currentUser?.id }
-            ?: userOptions.firstOrNull()
-            ?: UserChoice(null, "—")
+    LaunchedEffect(currentUser?.id) {
+        currentUser?.id?.let {
+            reportViewModel.setUserFilter(it)
+        }
+    }
+
+    val selectedUser = users.firstOrNull { it.id == settings.userId }
+        ?: users.firstOrNull { it.id == currentUser?.id }
+        ?: users.firstOrNull()
+        ?: currentUser
 
     val totalSum = rows.sumOf { it.receipt.totalAmountTiyin }
     val totalVat = rows.sumOf { it.receipt.vatAmountTiyin }
@@ -207,8 +210,6 @@ fun ReportScreen(
     } else {
         "${settings.quarter.label} ${settings.year} г."
     }
-
-    val selectedUserObj = users.firstOrNull { it.id == selectedUser.id } ?: currentUser
 
     val listState = rememberLazyListState()
     LaunchedEffect(appViewModel.scrollToTopEvent) {
@@ -230,8 +231,8 @@ fun ReportScreen(
         // =====================================================================
         item {
             ReportHeaderCard(
-                userFullName = selectedUser.label,
-                position = selectedUserObj?.position ?: "",
+                userFullName = selectedUser?.fullName ?: "—",
+                position = selectedUser?.position ?: "",
                 periodText = periodLabel,
                 count = rows.size,
                 totalSum = totalSum,
@@ -264,8 +265,8 @@ fun ReportScreen(
                 onShare = { showShareFormatDialog = true },
                 isSaving = isSaving,
                 saveProgress = saveProgress,
-                isSaveEnabled = !isSaving && rows.isNotEmpty() && selectedUser.id != null,
-                isOpenPrintEnabled = rows.isNotEmpty() && selectedUser.id != null,
+                isSaveEnabled = !isSaving && rows.isNotEmpty() && selectedUser?.id != null,
+                isOpenPrintEnabled = rows.isNotEmpty() && selectedUser?.id != null,
                 saveProgressLabel = if (savePhase.isNotEmpty()) savePhase else "Сохранение… ${(saveProgress * 100).toInt()}%"
             )
             Spacer(Modifier.height(10.dp))
@@ -475,14 +476,12 @@ fun ReportScreen(
     }
 
     // --- Диалоги выбора параметров фильтров ---
-    if (showUserPicker && userOptions.isNotEmpty()) {
-        SelectUserDialog(
-            userOptions = userOptions,
-            selectedUserId = selectedUser.id,
-            onDismiss = { showUserPicker = false },
-            onSelect = {
-                reportViewModel.setUserFilter(it)
-                showUserPicker = false
+    if (showUserPicker) {
+        UserManagementBottomSheet(
+            appViewModel = appViewModel,
+            onDismissRequest = { showUserPicker = false },
+            onSelectUser = { selected ->
+                reportViewModel.setUserFilter(selected.id)
             }
         )
     }
@@ -1228,50 +1227,5 @@ private fun ReceiptPreviewDialog(
             }
         },
         dismissButton = null
-    )
-}
-
-/**
- * Диалог выбора пользователя.
- */
-@Composable
-private fun SelectUserDialog(
-    userOptions: List<UserChoice>,
-    selectedUserId: Long?,
-    onDismiss: () -> Unit,
-    onSelect: (Long?) -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Выберите сотрудника") },
-        text = {
-            Column {
-                userOptions.forEach { user ->
-                    val isSelected = user.id == selectedUserId
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { onSelect(user.id) }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = { onSelect(user.id) }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = user.label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Закрыть") }
-        }
     )
 }

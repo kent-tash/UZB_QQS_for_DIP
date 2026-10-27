@@ -6,6 +6,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.GridView
@@ -57,8 +59,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -73,6 +80,7 @@ import com.example.uzb_qqs_for_dip.ui.ScanViewModel
 import com.example.uzb_qqs_for_dip.ui.SheetItemStatus
 import com.example.uzb_qqs_for_dip.ui.components.MultiQrCameraScannerDialog
 import com.example.uzb_qqs_for_dip.ui.components.SheetPreviewDialog
+import com.example.uzb_qqs_for_dip.ui.components.UserManagementBottomSheet
 import com.example.uzb_qqs_for_dip.ui.components.ZeroVatScanDialog
 import com.example.uzb_qqs_for_dip.ui.theme.Danger
 import com.example.uzb_qqs_for_dip.ui.theme.Success
@@ -123,6 +131,7 @@ fun ScanScreen(
     var showManualDialog by remember { mutableStateOf(false) }
     var showSheetSourceDialog by remember { mutableStateOf(false) }
     var showSheetCamera by remember { mutableStateOf(false) }
+    var showUserManagementSheet by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     androidx.compose.runtime.LaunchedEffect(appViewModel.scrollToTopEvent) {
@@ -171,7 +180,10 @@ fun ScanScreen(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Header(userName = currentUser?.fullName.orEmpty())
+        Header(
+            userName = currentUser?.fullName.orEmpty(),
+            onClick = { showUserManagementSheet = true }
+        )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { Box(modifier = Modifier.clip(RoundedCornerShape(percent = 50)).background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 16.dp, vertical = 6.dp), contentAlignment = Alignment.Center) { Text(text = "Отсканировано: $scannedCount", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer) } }
 
         Card(
@@ -423,6 +435,13 @@ fun ScanScreen(
             confirmableStatuses = setOf(SheetItemStatus.NEW)
         )
     }
+
+    if (showUserManagementSheet) {
+        UserManagementBottomSheet(
+            appViewModel = appViewModel,
+            onDismissRequest = { showUserManagementSheet = false }
+        )
+    }
 }
 
 /**
@@ -485,20 +504,41 @@ private fun AddLinkDialog(
 }
 
 @Composable
-private fun Header(userName: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
+private fun Header(userName: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .semantics {
+                role = Role.Button
+                contentDescription = "Текущий профиль: ${userName.ifEmpty { "Не выбран" }}. Нажмите для выбора или изменения профиля"
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f, fill = false)) {
             Text(
                 "Здравствуйте,",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 userName.ifEmpty { "—" },
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
+        Spacer(Modifier.size(4.dp))
+        Icon(
+            imageVector = Icons.Filled.ArrowDropDown,
+            contentDescription = "Сменить профиль",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
 

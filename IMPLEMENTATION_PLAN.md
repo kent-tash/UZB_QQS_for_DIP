@@ -1,343 +1,621 @@
-# Залипающая панель сортировки и пакетных действий (Sticky Header) в экране «Чеки и отчёт» (ReportScreen.kt)
+# План реализации: Рефакторинг навигации, главное меню профиля в TopAppBar, шторки резервного копирования и «О приложении», единое управление пользователями и обновление справки
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Реализовать залипающую панель (Sticky Header) сортировки и пакетных действий в экране «Чеки и отчёт» (`ReportScreen.kt`), которая при прокрутке списка чеков плавно фиксируется вверху экрана с непрозрачным фоном, динамической тенью, тональной возвышенностью и тонким разделителем, сохраняя постоянный доступ к управлению сортировкой и массовому удалению.
+**Goal:** Удалить вкладку «Профиль» из нижней панели навигации, интегрировать круглый кликабельный аватар текущего пользователя в TopAppBar с открытием `MainMenuBottomSheet`, разработать шторки `BackupBottomSheet` и `AboutAppBottomSheet`, сделать кликабельным приветствие сотрудника в «Добавить», внедрить единую шторку `UserManagementBottomSheet` с инлайн-редактированием (✏️), безопасным удалением (🗑️) и сквозной синхронизацией сессии во всех экранах, а также полностью актуализировать раздел справки `HelpBottomSheet.kt`.
 
 **Architecture:**
-1. **Presentation Layer (`ReportScreen.kt`):**
-   - Перевод элементов управления списка из обычных `item` в `stickyHeader(key = "sticky_sort_and_batch_bar")` внутри `LazyColumn`.
-   - В состав `stickyHeader` входят:
-     - Панель `SortAndBatchBar` (фиксированная кнопка сортировки 170dp и чекбокс «Все (N) [✓]»);
-     - Плашка пакетного удаления `SelectionActionBar` с анимацией раскрытия `AnimatedVisibility` при `selectedIds.isNotEmpty()`.
-   - Реактивное вычисление состояния залипания через `derivedStateOf { listState.firstVisibleItemIndex >= 3 }` (когда шапка отчёта, селектор режима и кнопки экспорта скрылись за верхним краем).
-   - Обертка `Surface` с непрозрачным фоном `MaterialTheme.colorScheme.background`, анимированной тенью `shadowElevation = 4.dp`, `tonalElevation = 2.dp` и тонким `HorizontalDivider(0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))` в состоянии `isPinned == true`.
-   - В обычном состоянии (`isPinned == false`) — плоский вид с `shadowElevation = 0.dp`, `tonalElevation = 0.dp` и без разделителя.
-2. **Documentation Layer (`HelpBottomSheet.kt`):**
-   - Добавление пояснения в раздел «Чеки и отчёт» о закреплённой панели сортировки и удобстве групповых операций при длинном скролле.
-3. **Quality & Stability Layer:**
-   - Unit-тест для чистой логики расчёта `isPinned` и параметров возвышения.
-   - Проверка сборки и тестов через `./gradlew testDebugUnitTest`.
-   - Проверка актуальности карты архитектуры `scripts/update_architecture_map.py`.
+1. **Навигационный слой (`ui/navigation/AppNavHost.kt`):**
+   - Удаление `MainTab.Profile`. В нижней навигационной панели (`NavigationBar`) остаются строго по 2 вкладки:
+     - Режим сотрудника (`EMPLOYEE`): «Добавить» (`Scan`) и «Чеки и отчёт» (`Report`).
+     - Режим аудитора (`AUDITOR`): «Аудит» (`Audit`) и «Чеки и отчёт» (`Report`).
+   - В правом верхнем углу `TopAppBar` на всех экранах вместо статичной иконки «?» размещается интерактивный круглый аватар активного пользователя (диаметр 38dp, контейнер `primaryContainer`, первая буква имени, сенсорная зона 48dp). Клик по аватару открывает `MainMenuBottomSheet`.
+   - Удаление устаревшего экрана `ProfileScreen.kt`.
 
-**Tech Stack:** Kotlin 2.x, Jetpack Compose, Material 3, Androidx Navigation, StateFlow / Coroutines, JUnit 4.
+2. **Компонентный слой (`ui/components/`):**
+   - `ProfileDialogs.kt`: вынос переиспользуемых диалогов профиля (`EditProfileDialog`, `CreateProfileDialog`, `EditableProfileField`, `EditSingleFieldDialog`) из `ProfileScreen.kt` в отдельный независимый файл компонентов.
+   - `MainMenuBottomSheet.kt`: карточка текущего пользователя (аватар, ФИО, должность, переход в управление пользователями), переключатель «Режим работы» (`switchCurrentUserRole()`), вызовы шторок «Резервная копия», «Справка» и «О приложении».
+   - `BackupBottomSheet.kt`: шторка резервного копирования с кнопками «Создать бэкап», «Загрузить бэкап» (с диалогом выбора: «Добавить к текущим» или «Полностью заменить» с окном предупреждения) и «Поделиться данными».
+   - `AboutAppBottomSheet.kt`: карточка информации о приложении (версия, описание), кнопка «Поделиться приложением» (ссылка на RuStore), диалог `PrivacyPolicyDialog` и блок «Обратная связь» с кликабельными контактами (Telegram, Email).
+   - `UserManagementBottomSheet.kt`: единый компонент управления пользователями со списком сотрудников, индикатором «Активен», кнопкой редактирования ✏️ (`EditProfileDialog`), кнопкой безопасного двухэтапного удаления 🗑️, кнопкой «+ Добавить новый профиль» (`CreateProfileDialog`) и мгновенным переключением активной сессии через `appViewModel.login(userId)`.
+
+3. **Слой экранов (`ui/screens/`):**
+   - `ScanScreen.kt`: заголовок «Здравствуйте, [ФИО] ▾» становится кликабельным с иконкой выпадающего списка `ArrowDropDown`. Клик открывает единый `UserManagementBottomSheet`.
+   - `ReportScreen.kt`: строка «Сотрудник: [ФИО] ▾» в шапке отчёта открывает единый `UserManagementBottomSheet` вместо старого `SelectUserDialog`. Устаревший диалог `SelectUserDialog` удаляется.
+   - `HelpBottomSheet.kt`: полное очищение от устаревших упоминаний вкладки «Профиль» и детальное описание новой архитектуры навигации, главного меню, управления профилями, 5 способов сканирования с иконками, sticky header в отчётах, бэкапа и аудита.
+
+4. **Тестирование и проверка:**
+   - Сохранение и адаптация существующих Unit-тестов (`ProfileValidationTest.kt`).
+   - Прогон полного набора unit-тестов `./gradlew testDebugUnitTest`.
+   - Автоматическая синхронизация карты архитектуры проекта через `python scripts/update_architecture_map.py`.
+
+**Tech Stack:** Kotlin 2.x, Jetpack Compose, Material 3, AndroidX Navigation, StateFlow / Coroutines, JUnit 4.
 
 ---
 
 ## Область изменений (Scope)
 
 - **In Scope:**
-  - Интеграция `stickyHeader` в `LazyColumn` экрана `ReportScreen.kt`.
-  - Динамическое состояние `isPinned` на базе `listState.firstVisibleItemIndex >= 3` с оптимизацией через `derivedStateOf`.
-  - Плавная анимация подъёма тени (`animateDpAsState`) с 0.dp до 4.dp и тональной возвышенности до 2.dp.
-  - Непрозрачный фоновый контейнер `Surface(color = MaterialTheme.colorScheme.background)`, защищающий от просвечивания карточек чеков.
-  - Тонкий разделитель `HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))` при залипании.
-  - Актуализация справки в `HelpBottomSheet.kt`.
-  - Модульный тест `ReportStickyHeaderLogicTest.kt`.
-  - Прогон тестов и автосинхронизация карты архитектуры.
+  - Создание `ui/components/ProfileDialogs.kt` с переносом `EditProfileDialog`, `CreateProfileDialog`, `EditableProfileField`, `EditSingleFieldDialog`.
+  - Обновление `ui/components/UserManagementBottomSheet.kt` с поддержкой редактирования (✏️), создания, двухэтапного удаления (🗑️) и авто-синхронизации через `appViewModel.login(userId)`.
+  - Создание `ui/components/BackupBottomSheet.kt` для создания, загрузки (merge/replace) и отправки бэкапа.
+  - Создание `ui/components/AboutAppBottomSheet.kt` с версией приложения, ссылкой на RuStore, политикой конфиденциальности и контактами разработчика.
+  - Создание `ui/components/MainMenuBottomSheet.kt` для TopAppBar.
+  - Модификация `ui/navigation/AppNavHost.kt`: удаление `MainTab.Profile`, интеграция аватара в `TopAppBar`, поддержка 2 вкладок для режимов сотрудника и аудитора.
+  - Удаление `ui/screens/ProfileScreen.kt`.
+  - Модификация `ui/screens/ScanScreen.kt`: кликабельное приветствие с иконкой выпадающего списка и вызовом `UserManagementBottomSheet`.
+  - Модификация `ui/screens/ReportScreen.kt`: замена `SelectUserDialog` на `UserManagementBottomSheet`.
+  - Полная переработка контента `ui/components/HelpBottomSheet.kt`.
+  - Адаптация тестов `ProfileValidationTest.kt` и прогон тестов `./gradlew testDebugUnitTest`.
+  - Запуск скрипта обновления карты архитектуры `scripts/update_architecture_map.py`.
+
 - **Out of Scope:**
-  - Изменение структуры базы данных SQLite (`DbHelper.kt`) и миграции.
-  - Изменение бизнес-логики `ReportViewModel.kt` (сортировка, фильтрация, удаление остаются без изменений).
-  - Изменение структуры генерации PDF, XLSX и других экспортеров.
+  - Изменение схемы базы данных SQLite (`DbHelper.kt`) и миграции (база данных не меняется).
+  - Модификация логики парсинга фискальных чеков и сетевых запросов (`ReceiptParser.kt`, `OfdPaymentApi.kt`).
+  - Изменение логики алгоритмов генерации PDF и Excel экспорта.
 
 ---
 
 ## План пошаговой реализации (Action Items)
 
-### Task 1: UI/UX ревью и спецификация микроанимаций (Designer)
+### Task 1: Выделение диалогов профилей в `ProfileDialogs.kt` и адаптация импортов
 
 **Files:**
-- Reference: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
-- Reference: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/theme/Color.kt`
-- Reference: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/theme/Theme.kt`
+- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/ProfileDialogs.kt`
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/AuthScreen.kt`
+- Modify: `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ProfileValidationTest.kt`
 
-**Цели этапа Designer:**
-1. Проверить эргономику и контрастность визуальных состояний:
-   - `isPinned == false`: абсолютно плоский вид (flat), органично сливающийся с фоном экрана;
-   - `isPinned == true`: мягкая тень 4.dp, тональная подсветка 2.dp и едва заметный полупрозрачный бордер 0.5.dp снизу (`outlineVariant` с alpha = 0.5f).
-2. Проверить сохранение Touch target размеров:
-   - Кнопка сортировки: ширина 170dp, высота 40dp, кликабельная иконка направления (touch target не менее 48dp с учётом ripple radius);
-   - Чекбокс «Все»: кликабельная строка и TriStateCheckbox с размером зоны касания 48dp;
-   - Плашка `SelectionActionBar`: кнопки «Снять» и «Удалить» с достаточными отступами.
-3. Проверить TalkBack и Accessibility:
-   - Убедиться, что фиксация заголовка не нарушает фокус экранного диктора при навигации жестами.
-
----
-
-### Task 2: Создание Unit-теста логики залипания (Test Engineer / TDD)
-
-**Files:**
-- Create: `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ReportStickyHeaderLogicTest.kt`
-
-**Step 1: Написать failing unit-тест для логики `isPinned` и визуальных атрибутов**
-Создать файл `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ReportStickyHeaderLogicTest.kt`:
+**Step 1: Создание `ProfileDialogs.kt`**
+Перенести компоненты `EditableProfileField`, `EditSingleFieldDialog`, `CreateProfileDialog` и `EditProfileDialog` из `ProfileScreen.kt` в отдельный файл `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/ProfileDialogs.kt`.
+Диалоги должны использовать Material 3, валидировать обязательные поля (имя и должность) и иметь эргономичные кнопки.
 
 ```kotlin
-package com.example.uzb_qqs_for_dip.ui
+package com.example.uzb_qqs_for_dip.ui.components
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 
-/**
- * Тестирование логики вычисления состояния залипания (Sticky Header)
- * и визуальных параметров панели сортировки и пакетных действий.
- */
-class ReportStickyHeaderLogicTest {
+enum class EditableProfileField(val title: String, val label: String) {
+    FULL_NAME("Изменить имя", "Имя пользователя (полностью)"),
+    POSITION("Изменить должность", "Должность"),
+    ORGANIZATION("Изменить организацию", "Организация (необязательно)")
+}
 
-    object StickyHeaderCalculator {
-        // Пороговый индекс элемента списка, при котором шапка отчета (0),
-        // селектор режима (1) и кнопки экспорта (2) скрылись за верхним краем
-        const val PINNED_THRESHOLD_INDEX = 3
+@Composable
+fun EditSingleFieldDialog(
+    field: EditableProfileField,
+    initialValue: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var value by remember { mutableStateOf(initialValue) }
+    var error by remember { mutableStateOf<String?>(null) }
 
-        fun calculateIsPinned(firstVisibleItemIndex: Int): Boolean {
-            return firstVisibleItemIndex >= PINNED_THRESHOLD_INDEX
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(field.title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = {
+                        value = it
+                        error = null
+                    },
+                    label = { Text(field.label) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = error != null
+                )
+                error?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val trimmed = value.trim()
+                    if (field != EditableProfileField.ORGANIZATION && trimmed.isEmpty()) {
+                        error = "Поле не может быть пустым"
+                        return@Button
+                    }
+                    onConfirm(trimmed)
+                }
+            ) { Text("Сохранить") }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
         }
+    )
+}
 
-        fun getShadowElevationDp(isPinned: Boolean): Float = if (isPinned) 4f else 0f
-        fun getTonalElevationDp(isPinned: Boolean): Float = if (isPinned) 2f else 0f
-        fun shouldShowDivider(isPinned: Boolean): Boolean = isPinned
+@Composable
+fun CreateProfileDialog(
+    error: String?,
+    onClearError: () -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: (fullName: String, position: String, organization: String) -> Unit
+) {
+    var fullName by remember { mutableStateOf("") }
+    var position by remember { mutableStateOf("") }
+    var organization by remember { mutableStateOf("") }
+    var localError by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Новый профиль") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it; localError = null; onClearError() },
+                    label = { Text("Имя пользователя (полностью)") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = position,
+                    onValueChange = { position = it; localError = null; onClearError() },
+                    label = { Text("Должность") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = organization,
+                    onValueChange = { organization = it; localError = null; onClearError() },
+                    label = { Text("Организация (необязательно)") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                val displayError = localError ?: error
+                displayError?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Medium)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (fullName.trim().isEmpty() || position.trim().isEmpty()) {
+                        localError = "Заполните имя и должность"
+                        return@Button
+                    }
+                    onConfirm(fullName.trim(), position.trim(), organization.trim())
+                }
+            ) { Text("Создать") }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
+        }
+    )
+}
+
+@Composable
+fun EditProfileDialog(
+    initialFullName: String,
+    initialPosition: String,
+    initialOrganization: String = "",
+    error: String?,
+    onClearError: () -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: (fullName: String, position: String, organization: String) -> Unit,
+    title: String = "Редактирование профиля"
+) {
+    var fullName by remember { mutableStateOf(initialFullName) }
+    var position by remember { mutableStateOf(initialPosition) }
+    var organization by remember { mutableStateOf(initialOrganization) }
+
+    LaunchedEffect(initialFullName, initialPosition, initialOrganization) {
+        fullName = initialFullName
+        position = initialPosition
+        organization = initialOrganization
     }
 
-    @Test
-    fun testIsPinnedCalculation() {
-        // До порога (элементы 0, 1, 2 на экране)
-        assertFalse("Индекс 0 не должен вызывать залипание", StickyHeaderCalculator.calculateIsPinned(0))
-        assertFalse("Индекс 1 не должен вызывать залипание", StickyHeaderCalculator.calculateIsPinned(1))
-        assertFalse("Индекс 2 не должен вызывать залипание", StickyHeaderCalculator.calculateIsPinned(2))
-
-        // Начиная с порога (шапка скрылась)
-        assertTrue("Индекс 3 должен активировать залипание", StickyHeaderCalculator.calculateIsPinned(3))
-        assertTrue("Индекс 4 должен активировать залипание", StickyHeaderCalculator.calculateIsPinned(4))
-        assertTrue("Индекс 10 должен активировать залипание", StickyHeaderCalculator.calculateIsPinned(10))
-    }
-
-    @Test
-    fun testElevationAndDividerValues() {
-        // В незалипшем состоянии
-        assertEquals(0f, StickyHeaderCalculator.getShadowElevationDp(isPinned = false), 0.001f)
-        assertEquals(0f, StickyHeaderCalculator.getTonalElevationDp(isPinned = false), 0.001f)
-        assertFalse(StickyHeaderCalculator.shouldShowDivider(isPinned = false))
-
-        // В залипшем состоянии
-        assertEquals(4f, StickyHeaderCalculator.getShadowElevationDp(isPinned = true), 0.001f)
-        assertEquals(2f, StickyHeaderCalculator.getTonalElevationDp(isPinned = true), 0.001f)
-        assertTrue(StickyHeaderCalculator.shouldShowDivider(isPinned = true))
-    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it; onClearError() },
+                    label = { Text("Имя пользователя (полностью)") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = position,
+                    onValueChange = { position = it; onClearError() },
+                    label = { Text("Должность") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = organization,
+                    onValueChange = { organization = it; onClearError() },
+                    label = { Text("Организация (необязательно)") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                error?.let {
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(fullName, position, organization) }) {
+                Text("Сохранить")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Отмена") }
+        }
+    )
 }
 ```
 
-**Step 2: Запустить unit-тест и убедиться в успешном прохождении**
-Команда PowerShell:
-`.\gradlew.bat testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.ui.ReportStickyHeaderLogicTest"`
-Ожидаемый результат: `BUILD SUCCESSFUL` (1 test class, 2 tests passed).
+**Step 2: Обновление импортов в `AuthScreen.kt` и `ProfileValidationTest.kt`**
+- В `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/AuthScreen.kt`:
+  Заменить импорт `EditProfileDialog` из `ProfileScreen` на `com.example.uzb_qqs_for_dip.ui.components.EditProfileDialog`.
+- В `app/src/test/java/com/example/uzb_qqs_for_dip/ui/ProfileValidationTest.kt`:
+  Заменить импорт `EditableProfileField` на `com.example.uzb_qqs_for_dip.ui.components.EditableProfileField`.
 
-**Step 3: Зафиксировать тест в Git**
-```bash
-git add app/src/test/java/com/example/uzb_qqs_for_dip/ui/ReportStickyHeaderLogicTest.kt
-git commit -m "test(ui): add unit tests for sticky header isPinned logic and elevation values"
-```
+**Step 3: Проверка тестов валидации**
+Запустить: `./gradlew testDebugUnitTest --tests "com.example.uzb_qqs_for_dip.ui.ProfileValidationTest"`
+Ожидаемый результат: тесты проходят успешно (BUILD SUCCESSFUL).
 
 ---
 
-### Task 3: Реализация `stickyHeader` в `ReportScreen.kt` (Doer)
+### Task 2: Единая шторка управления пользователями `UserManagementBottomSheet.kt`
+
+**Files:**
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/UserManagementBottomSheet.kt`
+
+**Требования к UI и поведению:**
+1. Отображение списка всех зарегистрированных пользователей (`users` из `AppViewModel`).
+2. В строке каждого пользователя:
+   - Круглый аватар с первой буквой имени.
+   - ФИО (жирным шрифтом, если активен) и должность.
+   - Индикатор «Активен» (чип `primaryContainer` / `primary`) для текущего авторизованного пользователя.
+   - Кнопка-карандаш ✏️ `Icons.Outlined.Edit` с доступным Touch Target (не менее 48dp).
+   - Кнопка-корзина 🗑️ `Icons.Outlined.Delete` с оттенком `error` и Touch Target не менее 48dp.
+3. Поведение при клике на строку пользователя:
+   - Вызывает `appViewModel.login(user.id)`.
+   - Мгновенно синхронизирует текущую сессию во всех экранах приложения.
+   - Закрывает шторку (`onDismissRequest()`).
+4. Поведение при клике на ✏️:
+   - Открывает модальный диалог `EditProfileDialog`.
+   - Позволяет изменить «Имя», «Должность», «Организацию».
+   - При подтверждении вызывает `appViewModel.updateProfile(user.id, name, pos, org, user.role)`.
+5. Поведение при клике на 🗑️:
+   - Запускает двухэтапное безопасное подтверждение:
+     - Этап 1: Диалог с предупреждением, что все чеки этого пользователя будут удалены.
+     - Этап 2: Финальный диалог с иконкой предупреждения `Icons.Filled.WarningAmber` и кнопкой «Удалить окончательно».
+     - При подтверждении вызывает `appViewModel.deleteProfile(user.id) { if (isCurrent) onLoggedOut() }`.
+6. Кнопка «+ Добавить новый профиль»:
+   - Расположена внизу списка пользователей.
+   - Открывает `CreateProfileDialog`.
+   - При создании вызывает `appViewModel.register(fullName, position, organization, autoLogin = false)`.
+
+**Сигнатура компонента:**
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserManagementBottomSheet(
+    appViewModel: AppViewModel,
+    onDismissRequest: () -> Unit,
+    onLoggedOut: () -> Unit = {}
+)
+```
+
+**Step 1: Реализация компонента в `UserManagementBottomSheet.kt`**
+Написать код компонента с внутренней обработкой состояний диалогов редактирования, создания и удаления, исключая дублирование кода в других экранах.
+
+**Step 2: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`
+Убедиться в отсутствии ошибок компиляции.
+
+---
+
+### Task 3: Шторка резервного копирования `BackupBottomSheet.kt`
+
+**Files:**
+- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/BackupBottomSheet.kt`
+
+**Требования к UI и поведению:**
+1. Заголовок «Резервная копия» и пояснение: «Один файл JSON: все профили, сохранённые чеки и настройки отчёта.»
+2. Карточка / кнопки действий:
+   - **«Создать бэкап»** (`Icons.Outlined.SaveAlt`):
+     - Открывает системный ActivityResultLauncher `CreateDocument(AppBackup.MIME_TYPE)`.
+     - При выборе файла вызывает `appViewModel.exportBackupToUri(context, uri)`.
+   - **«Загрузить бэкап»** (`Icons.Outlined.FolderOpen`):
+     - Открывает системный ActivityResultLauncher `OpenDocument()`.
+     - При выборе файла открывает модальный диалог с двумя опциями:
+       - «Добавить к текущим» -> вызывает `appViewModel.mergeBackupFromUri(context, uri)`.
+       - «Полностью заменить» -> открывает второе окно предупреждения «Внимание! Вы уверены в полной замене базы? Текущие данные будут безвозвратно потеряны» -> вызывает `appViewModel.importBackupFromUri(context, uri, onNavigateToAuth)`.
+   - **«Поделиться данными»** (`Icons.Outlined.Share`):
+     - Вызывает `appViewModel.shareBackup(context)`, создавая временный файл во внешнем хранилище кэша и вызывая системное меню «Поделиться».
+3. Соблюдение Material 3, скругление карточек 16dp, высота кнопок 48dp, иконки перед текстом кнопок.
+
+**Сигнатура компонента:**
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BackupBottomSheet(
+    appViewModel: AppViewModel,
+    onDismissRequest: () -> Unit,
+    onNavigateToAuth: () -> Unit = {}
+)
+```
+
+**Step 1: Создание `BackupBottomSheet.kt`**
+Реализовать компонент с интеграцией ActivityResultContract и вызовом методов бэкапа из `AppViewModel`.
+
+**Step 2: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`
+
+---
+
+### Task 4: Шторка «О приложении» `AboutAppBottomSheet.kt` и диалог политики
+
+**Files:**
+- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/AboutAppBottomSheet.kt`
+
+**Требования к UI и поведению:**
+1. Информационный блок:
+   - Название приложения: **UZB QQS for DIP**.
+   - Версия приложения: динамическое получение из `PackageManager` (с фоллбэком на `1.13.0`).
+   - Иконка приложения или тематический символ (`Icons.Outlined.QrCodeScanner`).
+   - Краткое описание: «Учёт и подготовка фискальных чеков для возврата НДС (QQS) в Республике Узбекистан».
+2. Интерактивные строки/кнопки:
+   - **«Поделиться приложением»** (`Icons.Outlined.Share`):
+     - Отправка системного Intent `ACTION_SEND` с текстом ссылки на RuStore: `https://www.rustore.ru/catalog/app/com.example.uzb_qqs_for_dip`.
+   - **«Политика конфиденциальности»** (`Icons.Outlined.Security`):
+     - Открывает диалог `PrivacyPolicyDialog`.
+   - **«Обратная связь»**:
+     - Блок контактов с кликабельными ссылками (используя `LocalUriHandler`):
+     - Telegram: `t.me/dis_night` (открывает `https://t.me/dis_night`).
+     - Email: `i@dis-night.ru` (открывает `mailto:i@dis-night.ru`).
+3. Диалог `PrivacyPolicyDialog`:
+   - Разъясняет локальное хранение данных на устройстве пользователя в SQLite.
+   - Подтверждает отсутствие сбора аналитики, трекеров и передачи данных третьим лицам.
+   - Поясняет, что сетевые запросы совершаются только к официальным шлюзам ОФД / Soliq для получения фискальных реквизитов чека.
+
+**Сигнатура компонента:**
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutAppBottomSheet(
+    onDismissRequest: () -> Unit
+)
+```
+
+**Step 1: Создание `AboutAppBottomSheet.kt`**
+Написать компонент в соответствии со спецификацией.
+
+**Step 2: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`
+
+---
+
+### Task 5: Главная шторка `MainMenuBottomSheet.kt`
+
+**Files:**
+- Create: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/MainMenuBottomSheet.kt`
+
+**Требования к UI и поведению:**
+1. Карточка текущего профиля:
+   - Аватар пользователя (46dp, CircleShape, `primaryContainer`, первая буква имени).
+   - ФИО и должность.
+   - Иконка перехода / смены профиля (`Icons.Outlined.SwapHoriz` или шеврон).
+   - Клик по карточке закрывает текущую шторку и открывает `UserManagementBottomSheet`.
+2. Тонкий разделитель `HorizontalDivider()`.
+3. Меню пунктов (вертикальный список с иконкой, заголовком и подзаголовком / бейджем):
+   - **«Режим работы»** (`Icons.Outlined.AdminPanelSettings`):
+     - Отображает текущий режим: «Сотрудник» или «Аудитор» с бейджем.
+     - Клик вызывает `onSwitchRole()`.
+   - **«Резервная копия»** (`Icons.Outlined.Backup`):
+     - Подзаголовок: «Сохранение и восстановление базы данных».
+     - Клик закрывает меню и открывает `BackupBottomSheet`.
+   - **«Справка»** (`Icons.AutoMirrored.Outlined.HelpOutline`):
+     - Подзаголовок: «Инструкции и руководство по работе».
+     - Клик закрывает меню и открывает `HelpBottomSheet`.
+   - **«О приложении»** (`Icons.Outlined.Info`):
+     - Подзаголовок: «Версия, контакты и политика конфиденциальности».
+     - Клик закрывает меню и открывает `AboutAppBottomSheet`.
+
+**Сигнатура компонента:**
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainMenuBottomSheet(
+    user: User?,
+    onOpenUserManagement: () -> Unit,
+    onSwitchRole: () -> Unit,
+    onOpenBackup: () -> Unit,
+    onOpenHelp: () -> Unit,
+    onOpenAboutApp: () -> Unit,
+    onDismissRequest: () -> Unit
+)
+```
+
+**Step 1: Создание `MainMenuBottomSheet.kt`**
+Реализовать шторку согласно архитектурному шаблону.
+
+**Step 2: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`
+
+---
+
+### Task 6: Рефакторинг навигации в `AppNavHost.kt`, TopAppBar и удаление `ProfileScreen.kt`
+
+**Files:**
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/navigation/AppNavHost.kt`
+- Delete: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`
+
+**Требования к UI и навигации:**
+1. Удалить `MainTab.Profile`:
+   - Вкладки в `MainTab.employee`: `listOf(Scan, Report)` (ровно 2 вкладки: «Добавить» и «Чеки и отчёт»).
+   - Вкладки в `MainTab.auditor`: `listOf(Audit, Report)` (ровно 2 вкладки: «Аудит» и «Чеки и отчёт»).
+2. В `TopAppBar` (в `MainScaffold`):
+   - В слоте `actions` заменить старую кнопку со знаком «?» на круглый аватар активного пользователя:
+     - Размер аватара: 38dp.
+     - Фон: `MaterialTheme.colorScheme.primaryContainer`.
+     - Текст: первая буква имени `currentUser?.fullName?.take(1)?.uppercase() ?: "?"`.
+     - Стиль текста: `MaterialTheme.typography.titleMedium`, цвет `MaterialTheme.colorScheme.primary`, `FontWeight.Bold`.
+     - Контейнер кликабельный с Touch Target не менее 48dp (`IconButton` или `Box(Modifier.size(48.dp), contentAlignment = Alignment.Center)`).
+     - Клик по аватару устанавливает `showMainMenu = true`.
+3. Управление шторками в `MainScaffold`:
+   - `var showMainMenu by remember { mutableStateOf(false) }`
+   - `var showUserManagement by remember { mutableStateOf(false) }`
+   - `var showBackup by remember { mutableStateOf(false) }`
+   - `var showHelp by remember { mutableStateOf(false) }`
+   - `var showAboutApp by remember { mutableStateOf(false) }`
+   - Подключение `MainMenuBottomSheet`, `UserManagementBottomSheet`, `BackupBottomSheet`, `AboutAppBottomSheet`, `HelpBottomSheet`.
+4. Удалить `composable(MainTab.Profile.route)` из `NavHost`.
+5. Удалить неиспользуемый файл `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`.
+
+**Step 1: Обновление `AppNavHost.kt`**
+Применить изменения в `AppNavHost.kt`.
+
+**Step 2: Удаление файла `ProfileScreen.kt`**
+Удалить файл `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ProfileScreen.kt`.
+
+**Step 3: Проверка сборки и тестов**
+Запустить: `./gradlew testDebugUnitTest`
+Убедиться, что проект компилируется и старые тесты не ломаются.
+
+---
+
+### Task 7: Кликабельное приветствие в «Добавить» (`ScanScreen.kt`)
+
+**Files:**
+- Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ScanScreen.kt`
+
+**Требования к UI и поведению:**
+1. Блок приветствия вверху экрана:
+   - Отображает «Здравствуйте,», а ниже ФИО текущего пользователя со стрелочкой выпадающего списка `Icon(Icons.Filled.ArrowDropDown, contentDescription = "Сменить профиль", tint = MaterialTheme.colorScheme.primary)`.
+   - Обернут в кликабельный контейнер с `clip(RoundedCornerShape(12.dp))` и эффектом нажатия (ripple).
+   - Клик по блоку открывает `UserManagementBottomSheet`.
+2. Подключение `UserManagementBottomSheet(appViewModel = appViewModel, onDismissRequest = { showUserManagement = false })` в `ScanScreen`.
+3. Так как `currentUser` собирается через `collectAsStateWithLifecycle()`, смена пользователя в шторке мгновенно обновляет имя на экране и привязку добавляемых чеков.
+
+**Step 1: Редактирование `ScanScreen.kt`**
+Обновить composable `Header` и добавить состояние `showUserManagementSheet`.
+
+**Step 2: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`
+
+---
+
+### Task 8: Интеграция `UserManagementBottomSheet` в «Чеки и отчёт» (`ReportScreen.kt`)
 
 **Files:**
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt`
 
-**Step 1: Добавить необходимые импорты**
-В файле `ReportScreen.kt` убедиться в наличии импортов:
-```kotlin
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.runtime.derivedStateOf
-```
+**Требования к UI и поведению:**
+1. В шапке отчёта (`ReportHeaderCard`) клик по строке сотрудника вызывает открытие `UserManagementBottomSheet`.
+2. Заменить старый радио-диалог `SelectUserDialog` на `UserManagementBottomSheet(appViewModel = appViewModel, onDismissRequest = { showUserPicker = false })`.
+3. Удалить composable `SelectUserDialog` и вспомогательный класс `UserChoice` (если он больше не используется).
+4. При смене пользователя в `UserManagementBottomSheet` происходит вызов `appViewModel.login(user.id)`, а в отчёте сбрасывается или синхронизируется фильтр, чтобы отчёт сразу отображал чеки выбранного сотрудника.
 
-**Step 2: Заменить блоки 5 в `LazyColumn` на `stickyHeader`**
-Заменить строки 263-294 в `ReportScreen.kt`:
-```kotlin
-        // =====================================================================
-        // Блок 4: Залипающая панель сортировки и пакетных действий (Sticky Header)
-        // =====================================================================
-        @OptIn(ExperimentalFoundationApi::class)
-        stickyHeader(key = "sticky_sort_and_batch_bar") {
-            val isPinned by remember {
-                derivedStateOf { listState.firstVisibleItemIndex >= 3 }
-            }
-            val shadowElevation by animateDpAsState(
-                targetValue = if (isPinned) 4.dp else 0.dp,
-                label = "stickyShadowElevation"
-            )
-            val tonalElevation by animateDpAsState(
-                targetValue = if (isPinned) 2.dp else 0.dp,
-                label = "stickyTonalElevation"
-            )
+**Step 1: Модификация `ReportScreen.kt`**
+Заменить `SelectUserDialog` на `UserManagementBottomSheet`, вычистить устаревший код диалога.
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.background,
-                shadowElevation = shadowElevation,
-                tonalElevation = tonalElevation
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = if (isPinned) 4.dp else 0.dp)
-                ) {
-                    SortAndBatchBar(
-                        totalCount = rows.size,
-                        selectedCount = selectedIds.size,
-                        onSelectAll = { reportViewModel.selectAllVisible() },
-                        onClearAll = { reportViewModel.clearSelection() },
-                        sortField = settings.sortField,
-                        sortOrder = settings.sortOrder,
-                        onSortFieldSelected = { reportViewModel.toggleSort(it) },
-                        onToggleSortOrder = { reportViewModel.toggleSort(settings.sortField) }
-                    )
-
-                    AnimatedVisibility(
-                        visible = selectedIds.isNotEmpty(),
-                        enter = expandVertically() + fadeIn(),
-                        exit = shrinkVertically() + fadeOut()
-                    ) {
-                        Column(Modifier.padding(vertical = 4.dp)) {
-                            SelectionActionBar(
-                                selectedCount = selectedIds.size,
-                                onClear = { reportViewModel.clearSelection() },
-                                onDelete = { showDeleteBatchConfirm = true }
-                            )
-                        }
-                    }
-
-                    if (isPinned) {
-                        HorizontalDivider(
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-                    }
-                }
-            }
-        }
-```
-
-**Step 3: Проверить компиляцию**
-Команда PowerShell:
-`.\gradlew.bat compileDebugKotlin`
-Ожидаемый результат: `BUILD SUCCESSFUL`.
-
-**Step 4: Зафиксировать изменения в Git**
-```bash
-git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/screens/ReportScreen.kt
-git commit -m "feat(ui): implement sticky header for sort and batch actions in ReportScreen"
-```
+**Step 2: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`
 
 ---
 
-### Task 4: Актуализация раздела помощи `HelpBottomSheet.kt` (Doer)
+### Task 9: Полная актуализация справки в `HelpBottomSheet.kt`
 
 **Files:**
 - Modify: `app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/HelpBottomSheet.kt`
 
-**Step 1: Обновить описание секции «Чеки и отчёт (Единый экран)»**
-В секции `AccordionItem(title = "Чеки и отчёт (Единый экран)")` обновить пункт 4:
-```kotlin
-"4. Сортировка и групповые операции:\n" +
-"• Залипающая панель (Sticky Header): при прокрутке списка чеков панель сортировки и плашка пакетных действий («Удалить выбранные») остаются аккуратно зафиксированными вверху экрана с элегантной тенью и разделителем, позволяя управлять сортировкой и удалением без необходимости прокручивать список обратно наверх.\n" +
-"• Компактная кнопка сортировки шириной 170dp с встроенным быстрым переключением направления (↑ / ↓) и выбором поля по клику на шеврон.\n" +
-"• Справа расположена плашка «Все (N)» с чекбоксом [✓] для быстрого выбора всех чеков в одно касание.\n\n" +
-```
+**Требования к содержанию справки:**
+1. **Полная зачистка:** Удалить любые упоминания старой вкладки «Профиль» в нижней панели.
+2. **Раздел «Навигация и Главное меню» (Новый):**
+   - Описание обновлённой нижней панели: строго 2 вкладки («Добавить» и «Чеки и отчёт» для сотрудников, «Аудит» и «Чеки и отчёт» для аудитора).
+   - Круглый аватар пользователя в TopAppBar: быстрый доступ к главному меню из любой точки приложения.
+   - Состав Главного меню: карточка профиля, переключение режима работы («Сотрудник» / «Аудитор»), «Резервная копия», «Справка» и «О приложении».
+3. **Раздел «Управление профилями» (Актуализированный):**
+   - 3 удобных точки входа: клик по аватару в TopAppBar -> карточка профиля, клик по приветствию «Здравствуйте, [ФИО] ▾» в «Добавить», клик по строке сотрудника в шапке «Чеки и отчёт».
+   - Единая шторка: список всех сотрудников с отметкой «Активен», кнопка редактирования ✏️ (ФИО, должность, организация), кнопка безопасного двухэтапного удаления 🗑️, кнопка «+ Добавить новый профиль».
+   - Мгновенная сквозная синхронизация активной сессии во всем приложении.
+4. **Раздел «Резервная копия» (Новый/Актуализированный):**
+   - Создание бэкапа в единый JSON-файл (все профили, чеки и настройки).
+   - Загрузка бэкапа: «Добавить к текущим» (умное слияние без дублей) или «Полностью заменить» (с защитой от случайного удаления).
+   - Функция «Поделиться данными» для быстрой отправки базы через мессенджеры или почту.
+5. **Раздел «О приложении» (Новый):**
+   - Версия приложения, ссылка на RuStore, политика конфиденциальности и прямые контакты разработчика (Telegram, Email).
+6. **Разделы «Добавление чеков» (5 способов с иконками), «Чеки и отчёт» (со sticky header) и «Аудит»:**
+   - Сохранить и привести к идеальному гармоничному виду с аккордеонами `AccordionItem`.
 
-**Step 2: Проверить компиляцию**
-Команда PowerShell:
-`.\gradlew.bat compileDebugKotlin`
-Ожидаемый результат: `BUILD SUCCESSFUL`.
+**Step 1: Обновление `HelpBottomSheet.kt`**
+Переписать содержимое с актуализацией всех блоков.
 
-**Step 3: Зафиксировать изменения в Git**
-```bash
-git add app/src/main/java/com/example/uzb_qqs_for_dip/ui/components/HelpBottomSheet.kt
-git commit -m "docs(help): document sticky header functionality in HelpBottomSheet"
-```
+**Step 2: Проверка сборки**
+Запустить: `./gradlew testDebugUnitTest`
 
 ---
 
-### Task 5: Верификация, статический анализ и синхронизация архитектуры (Test Engineer & Reviewer)
+### Task 10: Финальное тестирование, сборка и автосинхронизация карты архитектуры
 
 **Files:**
-- Test: Все модульные тесты проекта
-- Scripts: `scripts/update_architecture_map.py`
-- Documentation: `SYSTEM_PROMPT.md`, `.cursorrules`
+- Test verification: Unit-тесты
+- Architecture Map sync: `SYSTEM_PROMPT.md`, `.cursorrules`
 
-**Step 1: Запустить все Unit-тесты проекта**
-Команда PowerShell:
-`.\gradlew.bat testDebugUnitTest`
-Ожидаемый результат: `BUILD SUCCESSFUL`, все тесты пройдены без ошибок.
+**Step 1: Запуск unit-тестов проекта**
+Выполнить команду в PowerShell:
+`./gradlew testDebugUnitTest`
+Ожидаемый результат: Все тесты (включая тесты экспорта, UI-логики, валидации профиля и парсинга) завершаются успешно: `BUILD SUCCESSFUL`.
 
-**Step 2: Запустить автосинхронизацию архитектурной карты**
-Команда PowerShell:
+**Step 2: Автосинхронизация карты архитектуры**
+Выполнить команду:
 `python scripts/update_architecture_map.py`
-Ожидаемый результат: карта структуры актуализирована, изменения применены к `SYSTEM_PROMPT.md` и `.cursorrules`.
+Скрипт просканирует файловую структуру, зафиксирует удаление `ProfileScreen.kt`, появление `MainMenuBottomSheet.kt`, `BackupBottomSheet.kt`, `AboutAppBottomSheet.kt`, `ProfileDialogs.kt` и обновит блок `<architecture_map>` в `SYSTEM_PROMPT.md` и `.cursorrules`.
 
-**Step 3: Проверить линтинг и чистоту сборки**
-Команда PowerShell:
-`.\gradlew.bat lintDebug` (или `compileDebugKotlin`)
-Ожидаемый результат: отсутствие критических замечаний и ошибок.
-
-**Step 4: Зафиксировать изменения карты архитектуры в Git**
-```bash
-git add SYSTEM_PROMPT.md .cursorrules
-git commit -m "chore: synchronize architecture map after adding sticky header unit tests"
-```
-
----
-
-### Task 6: Контроль требований (Supervisor)
-
-**Чек-лист Супервизора для подтверждения готовности фичи:**
-- [ ] Панель сортировки и пакетных действий помещена в `stickyHeader` внутри `LazyColumn` экрана `ReportScreen.kt`.
-- [ ] В `stickyHeader` входят и `SortAndBatchBar`, и плашка `SelectionActionBar` с анимацией `AnimatedVisibility`.
-- [ ] Фон панели непрозрачен (`MaterialTheme.colorScheme.background`) — карточки чеков не просвечивают при прокрутке снизу.
-- [ ] `isPinned` вычисляется динамически через `derivedStateOf { listState.firstVisibleItemIndex >= 3 }`.
-- [ ] При `isPinned == true`: появляется `shadowElevation = 4.dp`, `tonalElevation = 2.dp` и тонкий `HorizontalDivider` (0.5.dp, `outlineVariant.copy(alpha = 0.5f)`).
-- [ ] При `isPinned == false`: тень 0.dp, тональная подсветка 0.dp, разделителя нет (плоский вид).
-- [ ] Раздел помощи `HelpBottomSheet.kt` дополнен описанием залипающей панели.
-- [ ] Написан Unit-тест на логику состояний. Все unit-тесты проекта проходят успешно (`./gradlew testDebugUnitTest`).
-- [ ] Архитектурная карта актуализирована.
-
----
-
-### Task 7: Сборка релиза и формирование Changelog (Releaser)
-
-**Шаги Релизера:**
-1. Проверить текущую версию в `app/build.gradle.kts` (`versionName = "1.12.0"`, `versionCode = 33`).
-2. Прочитать последнюю версию на странице RuStore через HTTP-запрос.
-3. Сформировать Changelog:
-   - "Залипающая панель сортировки и пакетных действий (Sticky Header) в экране 'Чеки и отчёт'".
-   - "Плавная анимация подъёма и фиксации панели при скролле длинного списка чеков".
-   - "Постоянный доступ к переключению сортировки и пакетному удалению выбранных чеков".
-4. Собрать релизные артефакты:
-   `.\gradlew.bat assembleRelease`
-5. Скопировать релизный APK в каталог `release/` с указанием версии (например, `release/UZB_QQS_v1.12.0.apk`).
-
----
-
-### Task 8: Публикация и обновление документации (Publisher)
-
-**Шаги Паблишера:**
-1. Обновить `README.md` с описанием новой версии и фичи Sticky Header.
-2. Создать коммит по стандарту Conventional Commits:
-   `git commit -m "feat(report): add sticky header for sort and batch action bar"`
-3. Создать git-тег для версии (например, `v1.12.0`).
-4. Отправить изменения в удалённый репозиторий:
-   `git push origin main --tags`
-5. Сформировать GitHub Release с прикреплением готового APK файла.
+**Step 3: Проверка статуса Git**
+`git status` — убедиться, что изменены только целевые файлы и нет лишнего мусора или повреждения кодировок UTF-8.
 
 ---
 
 ## Варианты выполнения (Execution Handoff)
 
-План полностью сформирован и сохранён в `IMPLEMENTATION_PLAN.md`.
+План составлен, детализирован и сохранен в `IMPLEMENTATION_PLAN.md`. Доступны следующие варианты исполнения:
 
-Доступны 2 варианта исполнения:
-1. **Subagent-Driven (в текущей сессии, Рекомендуется)** — последовательный запуск субагентов для каждого этапа (Designer -> Doer -> Test Engineer -> Reviewer -> Supervisor -> Releaser -> Publisher), валидация после каждого таска, быстрый темп и максимальный контроль качества.
-2. **Parallel Session (отдельная сессия)** — открытие новой рабочей сессии с навыком `executing-plans` для пакетного выполнения с контрольными точками.
+1. **Subagent-Driven (в текущей сессии):**
+   - Оркестратор запускает субагента-Дизайнера (`Designer`) для верификации эргономики UI/UX и Touch Targets (>= 48dp).
+   - Затем субагент-Исполнитель (`Doer`) последовательно реализует задачи 1–9.
+   - Тестировщик (`TestEngineer`) и Ревьюер (`Reviewer`) проверяют тесты и синхронизируют карту архитектуры.
+2. **Ручное выполнение (Step-by-step):**
+   - Пошаговое подтверждение каждого этапа пользователем.

@@ -1,18 +1,23 @@
 package com.example.uzb_qqs_for_dip.ui.navigation
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -24,9 +29,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -39,30 +52,32 @@ import com.example.uzb_qqs_for_dip.data.model.UserRole
 import com.example.uzb_qqs_for_dip.data.settings.Quarter
 import com.example.uzb_qqs_for_dip.ui.AppViewModel
 import com.example.uzb_qqs_for_dip.ui.AuditorViewModel
+import com.example.uzb_qqs_for_dip.ui.components.AboutAppBottomSheet
+import com.example.uzb_qqs_for_dip.ui.components.BackupBottomSheet
 import com.example.uzb_qqs_for_dip.ui.components.HelpBottomSheet
+import com.example.uzb_qqs_for_dip.ui.components.MainMenuBottomSheet
+import com.example.uzb_qqs_for_dip.ui.components.UserManagementBottomSheet
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorReceiptSearchScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuditorVerifyScreen
 import com.example.uzb_qqs_for_dip.ui.screens.AuthScreen
-import com.example.uzb_qqs_for_dip.ui.screens.ProfileScreen
 import com.example.uzb_qqs_for_dip.ui.screens.RegisterScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ReportScreen
 import com.example.uzb_qqs_for_dip.ui.screens.ScanScreen
 
-private sealed class TopRoute(val route: String) {
+sealed class TopRoute(val route: String) {
     data object Auth : TopRoute("auth")
     data object Register : TopRoute("register")
     data object Main : TopRoute("main")
 }
 
-private sealed class MainTab(val route: String, val title: String, val icon: ImageVector) {
+sealed class MainTab(val route: String, val title: String, val icon: ImageVector) {
     data object Scan : MainTab("main/scan", "Добавить", Icons.Outlined.QrCodeScanner)
     data object Report : MainTab("main/report", "Чеки и отчёт", Icons.Outlined.Description)
     data object Audit : MainTab("main/audit", "Аудит", Icons.AutoMirrored.Outlined.FactCheck)
-    data object Profile : MainTab("main/profile", "Профиль", Icons.Outlined.Person)
     companion object {
-        val employee = listOf(Scan, Report, Profile)
-        val auditor = listOf(Audit, Report, Profile)
+        val employee: List<MainTab> get() = listOf(Scan, Report)
+        val auditor: List<MainTab> get() = listOf(Audit, Report)
     }
 }
 
@@ -161,9 +176,58 @@ private fun MainScaffold(
         }
     }
 
-    var showHelpDialog by remember { mutableStateOf(false) }
-    if (showHelpDialog) {
-        HelpBottomSheet(onDismissRequest = { showHelpDialog = false })
+    LaunchedEffect(isAuditor) {
+        val current = tabsNav.currentDestination?.route
+        val validRoutes = tabs.map { it.route } + listOf(ROUTE_AUDIT_SEARCH, ROUTE_AUDIT_VERIFY)
+        if (current != null && current !in validRoutes) {
+            tabsNav.navigate(startTab) {
+                popUpTo(tabsNav.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+    var showMainMenu by remember { mutableStateOf(false) }
+    var showUserManagement by remember { mutableStateOf(false) }
+    var showBackup by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
+    var showAboutApp by remember { mutableStateOf(false) }
+
+    if (showMainMenu) {
+        MainMenuBottomSheet(
+            user = currentUser,
+            onOpenUserManagement = { showUserManagement = true },
+            onSwitchRole = { appViewModel.switchCurrentUserRole() },
+            onOpenBackup = { showBackup = true },
+            onOpenHelp = { showHelp = true },
+            onOpenAboutApp = { showAboutApp = true },
+            onDismissRequest = { showMainMenu = false }
+        )
+    }
+
+    if (showUserManagement) {
+        UserManagementBottomSheet(
+            appViewModel = appViewModel,
+            onDismissRequest = { showUserManagement = false },
+            onLoggedOut = onLoggedOut
+        )
+    }
+
+    if (showBackup) {
+        BackupBottomSheet(
+            appViewModel = appViewModel,
+            onDismissRequest = { showBackup = false },
+            onNavigateToAuth = onLoggedOut
+        )
+    }
+
+    if (showHelp) {
+        HelpBottomSheet(onDismissRequest = { showHelp = false })
+    }
+
+    if (showAboutApp) {
+        AboutAppBottomSheet(onDismissRequest = { showAboutApp = false })
     }
 
     Scaffold(
@@ -188,8 +252,35 @@ private fun MainScaffold(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showHelpDialog = true }) {
-                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Помощь")
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .clickable { showMainMenu = true }
+                            .semantics {
+                                role = Role.Button
+                                contentDescription = "Главное меню профиля: ${currentUser?.fullName ?: "Гость"}"
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .border(
+                                    BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = currentUser?.fullName?.take(1)?.uppercase() ?: "?",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             )
@@ -264,12 +355,6 @@ private fun MainScaffold(
                     initialQuarter = quarter,
                     initialYear = year,
                     onBack = { tabsNav.popBackStack() }
-                )
-            }
-            composable(MainTab.Profile.route) {
-                ProfileScreen(
-                    appViewModel = appViewModel,
-                    onLoggedOut = onLoggedOut
                 )
             }
         }
