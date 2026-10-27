@@ -48,10 +48,10 @@ object PdfReportGenerator {
     // A4 в pt (1/72 дюйма): 595 x 842.
     private const val PAGE_WIDTH = 595
     private const val PAGE_HEIGHT = 842
-    private const val MARGIN = 40f
+    private const val MARGIN = 28f // 10 мм
 
-    // Колонки: №, Наименование организации, Сумма, НДС, Дата.
-    private val COL_WIDTHS = floatArrayOf(28f, 170f, 110f, 100f, 107f)
+    // Колонки: №, Наименование организации, Сумма, НДС, Дата. Сумма = 539f (PAGE_WIDTH - 2 * MARGIN)
+    private val COL_WIDTHS = floatArrayOf(28f, 194f, 110f, 100f, 107f)
     private val COL_HEADERS = arrayOf("№", "Наименование организации", "Сумма", "НДС", "Дата")
 
     private const val COL_NUM = 0
@@ -84,40 +84,106 @@ object PdfReportGenerator {
     }
 
     /**
-     * Рендерит отчёт в [doc]. Реально проходов два:
-     *   1. «Сухой» прогон во временный документ — чтобы узнать общее число страниц
-     *      (это нужно для нумерации в правом верхнем углу: первую страницу не нумеруем,
-     *      и нумерация добавляется только если страниц больше одной).
-     *   2. Настоящий прогон в выходной [doc] с уже известным [totalPages] — рисуются
-     *      номера страниц и нижний колонтитул (должность + И.О. Фамилия).
-     *
-     * Открыто, чтобы тот же контент использовать в PrintDocumentAdapter.
+     * Фильтрует чеки с нулевым НДС.
      */
     internal fun sanitizeParams(params: ReportParams): ReportParams =
         params.copy(rows = params.rows.filter { it.receipt.vatAmountTiyin > 0L })
 
-    fun renderInto(doc: PdfDocument, params: ReportParams) {
+    /**
+     * Рендерит отчёт в [doc].
+     * Возвращает общее количество добавленных страниц.
+     */
+    fun renderInto(
+        doc: PdfDocument,
+        params: ReportParams,
+        includeManualAttachments: Boolean = true
+    ): Int {
         val sanitizedParams = sanitizeParams(params)
-        val totalPages = countPages(sanitizedParams)
-        renderOnce(doc, sanitizedParams, totalPages)
-    }
-
-    /** Сухой прогон ради подсчёта страниц. Временный документ закрывается. */
-    private fun countPages(params: ReportParams): Int {
-        val tmp = PdfDocument()
-        return try {
-            renderOnce(tmp, params, totalPages = 0)
-            tmp.pages.size
-        } finally {
-            tmp.close()
-        }
+        val totalPages = calculatePageCount(sanitizedParams, includeManualAttachments)
+        return renderOnce(doc, sanitizedParams, totalPages, includeManualAttachments)
     }
 
     /**
-     * Один проход рендера. При [totalPages] > 1 рисует номера страниц (со 2-й включительно),
-     * на каждой странице добавляет в правый нижний угол должность и подпись из профиля.
+     * Расчет количества страниц отчёта без зависимости от PdfDocument (чистый расчет).
      */
-    private fun renderOnce(doc: PdfDocument, params: ReportParams, totalPages: Int) {
+    fun calculatePageCount(params: ReportParams, includeManualAttachments: Boolean = true): Int {
+        val sanitized = sanitizeParams(params)
+        val signatureBlockHeight = 70f
+        val contentBottomLimit = PAGE_HEIGHT - 32f
+
+        var pageNumber = 1
+        var y = MARGIN
+
+        // Шапка: 3 блока по центру
+        val periodText = sanitized.quarterLabel
+            ?: "${DateFormat.formatDate(sanitized.periodStart)} — ${DateFormat.formatDate(sanitized.periodEnd)}"
+        val titleMaxWidth = PAGE_WIDTH - 2f * MARGIN
+        val titleLineHeight = 17f
+
+        val titleLines1 = wrapText("Реестр предъявляемых к возмещению платежных документов", null, titleMaxWidth, 8, 7.5f)
+        val titleLines2 = wrapText(periodText, null, titleMaxWidth, 8, 7.5f)
+        val titleLines3 = wrapText("${sanitized.user.position} ${sanitized.user.fullName}".trim(), null, titleMaxWidth, 8, 7.5f)
+        y += (titleLines1.size + titleLines2.size + titleLines3.size) * titleLineHeight + 10f
+
+        // Таблица: шапка
+        y += HEADER_ROW_HEIGHT
+
+        val sellerMaxWidth = COL_WIDTHS[COL_SELLER] - CELL_PADDING_H * 2f
+        val rowHeights = sanitized.rows.map { item ->
+            val lines = wrapText(item.receipt.sellerName.ifBlank { "—" }, null, sellerMaxWidth, MAX_SELLER_LINES, 5.5f)
+            maxOf(ROW_HEIGHT_MIN, CELL_PADDING_V * 2f + lines.size * LINE_HEIGHT)
+        }
+
+        sanitized.rows.forEachIndexed { idx, _ ->
+            val rowHeight = rowHeights[idx]
+            val remainingRowsHeight = (idx until sanitized.rows.size).sumOf { rowHeights[it].toDouble() }.toFloat()
+            val canFinishOnCurrentPage = (y + remainingRowsHeight + ROW_HEIGHT_MIN + signatureBlockHeight) <= contentBottomLimit
+
+            if (!canFinishOnCurrentPage) {
+                val isLastRow = (idx == sanitized.rows.lastIndex)
+                val effectiveLimit = if (isLastRow) {
+                    contentBottomLimit - ROW_HEIGHT_MIN - signatureBlockHeight
+                } else {
+                    contentBottomLimit
+                }
+
+                if (y + rowHeight > effectiveLimit) {
+                    pageNumber++
+                    y = MARGIN + HEADER_ROW_HEIGHT
+                }
+            }
+            y += rowHeight
+        }
+
+        if (sanitized.rows.isEmpty()) {
+            y += ROW_HEIGHT_MIN
+        }
+
+        if (y + ROW_HEIGHT_MIN + signatureBlockHeight > contentBottomLimit) {
+            pageNumber++
+        }
+
+        var totalPages = pageNumber
+
+        if (includeManualAttachments) {
+            val manualReceiptsCount = sanitized.rows.count {
+                it.receipt.isManual && it.receipt.manualPhotoUri != null
+            }
+            totalPages += manualReceiptsCount
+        }
+
+        return totalPages
+    }
+
+    /**
+     * Отрисовка страниц отчёта в [doc].
+     */
+    private fun renderOnce(
+        doc: PdfDocument,
+        params: ReportParams,
+        totalPages: Int,
+        includeManualAttachments: Boolean = true
+    ): Int {
         val typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
         val typefaceBold = Typeface.create(Typeface.SERIF, Typeface.BOLD)
 
@@ -181,16 +247,12 @@ object PdfReportGenerator {
             textAlign = Paint.Align.CENTER
         }
 
-        // Колонтитул: в правом нижнем углу каждой страницы — должность и И.О. Фамилия
-        // из профиля (9 пт, по требованию задания).
         val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
             textSize = 9f
             color = 0xFF374151.toInt()
             textAlign = Paint.Align.RIGHT
         }
-        // Номер страницы — в правом верхнем углу, начиная со 2-й; первую не нумеруем
-        // (и не нумеруем вовсе, если страниц всего одна).
         val pageNumberPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             this.typeface = typeface
             textSize = 9.5f
@@ -201,17 +263,13 @@ object PdfReportGenerator {
         val totalSum = params.rows.sumOf { it.receipt.totalAmountTiyin }
         val totalVat = params.rows.sumOf { it.receipt.vatAmountTiyin }
 
+        var pagesAdded = 0
         var pageNumber = 1
         var page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
         var canvas = page.canvas
         var y = MARGIN
 
-        /**
-         * Дорисовывает на текущей странице номер (если нужен) и колонтитул,
-         * затем закрывает её через [PdfDocument.finishPage].
-         */
         fun finalizeAndFinishPage() {
-            // Колонтитул присутствует на каждой странице.
             val rightX = PAGE_WIDTH - MARGIN
             val generatedDateText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(params.generatedAt)}"
             val positionLines = wrapText(params.user.position, footerPaint, PAGE_WIDTH / 2f, 3)
@@ -226,15 +284,14 @@ object PdfReportGenerator {
             }
             canvas.drawText(generatedDateText, rightX, PAGE_HEIGHT - 10f, footerPaint)
 
-            // Номер страницы добавляем со второй страницы и только если страниц > 1.
             if (totalPages > 1 && pageNumber > 1) {
                 canvas.drawText(pageNumber.toString(), rightX, MARGIN - 4f, pageNumberPaint)
             }
             doc.finishPage(page)
+            pagesAdded++
         }
 
         // ----- Шапка: три блока по центру ---------------------------------
-        // 1) заголовок; 2) выбранный период; 3) должность и ФИО полностью.
         val periodText = params.quarterLabel
             ?: "${DateFormat.formatDate(params.periodStart)} — ${DateFormat.formatDate(params.periodEnd)}"
         val titleMaxWidth = PAGE_WIDTH - 2f * MARGIN
@@ -257,7 +314,6 @@ object PdfReportGenerator {
         val tableLeft = MARGIN
         val tableWidth = COL_WIDTHS.sum()
 
-        // Локальная функция: отрисовать шапку таблицы с переносом длинных заголовков.
         fun drawTableHeader(yTop: Float): Float {
             canvas.drawRect(tableLeft, yTop, tableLeft + tableWidth, yTop + HEADER_ROW_HEIGHT, tableHeaderFill)
             var hx = tableLeft
@@ -280,33 +336,46 @@ object PdfReportGenerator {
 
         y = drawTableHeader(y)
 
-        // Минимум места для строки с итогами + подписи + увеличенный отступ
-        val signatureBlockHeight = 110f
-        val bottomLimit = PAGE_HEIGHT - 5.67f - signatureBlockHeight
+        val signatureBlockHeight = 70f
+        val contentBottomLimit = PAGE_HEIGHT - 32f
 
-        // Строки данных
-        params.rows.forEachIndexed { idx, item ->
-            // Высота строки зависит от количества строк в названии организации.
-            val sellerMaxWidth = COL_WIDTHS[COL_SELLER] - CELL_PADDING_H * 2f
+        val sellerMaxWidth = COL_WIDTHS[COL_SELLER] - CELL_PADDING_H * 2f
+        val rowHeights = params.rows.map { item ->
             val sellerLines = wrapText(
                 item.receipt.sellerName.ifBlank { "—" },
                 cellPaint,
                 sellerMaxWidth,
                 MAX_SELLER_LINES
             )
-            val rowHeight = maxOf(
+            maxOf(
                 ROW_HEIGHT_MIN,
                 CELL_PADDING_V * 2f + sellerLines.size * LINE_HEIGHT
             )
+        }
 
-            // Проверяем, влезет ли эта строка полностью, не перекрывая bottomLimit. Если нет — новая страница.
-            if (y + rowHeight > bottomLimit) {
-                finalizeAndFinishPage()
-                pageNumber++
-                page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
-                canvas = page.canvas
-                y = MARGIN
-                y = drawTableHeader(y)
+        // Строки данных
+        params.rows.forEachIndexed { idx, item ->
+            val rowHeight = rowHeights[idx]
+
+            val remainingRowsHeight = (idx until params.rows.size).sumOf { rowHeights[it].toDouble() }.toFloat()
+            val canFinishOnCurrentPage = (y + remainingRowsHeight + ROW_HEIGHT_MIN + signatureBlockHeight) <= contentBottomLimit
+
+            if (!canFinishOnCurrentPage) {
+                val isLastRow = (idx == params.rows.lastIndex)
+                val effectiveLimit = if (isLastRow) {
+                    contentBottomLimit - ROW_HEIGHT_MIN - signatureBlockHeight
+                } else {
+                    contentBottomLimit
+                }
+
+                if (y + rowHeight > effectiveLimit) {
+                    finalizeAndFinishPage()
+                    pageNumber++
+                    page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
+                    canvas = page.canvas
+                    y = MARGIN
+                    y = drawTableHeader(y)
+                }
             }
 
             if (idx % 2 == 1) {
@@ -321,16 +390,20 @@ object PdfReportGenerator {
             canvas.drawRect(x, y, x + COL_WIDTHS[COL_NUM], y + rowHeight, borderPaint)
             x += COL_WIDTHS[COL_NUM]
 
-            // Наименование организации (многострочное, выровнено по левому краю)
-            run {
-                val totalH = sellerLines.size * LINE_HEIGHT
-                var ly = y + (rowHeight - totalH) / 2f + cellPaint.textSize
-                for (line in sellerLines) {
-                    canvas.drawText(line, x + CELL_PADDING_H, ly, cellPaint)
-                    ly += LINE_HEIGHT
-                }
-                canvas.drawRect(x, y, x + COL_WIDTHS[COL_SELLER], y + rowHeight, borderPaint)
+            // Наименование организации
+            val sellerLines = wrapText(
+                item.receipt.sellerName.ifBlank { "—" },
+                cellPaint,
+                sellerMaxWidth,
+                MAX_SELLER_LINES
+            )
+            val totalH = sellerLines.size * LINE_HEIGHT
+            var ly = y + (rowHeight - totalH) / 2f + cellPaint.textSize
+            for (line in sellerLines) {
+                canvas.drawText(line, x + CELL_PADDING_H, ly, cellPaint)
+                ly += LINE_HEIGHT
             }
+            canvas.drawRect(x, y, x + COL_WIDTHS[COL_SELLER], y + rowHeight, borderPaint)
             x += COL_WIDTHS[COL_SELLER]
 
             // Сумма
@@ -359,7 +432,6 @@ object PdfReportGenerator {
             y += rowHeight
         }
 
-        // Если строк нет — пустая строка-заглушка
         if (params.rows.isEmpty()) {
             val baseline = y + ROW_HEIGHT_MIN / 2f + cellPaint.textSize / 3f
             canvas.drawRect(tableLeft, y, tableLeft + tableWidth, y + ROW_HEIGHT_MIN, zebraFill)
@@ -371,13 +443,14 @@ object PdfReportGenerator {
             y += ROW_HEIGHT_MIN
         }
 
-        // Строка «Итого:» — объединяет две первые ячейки (№ и наименование)
-        if (y + ROW_HEIGHT_MIN > bottomLimit) {
+        // Строка «Итого:»
+        if (y + ROW_HEIGHT_MIN + signatureBlockHeight > contentBottomLimit) {
             finalizeAndFinishPage()
             pageNumber++
             page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
             canvas = page.canvas
             y = MARGIN
+            y = drawTableHeader(y)
         }
         canvas.drawRect(tableLeft, y, tableLeft + tableWidth, y + ROW_HEIGHT_MIN, totalsFill)
         val tBaseline = y + ROW_HEIGHT_MIN / 2f + totalsPaint.textSize / 3f
@@ -406,13 +479,9 @@ object PdfReportGenerator {
         canvas.drawRect(tx, y, tx + COL_WIDTHS[COL_DATE], y + ROW_HEIGHT_MIN, borderPaint)
         y += ROW_HEIGHT_MIN
 
-        // ----- Блок подписи (выровнен к нижней части страницы) -----
-        val signatureTop = (PAGE_HEIGHT - 5.67f - signatureBlockHeight).coerceAtLeast(y + 30f)
+        // ----- Блок подписи -----
+        val signatureTop = (contentBottomLimit - signatureBlockHeight).coerceAtLeast(y + 10f)
 
-        // Одной строкой:  [Должность]   ____подпись____   [И.О. Фамилия]
-        // Должность и подпись (И.О. Фамилия) выровнены по одной базовой линии,
-        // линия для живой подписи проходит по тому же уровню между ними. Подпись
-        // «(подпись)» — мелким шрифтом строго под линией.
         val initials = params.user.initialsSurname
         val initialsWidth = signatureTextPaint.measureText(initials)
         
@@ -426,10 +495,10 @@ object PdfReportGenerator {
         val lineStart = MARGIN + actualPosWidth + 16f
         val lineEnd = PAGE_WIDTH - MARGIN - initialsWidth - 16f
         
-        var py = signatureTop + 26f
+        var py = signatureTop + 20f
         for (i in 0 until positionLines.size - 1) {
             canvas.drawText(positionLines[i], MARGIN, py, signatureTextPaint)
-            py += signatureTextPaint.textSize + 4f
+            py += signatureTextPaint.textSize + 3f
         }
         val lastPosLine = positionLines.lastOrNull() ?: ""
         canvas.drawText(lastPosLine, MARGIN, py, signatureTextPaint)
@@ -442,12 +511,11 @@ object PdfReportGenerator {
         canvas.drawText(
             "(подпись)",
             (lineStart + lineEnd) / 2f,
-            lastBaseline + 11f,
+            lastBaseline + 9f,
             signatureSmallPaint
         )
 
-        // Поле «Дата: ____» — ниже подписи.
-        val dateY = lastBaseline + 36f
+        val dateY = lastBaseline + 20f
         canvas.drawText("Дата:", MARGIN, dateY, signatureTextPaint)
         val dateLineStart = MARGIN + signatureTextPaint.measureText("Дата: ") + 4f
         canvas.drawLine(dateLineStart, dateY + 1f, dateLineStart + 180f, dateY + 1f, signatureLinePaint)
@@ -455,70 +523,77 @@ object PdfReportGenerator {
         finalizeAndFinishPage()
 
         // --- Добавление страниц с фото для чеков, добавленных вручную ---
-        val manualReceipts = params.rows.mapIndexedNotNull { index, row ->
-            if (row.receipt.isManual && row.receipt.manualPhotoUri != null) {
-                index + 1 to row.receipt
-            } else null
-        }
+        if (includeManualAttachments) {
+            val manualReceipts = params.rows.mapIndexedNotNull { index, row ->
+                if (row.receipt.isManual && row.receipt.manualPhotoUri != null) {
+                    index + 1 to row.receipt
+                } else null
+            }
 
-        var manualSeq = 1
-        for ((tableIdx, receipt) in manualReceipts) {
-            val photoFile = java.io.File(receipt.manualPhotoUri!!)
-            if (photoFile.exists()) {
-                pageNumber++
-                page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
-                canvas = page.canvas
+            var manualSeq = 1
+            for ((tableIdx, receipt) in manualReceipts) {
+                val photoFile = java.io.File(receipt.manualPhotoUri!!)
+                if (photoFile.exists()) {
+                    pageNumber++
+                    page = doc.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
+                    canvas = page.canvas
 
-                val attachTitle = "Приложение № $manualSeq к Реестру (чек № $tableIdx)"
-                canvas.drawText(attachTitle, PAGE_WIDTH / 2f, MARGIN + titlePaint.textSize, titlePaint)
+                    val attachTitle = "Приложение № $manualSeq к Реестру (чек № $tableIdx)"
+                    canvas.drawText(attachTitle, PAGE_WIDTH / 2f, MARGIN + titlePaint.textSize, titlePaint)
 
-                if (totalPages > 0) { // Не декодировать картинку во время сухого прогона
-                    val bitmap = android.graphics.BitmapFactory.decodeFile(receipt.manualPhotoUri)
-                    if (bitmap != null) {
-                        val imgMaxWidth = PAGE_WIDTH - 2f * MARGIN
-                        val imgMaxHeight = PAGE_HEIGHT - 2f * MARGIN - titlePaint.textSize - 20f
-                        val scale = minOf(imgMaxWidth / bitmap.width, imgMaxHeight / bitmap.height, 1f)
-                        val scaledWidth = bitmap.width * scale
-                        val scaledHeight = bitmap.height * scale
-                        
-                        val imgLeft = (PAGE_WIDTH - scaledWidth) / 2f
-                        val imgTop = MARGIN + titlePaint.textSize + 20f
-                        
-                        val destRect = android.graphics.RectF(imgLeft, imgTop, imgLeft + scaledWidth, imgTop + scaledHeight)
-                        canvas.drawBitmap(bitmap, null, destRect, null)
-                        bitmap.recycle()
+                    if (totalPages > 0) {
+                        val bitmap = android.graphics.BitmapFactory.decodeFile(receipt.manualPhotoUri)
+                        if (bitmap != null) {
+                            val imgMaxWidth = PAGE_WIDTH - 2f * MARGIN
+                            val imgMaxHeight = PAGE_HEIGHT - 2f * MARGIN - titlePaint.textSize - 20f
+                            val scale = minOf(imgMaxWidth / bitmap.width, imgMaxHeight / bitmap.height, 1f)
+                            val scaledWidth = bitmap.width * scale
+                            val scaledHeight = bitmap.height * scale
+                            
+                            val imgLeft = (PAGE_WIDTH - scaledWidth) / 2f
+                            val imgTop = MARGIN + titlePaint.textSize + 20f
+                            
+                            val destRect = android.graphics.RectF(imgLeft, imgTop, imgLeft + scaledWidth, imgTop + scaledHeight)
+                            canvas.drawBitmap(bitmap, null, destRect, null)
+                            bitmap.recycle()
+                        }
                     }
-                }
 
-                if (totalPages > 1 || manualReceipts.isNotEmpty()) {
-                    canvas.drawText(pageNumber.toString(), PAGE_WIDTH - MARGIN, MARGIN - 4f, pageNumberPaint)
-                }
-                val generatedDateText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(params.generatedAt)}"
-                canvas.drawText(generatedDateText, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 10f, footerPaint)
+                    if (totalPages > 1 || manualReceipts.isNotEmpty()) {
+                        canvas.drawText(pageNumber.toString(), PAGE_WIDTH - MARGIN, MARGIN - 4f, pageNumberPaint)
+                    }
+                    val generatedDateText = "Сформировано ${DateFormat.formatDateTimeWithSeconds(params.generatedAt)}"
+                    canvas.drawText(generatedDateText, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 10f, footerPaint)
 
-                doc.finishPage(page)
-                manualSeq++
+                    doc.finishPage(page)
+                    pagesAdded++
+                    manualSeq++
+                }
             }
         }
+
+        return pagesAdded
     }
 
-    /**
-     * Переносит текст по словам в пределах maxWidth, не более maxLines строк.
-     * Если оригинал не помещается полностью — последняя строка усекается с «…».
-     * Слова длиннее maxWidth разрываются по символам.
-     */
+    private fun measureTextSafe(text: String, paint: Paint?, fallbackCharWidth: Float): Float {
+        if (paint != null) {
+            val measured = runCatching { paint.measureText(text) }.getOrNull()
+            if (measured != null && measured > 0f) return measured
+        }
+        return text.length * fallbackCharWidth
+    }
+
     private fun wrapText(
         text: String,
-        paint: Paint,
+        paint: Paint?,
         maxWidth: Float,
-        maxLines: Int
+        maxLines: Int,
+        fallbackCharWidth: Float = 5.5f
     ): List<String> {
         if (text.isEmpty()) return listOf("")
         if (maxLines <= 0) return emptyList()
-        if (paint.measureText(text) <= maxWidth) return listOf(text)
+        if (measureTextSafe(text, paint, fallbackCharWidth) <= maxWidth) return listOf(text)
 
-        // Очередь токенов: длинные слова в процессе обработки могут быть разрезаны
-        // и «дохвост» возвращён в начало очереди.
         val queue = ArrayDeque<String>().apply {
             text.split(Regex("\\s+")).filter { it.isNotEmpty() }.forEach { addLast(it) }
         }
@@ -528,15 +603,14 @@ object PdfReportGenerator {
         while (queue.isNotEmpty() && lines.size < maxLines) {
             val w = queue.removeFirst()
             val candidate = if (current.isEmpty()) w else "$current $w"
-            if (paint.measureText(candidate) <= maxWidth) {
+            if (measureTextSafe(candidate, paint, fallbackCharWidth) <= maxWidth) {
                 current = candidate
             } else if (current.isNotEmpty()) {
                 lines += current
                 current = ""
-                queue.addFirst(w) // попытаемся вместить с новой строки
+                queue.addFirst(w)
             } else {
-                // Слово длиннее, чем ширина ячейки — режем по символам.
-                val cut = forceFit(w, paint, maxWidth)
+                val cut = forceFit(w, paint, maxWidth, fallbackCharWidth)
                 lines += cut
                 val rest = w.substring(cut.length)
                 if (rest.isNotEmpty()) queue.addFirst(rest)
@@ -544,36 +618,39 @@ object PdfReportGenerator {
         }
         if (current.isNotEmpty() && lines.size < maxLines) lines += current
 
-        // Не всё уложилось в maxLines — добавляем многоточие в последнюю строку.
         if (queue.isNotEmpty()) {
             val last = lines.lastOrNull().orEmpty()
             val lastIdx = if (lines.isEmpty()) {
                 lines += ""
                 0
             } else lines.lastIndex
-            lines[lastIdx] = ellipsize(last, paint, maxWidth, addEllipsis = true)
+            lines[lastIdx] = ellipsize(last, paint, maxWidth, addEllipsis = true, fallbackCharWidth = fallbackCharWidth)
         }
-        return lines.ifEmpty { listOf(ellipsize(text, paint, maxWidth, addEllipsis = true)) }
+        return lines.ifEmpty { listOf(ellipsize(text, paint, maxWidth, addEllipsis = true, fallbackCharWidth = fallbackCharWidth)) }
     }
 
-    /** Принудительно подгоняет одно слово, чтобы префикс поместился в maxWidth. */
-    private fun forceFit(word: String, paint: Paint, maxWidth: Float): String {
-        if (paint.measureText(word) <= maxWidth) return word
+    private fun forceFit(word: String, paint: Paint?, maxWidth: Float, fallbackCharWidth: Float): String {
+        if (measureTextSafe(word, paint, fallbackCharWidth) <= maxWidth) return word
         var lo = 1
         var hi = word.length
         while (lo < hi) {
             val mid = (lo + hi + 1) / 2
-            if (paint.measureText(word.substring(0, mid)) <= maxWidth) lo = mid else hi = mid - 1
+            if (measureTextSafe(word.substring(0, mid), paint, fallbackCharWidth) <= maxWidth) lo = mid else hi = mid - 1
         }
         return word.substring(0, lo)
     }
 
-    /** Обрезает строку с конца. С addEllipsis=true гарантирует «…» в конце результата. */
-    private fun ellipsize(s: String, paint: Paint, maxWidth: Float, addEllipsis: Boolean = true): String {
+    private fun ellipsize(
+        s: String,
+        paint: Paint?,
+        maxWidth: Float,
+        addEllipsis: Boolean = true,
+        fallbackCharWidth: Float = 5.5f
+    ): String {
         val target = if (addEllipsis) s + "..." else s
-        if (paint.measureText(target) <= maxWidth) return target
+        if (measureTextSafe(target, paint, fallbackCharWidth) <= maxWidth) return target
         var t = s.trimEnd()
-        while (t.isNotEmpty() && paint.measureText(t + "...") > maxWidth) {
+        while (t.isNotEmpty() && measureTextSafe(t + "...", paint, fallbackCharWidth) > maxWidth) {
             t = t.dropLast(1)
         }
         return if (t.isEmpty()) "..." else t + "..."
