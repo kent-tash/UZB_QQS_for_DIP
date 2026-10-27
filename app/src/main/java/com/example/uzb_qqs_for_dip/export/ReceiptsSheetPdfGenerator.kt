@@ -49,6 +49,17 @@ object ReceiptsSheetPdfGenerator {
         return gridPages + manualPhotosCount
     }
 
+    /**
+     * Порядковый номер чека в реестре начинается с 1 (1-based index).
+     */
+    fun getReceiptOrdinal(index: Int): Int = index + 1
+
+    /**
+     * Текст номера страницы реестра. Нумерация страниц реестра всегда изолирована и начинается с 1 («стр. 1 из M»).
+     */
+    fun formatRegistryPageNumber(pageIndex: Int, totalRegistryPages: Int): String =
+        "стр. ${pageIndex + 1} из $totalRegistryPages"
+
     suspend fun generate(
         context: Context,
         rowsInOrder: List<ReceiptWithUser>,
@@ -170,7 +181,7 @@ object ReceiptsSheetPdfGenerator {
                 ReceiptCardRenderer.renderInto(
                     canvas = canvas,
                     receipt = item,
-                    ordinal = i + 1,
+                    ordinal = getReceiptOrdinal(i),
                     left = left,
                     top = top,
                     width = cellW,
@@ -180,7 +191,7 @@ object ReceiptsSheetPdfGenerator {
 
             // Нумерация страниц реестра всегда изолирована и начинается с 1: «стр. X из M»
             canvas.drawText(
-                "стр. $registryPageNumber из $totalRegistryPages",
+                formatRegistryPageNumber(pageIndex, totalRegistryPages),
                 PAGE_W - MARGIN, MARGIN - 6f, pagePaint
             )
             canvas.drawText(

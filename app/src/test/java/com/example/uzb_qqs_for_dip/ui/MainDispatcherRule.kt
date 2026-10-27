@@ -2,6 +2,7 @@ package com.example.uzb_qqs_for_dip.ui
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -11,7 +12,7 @@ import org.junit.runner.Description
 
 @ExperimentalCoroutinesApi
 class MainDispatcherRule(
-    val testDispatcher: TestDispatcher = UnconfinedTestDispatcher()
+    val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(TestCoroutineScheduler())
 ) : TestWatcher() {
     override fun starting(description: Description) {
         Dispatchers.setMain(testDispatcher)

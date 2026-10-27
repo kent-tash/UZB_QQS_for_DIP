@@ -21,6 +21,24 @@ object CombinedPdfGenerator {
     fun calculateRegistryPagesCount(receiptsCount: Int, manualPhotosCount: Int = 0): Int =
         ReceiptsSheetPdfGenerator.calculatePagesCount(receiptsCount, manualPhotosCount)
 
+    fun calculateReportPagesCount(params: ReportParams): Int =
+        PdfReportGenerator.calculatePageCount(sanitizeParams(params), includeManualAttachments = false)
+
+    fun calculateTotalPages(params: ReportParams, manualPhotosCount: Int = 0): Int {
+        val sanitized = sanitizeParams(params)
+        val reportPages = calculateReportPagesCount(sanitized)
+        val registryPages = calculateRegistryPagesCount(sanitized.rows.size, manualPhotosCount)
+        return reportPages + registryPages
+    }
+
+    /**
+     * Возвращает начальный номер страницы в сквозном документе для реестра чеков (Часть 2).
+     * Реестр чеков всегда начинается со следующей страницы после сводного отчёта.
+     */
+    fun calculateRegistryStartDocPage(params: ReportParams): Int {
+        return calculateReportPagesCount(params) + 1
+    }
+
     internal fun sanitizeParams(params: ReportParams): ReportParams =
         params.copy(rows = params.rows.filter { it.receipt.vatAmountTiyin > 0L })
 

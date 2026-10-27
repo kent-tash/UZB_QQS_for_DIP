@@ -7,7 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -189,7 +189,7 @@ private fun MainScaffold(
                 },
                 actions = {
                     IconButton(onClick = { showHelpDialog = true }) {
-                        Icon(Icons.Outlined.HelpOutline, contentDescription = "Помощь")
+                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Помощь")
                     }
                 }
             )

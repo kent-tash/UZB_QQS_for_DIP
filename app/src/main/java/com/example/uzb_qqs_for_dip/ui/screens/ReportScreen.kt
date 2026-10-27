@@ -27,7 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -344,12 +344,12 @@ fun ReportScreen(
                 }
             }
         } else {
-            items(
+            itemsIndexed(
                 items = rows,
-                key = { it.receipt.id },
-                contentType = { "receipt_card" }
-            ) { item ->
-                val ordinal = rows.indexOfFirst { it.receipt.id == item.receipt.id } + 1
+                key = { _, item -> item.receipt.id },
+                contentType = { _, _ -> "receipt_card" }
+            ) { index, item ->
+                val ordinal = index + 1
                 val isSelected = item.receipt.id in selectedIds
 
                 ReceiptListCard(

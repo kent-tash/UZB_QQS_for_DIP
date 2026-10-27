@@ -167,16 +167,6 @@ class ReportViewModel(app: Application) : AndroidViewModel(app) {
                 if (pruned.size != current.size) _selectedIds.value = pruned
             }
         }
-        // Синхронизируем локальные превью чеков на диске при изменении состава / порядка
-        viewModelScope.launch {
-            rows.distinctUntilChanged { a, b ->
-                a.size == b.size && a.zip(b).all { (x, y) -> x.receipt.id == y.receipt.id }
-            }.collect { ordered ->
-                runCatching {
-                    ReceiptImageExporter.regenerateAll(appContext, ordered.map { it.receipt })
-                }
-            }
-        }
     }
 
     fun toggleSelection(id: Long) {
